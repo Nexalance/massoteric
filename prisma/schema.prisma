@@ -1,0 +1,359 @@
+// ─────────────────────────────────────────────────────────
+// MASSOTERIC — Database Schema
+// Provider: PostgreSQL via Prisma ORM
+// ─────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ───────────────────────────────────────────────
+
+enum MarketStatus {
+  OPEN
+  CLOSED
+  RESOLVED
+}
+
+enum MarketSource {
+  POLYMARKET
+  KALSHI
+  METACULUS
+  USER_CREATED
+}
+
+enum MarketCategory {
+  POLITICS
+  FINANCE
+  CRYPTO
+  SPORTS
+  SCIENCE
+  TECH
+  MACRO
+  OTHER
+}
+
+enum TopicStatus {
+  PENDING   // awaiting admin approval
+  APPROVED
+  REJECTED
+}
+
+enum PredictionStatus {
+  ACTIVE
+  LOCKED    // within 48hrs of resolution
+  SCORED
+}
+
+enum SubscriptionTier {
+  FREE
+  STANDARD
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  INCOMPLETE
+}
+
+enum FeatureKey {
+  FULL_REASONING
+  ACCURACY_FILTER
+  USER_FILTER
+  CATEGORY_LEADERBOARD
+  EXPERT_QA
+  TOPIC_CREATE
+}
+
+// ─── USER ────────────────────────────────────────────────
+
+model User {
+  id                String    @id @default(cuid())
+  clerkId           String    @unique  // Clerk's user ID
+  username          String    @unique
+  displayName       String
+  email             String    @unique
+  phoneVerified     Boolean   @default(false)
+  avatarUrl         String?
+
+  // Background / profile info
+  bio               String?
+  occupation        String?
+  employer          String?
+  educationLevel    String?   // e.g. "Bachelor's", "PhD"
+  educationField    String?   // e.g. "Economics"
+  institution       String?   // university / school
+  certifications    String[]  // e.g. ["CFA", "CPA"]
+  yearsExperience   Int?
+  linkedinUrl       String?
+  websiteUrl        String?
+
+  // Subscription
+  stripeCustomerId  String?   @unique
+  subscriptionTier  SubscriptionTier @default(FREE)
+  subscriptionStatus SubscriptionStatus?
+
+  // Flags
+  isAdmin           Boolean   @default(false)
+  isSuspended       Boolean   @default(false)
+  onboardingComplete Boolean  @default(false)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  predictions       Prediction[]
+  predictionEdits   PredictionEdit[]
+  comments          Comment[]
+  commentVotes      CommentVote[]
+  subscriptions     UserSubscription[]  @relation("subscriber")
+  subscribers       UserSubscription[]  @relation("expert")
+  accuracyScores    AccuracyScore[]
+  topicsCreated     Market[]            @relation("topicCreator")
+
+  @@index([clerkId])
+  @@index([username])
+  @@index([subscriptionTier])
+}
+
+// ─── MARKET (Prediction Question) ────────────────────────
+
+model Market {
+  id                String        @id @default(cuid())
+  externalId        String?       @unique  // ID from Polymarket / Kalshi
+  source            MarketSource
+  category          MarketCategory
+  title             String
+  description       String?       @db.Text
+  resolutionCriteria String?      @db.Text
+  imageUrl          String?
+
+  // Probabilities
+  marketProbability Float?        // from external source (0–1)
+  
+  // Dates
+  closesAt          DateTime?     // when predictions lock
+  resolvesAt        DateTime?     // expected resolution
+  resolvedAt        DateTime?     // actual resolution date
+
+  // Resolution
+  status            MarketStatus  @default(OPEN)
+  resolvedValue     Boolean?      // true = YES, false = NO
+
+  // External links
+  externalUrl       String?
+
+  // User-created topic
+  createdByUserId   String?
+  createdBy         User?         @relation("topicCreator", fields: [createdByUserId], references: [id])
+  topicStatus       TopicStatus?  // only for USER_CREATED
+
+  // Metadata
+  tags              String[]
+  featured          Boolean       @default(false)
+  viewCount         Int           @default(0)
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relations
+  predictions       Prediction[]
+  comments          Comment[]
+
+  @@index([status])
+  @@index([category])
+  @@index([source])
+  @@index([closesAt])
+  @@index([featured])
+}
+
+// ─── PREDICTION ───────────────────────────────────────────
+
+model Prediction {
+  id                String          @id @default(cuid())
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  marketId          String
+  market            Market          @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  // The prediction
+  probability       Float           // 0.0 – 1.0 (user's estimate)
+  reasoning         String          @db.Text
+  reasoningSnippet  String?         // first ~200 chars, always public
+
+  // Status
+  status            PredictionStatus @default(ACTIVE)
+
+  // Scoring — populated when market resolves
+  brierScore        Float?          // lower is better (0.0 = perfect, 2.0 = worst)
+  isCorrect         Boolean?        // simple yes/no accuracy
+
+  // Timestamps
+  lockedAt          DateTime?       // when editing was disabled
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // Relations
+  edits             PredictionEdit[]
+
+  @@unique([userId, marketId])  // one prediction per user per market
+  @@index([userId])
+  @@index([marketId])
+  @@index([status])
+  @@index([brierScore])
+}
+
+// ─── PREDICTION EDIT HISTORY ─────────────────────────────
+
+model PredictionEdit {
+  id                String      @id @default(cuid())
+  predictionId      String
+  prediction        Prediction  @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // What it was BEFORE this edit
+  previousProbability Float
+  previousReasoning   String    @db.Text
+
+  // Why they edited
+  editReason        String?
+
+  createdAt         DateTime    @default(now())
+
+  @@index([predictionId])
+}
+
+// ─── COMMENT ─────────────────────────────────────────────
+
+model Comment {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  marketId          String
+  market            Market    @relation(fields: [marketId], references: [id], onDelete: Cascade)
+
+  parentId          String?   // for threaded replies
+  parent            Comment?  @relation("replies", fields: [parentId], references: [id])
+  replies           Comment[] @relation("replies")
+
+  body              String    @db.Text
+  isDeleted         Boolean   @default(false)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  votes             CommentVote[]
+
+  @@index([marketId])
+  @@index([userId])
+  @@index([parentId])
+}
+
+model CommentVote {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  commentId   String
+  comment     Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  value       Int      // +1 or -1
+
+  @@unique([userId, commentId])
+}
+
+// ─── ACCURACY SCORE (denormalized for performance) ────────
+
+model AccuracyScore {
+  id              String          @id @default(cuid())
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category        MarketCategory?  // null = overall score
+
+  totalPredictions  Int           @default(0)
+  scoredPredictions Int           @default(0)
+  totalBrierScore   Float         @default(0)  // sum of all brier scores
+  avgBrierScore     Float?        // totalBrierScore / scoredPredictions
+  accuracyPct       Float?        // simple % correct (0–100)
+
+  updatedAt       DateTime        @updatedAt
+
+  @@unique([userId, category])
+  @@index([userId])
+  @@index([category, avgBrierScore])
+}
+
+// ─── USER SUBSCRIPTION (expert → subscriber) ─────────────
+
+model UserSubscription {
+  id            String    @id @default(cuid())
+  subscriberId  String
+  subscriber    User      @relation("subscriber", fields: [subscriberId], references: [id], onDelete: Cascade)
+  expertId      String
+  expert        User      @relation("expert", fields: [expertId], references: [id], onDelete: Cascade)
+
+  // Stripe
+  stripeSubscriptionId  String?   @unique
+  stripePriceId         String?
+  status                SubscriptionStatus @default(ACTIVE)
+  currentPeriodEnd      DateTime?
+
+  // Expert's pricing
+  monthlyPriceCents     Int       // e.g. 999 = $9.99
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([subscriberId, expertId])
+  @@index([expertId])
+  @@index([subscriberId])
+}
+
+// ─── PLATFORM SUBSCRIPTION (Massoteric tiers) ────────────
+
+model PlatformSubscription {
+  id                    String              @id @default(cuid())
+  userId                String              @unique
+  stripeSubscriptionId  String              @unique
+  stripePriceId         String
+  tier                  SubscriptionTier
+  status                SubscriptionStatus
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  cancelAtPeriodEnd     Boolean             @default(false)
+
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+}
+
+// ─── FEATURE FLAGS (admin-controlled) ────────────────────
+
+model FeatureFlag {
+  id          String      @id @default(cuid())
+  key         FeatureKey  @unique
+  label       String
+  description String
+  isFree      Boolean     @default(false)  // if true, available to free tier
+  isEnabled   Boolean     @default(true)   // global kill switch
+
+  updatedAt   DateTime    @updatedAt
+  updatedBy   String?     // admin user ID
+}
+
+// ─── SEED DATA: default feature flags ────────────────────
+// (populated via prisma/seed.ts)
+
+// ─── EMAIL WAITLIST ───────────────────────────────────────
+
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String?  // "hero", "cta", etc.
+  createdAt DateTime @default(now())
+}

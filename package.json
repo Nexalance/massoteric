@@ -1,0 +1,39 @@
+{
+  "name": "massoteric",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^5.0.0",
+    "@prisma/client": "^5.14.0",
+    "@stripe/stripe-js": "^3.4.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "next": "14.2.3",
+    "react": "^18",
+    "react-dom": "^18",
+    "stripe": "^15.7.0",
+    "swr": "^2.2.5",
+    "zod": "^3.23.8",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.3",
+    "prisma": "^5.14.0",
+    "tsx": "^4.11.0",
+    "typescript": "^5"
+  }
+}
