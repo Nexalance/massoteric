@@ -2,9 +2,17 @@
 // Root layout — wraps all pages with Clerk auth provider
 
 import type { Metadata } from 'next'
-import { ClerkProvider } from '@clerk/nextjs'
 import { Cormorant_Garamond, DM_Mono, Libre_Baskerville } from 'next/font/google'
 import './globals.css'
+
+// Only import ClerkProvider if we have valid keys
+const hasValidClerkKey = !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.includes('placeholder')
+let ClerkProvider: any
+
+if (hasValidClerkKey) {
+  const clerk = require('@clerk/nextjs')
+  ClerkProvider = clerk.ClerkProvider
+}
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -40,7 +48,23 @@ export const metadata: Metadata = {
   },
 }
 
+function DevWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <html
+      lang="en"
+      className={`${cormorant.variable} ${libreBaskerville.variable} ${dmMono.variable}`}
+    >
+      <body>{children}</body>
+    </html>
+  )
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // In development without Clerk keys, skip ClerkProvider
+  if (!hasValidClerkKey) {
+    return <DevWrapper>{children}</DevWrapper>
+  }
+
   return (
     <ClerkProvider>
       <html

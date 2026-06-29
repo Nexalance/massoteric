@@ -1,6 +1,6 @@
 // src/components/layout/Nav.tsx
 
-import { auth, currentUser } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@/lib/auth-mock'
 import { prisma } from '@/lib/prisma'
 import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'

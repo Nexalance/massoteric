@@ -1,6 +1,6 @@
 // src/app/profile/[username]/page.tsx
 
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth-mock'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getUserAccuracySummary } from '@/lib/scoring'

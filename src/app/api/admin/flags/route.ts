@@ -3,7 +3,7 @@
 // GET  — list all flags
 // PATCH — toggle a flag
 
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth-mock'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { FeatureKey } from '@prisma/client'

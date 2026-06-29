@@ -1,6 +1,6 @@
 // src/app/api/billing/checkout/route.ts
 
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth-mock'
 import { NextRequest, NextResponse } from 'next/server'
 import { createCheckoutSession } from '@/lib/stripe'
 import { SubscriptionTier } from '@prisma/client'

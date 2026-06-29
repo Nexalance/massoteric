@@ -2,7 +2,7 @@
 // GET  /api/markets  — list markets with filters
 // POST /api/markets  — create user-submitted topic (requires auth)
 
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth-mock'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { MarketCategory, MarketStatus, MarketSource } from '@prisma/client'

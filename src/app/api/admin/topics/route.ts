@@ -3,7 +3,7 @@
 // GET   — list pending topics
 // PATCH — approve or reject a topic
 
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth-mock'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { TopicStatus } from '@prisma/client'

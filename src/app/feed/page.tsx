@@ -1,7 +1,7 @@
 // src/app/feed/page.tsx
 // Main authenticated feed — shows markets with predictions
 
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth-mock'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { MarketCategory } from '@prisma/client'

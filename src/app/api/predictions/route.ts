@@ -2,7 +2,7 @@
 // GET  /api/predictions  — list predictions (with access control on reasoning)
 // POST /api/predictions  — create a prediction (requires auth)
 
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth-mock'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'

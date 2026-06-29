@@ -1,7 +1,7 @@
 // src/app/onboarding/page.tsx
 // Collects user background info after signup
 
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth-mock'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 

@@ -1,6 +1,6 @@
 // src/app/leaderboard/page.tsx
 
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth-mock'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { canAccess } from '@/lib/access'

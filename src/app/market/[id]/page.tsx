@@ -1,7 +1,7 @@
 // src/app/market/[id]/page.tsx
 // Individual market page — shows predictions, discussion, post form
 
-import { auth } from '@clerk/nextjs/server'
+import { auth } from '@/lib/auth-mock'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { canAccess } from '@/lib/access'
