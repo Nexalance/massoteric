@@ -71,7 +71,24 @@ const CreateTopicSchema = z.object({
   description: z.string().min(20).max(2000),
   category: z.nativeEnum(MarketCategory),
   resolutionCriteria: z.string().min(20).max(1000),
-  closesAt: z.string().datetime().optional(),
+  closesAt: z.string().optional().transform(val => {
+    // Handle empty, null, undefined
+    if (!val || val === '' || val === null) return undefined
+
+    // Handle datetime-local format (YYYY-MM-DDTHH:mm) - add seconds and UTC
+    // HTML datetime-local returns format like "2024-12-31T23:59"
+    if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+      return val + ':00Z' // Add seconds and UTC timezone
+    }
+
+    // Handle formats without timezone - append Z
+    if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)) {
+      return val + 'Z'
+    }
+
+    // Already has timezone or is invalid, return as-is
+    return val
+  }),
   tags: z.array(z.string()).max(5).default([]),
 })
 
