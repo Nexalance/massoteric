@@ -25,5 +25,6 @@ export async function POST(req: NextRequest) {
   if (!priceId) return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
 
   const url = await createCheckoutSession(user.id, priceId, tier)
-  return NextResponse.redirect(url)
+  // Return JSON with URL for JavaScript redirect (more reliable than form redirect)
+  return NextResponse.json({ url })
 }

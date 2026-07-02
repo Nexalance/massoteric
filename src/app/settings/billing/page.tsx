@@ -4,6 +4,8 @@ import { auth } from '@/lib/auth-mock'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { BillingForm } from './BillingForm'
+import { PortalButton } from './PortalButton'
 
 export const metadata = { title: 'Billing & Subscription' }
 
@@ -129,11 +131,7 @@ export default async function BillingPage() {
 
                 {isCurrent ? (
                   user.stripeCustomerId ? (
-                    <form action="/api/billing/portal" method="POST">
-                      <button type="submit" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>
-                        Manage Subscription
-                      </button>
-                    </form>
+                    <PortalButton />
                   ) : (
                     <div className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center', cursor: 'default' }}>
                       Current Plan
@@ -144,12 +142,7 @@ export default async function BillingPage() {
                     Downgrade
                   </div>
                 ) : (
-                  <form action="/api/billing/checkout" method="POST">
-                    <input type="hidden" name="tier" value={plan.tier} />
-                    <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', background: plan.color, borderColor: plan.color }}>
-                      Upgrade to {plan.name}
-                    </button>
-                  </form>
+                  <BillingForm tier={plan.tier} planName={plan.name} color={plan.color} />
                 )}
               </div>
             )
