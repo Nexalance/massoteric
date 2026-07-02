@@ -4,6 +4,7 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, DM_Mono, Libre_Baskerville } from 'next/font/google'
 import './globals.css'
+import { MockAuthProvider } from '@/lib/useMockAuth'
 
 // Only import ClerkProvider if we have valid keys
 const hasValidClerkKey = !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.includes('placeholder')
@@ -50,12 +51,14 @@ export const metadata: Metadata = {
 
 function DevWrapper({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="en"
-      className={`${cormorant.variable} ${libreBaskerville.variable} ${dmMono.variable}`}
-    >
-      <body>{children}</body>
-    </html>
+    <MockAuthProvider>
+      <html
+        lang="en"
+        className={`${cormorant.variable} ${libreBaskerville.variable} ${dmMono.variable}`}
+      >
+        <body>{children}</body>
+      </html>
+    </MockAuthProvider>
   )
 }
 

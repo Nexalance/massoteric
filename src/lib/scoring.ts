@@ -63,15 +63,9 @@ export async function scoreMarket(marketId: string, outcome: boolean): Promise<v
       },
     })
 
-    // Update the user's overall accuracy score
-    await updateUserAccuracyScore(prediction.userId, null, brierScore)
-
-    // Update the user's category-specific accuracy score
-    await updateUserAccuracyScore(
-      prediction.userId,
-      prediction.market.category,
-      brierScore
-    )
+    // Update both overall and category-specific accuracy scores in one call
+    // to avoid double-counting totalPredictions
+    await updateUserAccuracyScores(prediction.userId, prediction.market.category, brierScore)
   }
 
   console.log(`✅ Scored market ${marketId}`)
@@ -80,14 +74,21 @@ export async function scoreMarket(marketId: string, outcome: boolean): Promise<v
 /**
  * Update (or create) a user's accuracy score record.
  * Uses a running average to avoid recomputing all predictions.
+ *
+ * IMPORTANT: totalPredictions is only incremented for overall scores (category = null)
+ * to avoid double-counting when updating both overall and category scores.
  */
 async function updateUserAccuracyScore(
   userId: string,
   category: MarketCategory | null,
-  newBrierScore: number
+  newBrierScore: number,
+  incrementTotal: boolean = true
 ): Promise<void> {
-  const existing = await prisma.accuracyScore.findUnique({
-    where: { userId_category: { userId, category: category ?? null } },
+  const existing = await prisma.accuracyScore.findFirst({
+    where: {
+      userId,
+      category: category ?? null
+    },
   })
 
   if (existing) {
@@ -99,7 +100,7 @@ async function updateUserAccuracyScore(
       where: { id: existing.id },
       data: {
         scoredPredictions: newCount,
-        totalPredictions: existing.totalPredictions + 1,
+        totalPredictions: incrementTotal ? existing.totalPredictions + 1 : existing.totalPredictions,
         totalBrierScore: newTotal,
         avgBrierScore: newAvg,
         accuracyPct: brierToAccuracyPct(newAvg),
@@ -117,6 +118,24 @@ async function updateUserAccuracyScore(
         accuracyPct: brierToAccuracyPct(newBrierScore),
       },
     })
+  }
+}
+
+/**
+ * Update both overall and category-specific accuracy scores for a user in one transaction.
+ * This ensures totalPredictions is only incremented once per prediction.
+ */
+async function updateUserAccuracyScores(
+  userId: string,
+  category: MarketCategory | null,
+  newBrierScore: number
+): Promise<void> {
+  // Update overall score (increments totalPredictions)
+  await updateUserAccuracyScore(userId, null, newBrierScore, true)
+
+  // Update category-specific score only if category exists (does NOT increment totalPredictions)
+  if (category) {
+    await updateUserAccuracyScore(userId, category, newBrierScore, false)
   }
 }
 

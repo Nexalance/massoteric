@@ -34,5 +34,5 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Required: disable body parsing for Stripe signature verification
-export const config = { api: { bodyParser: false } }
+// Note: In Next.js 14 App Router, body parsing is handled automatically.
+// The raw body is accessed via req.text() above for signature verification.
