@@ -14,7 +14,7 @@ RUN npm ci
 # Builder stage
 FROM base AS builder
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -41,6 +41,7 @@ RUN npm run build
 # Production stage
 FROM base AS runner
 ENV NEXT_TELEMETRY_DISABLED=1
+RUN apk add --no-cache libc6-compat openssl
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
