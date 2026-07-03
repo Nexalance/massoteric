@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/onboarding/page.tsx
 // Collects user background info after signup
 

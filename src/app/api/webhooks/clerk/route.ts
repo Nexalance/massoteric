@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/api/webhooks/clerk/route.ts
 // Syncs Clerk user events into our database
 // Register this URL in your Clerk dashboard under Webhooks

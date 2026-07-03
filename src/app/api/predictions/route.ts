@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/api/predictions/route.ts
 // GET  /api/predictions  — list predictions (with access control on reasoning)
 // POST /api/predictions  — create a prediction (requires auth)

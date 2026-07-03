@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/api/admin/flags/route.ts
 // Admin: manage feature flags
 // GET  — list all flags

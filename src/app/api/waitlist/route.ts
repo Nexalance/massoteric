@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/api/waitlist/route.ts
 // Collects emails from the landing page — no auth required
 

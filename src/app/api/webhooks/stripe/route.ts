@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/api/webhooks/stripe/route.ts
 // Receives and processes Stripe webhook events
 // Must be registered in your Stripe dashboard

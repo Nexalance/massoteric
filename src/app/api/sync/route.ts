@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { syncPolymarketMarkets } from '@/lib/polymarket';
 
 export async function GET() {

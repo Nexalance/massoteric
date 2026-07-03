@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/api/admin/topics/route.ts
 // Admin: moderate user-submitted topics
 // GET   — list pending topics

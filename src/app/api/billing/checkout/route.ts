@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/api/billing/checkout/route.ts
 
 import { auth } from '@/lib/auth-mock'

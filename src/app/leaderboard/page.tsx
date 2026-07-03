@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/leaderboard/page.tsx
 
 import { auth } from '@/lib/auth-mock'

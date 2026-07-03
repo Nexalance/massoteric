@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/market/[id]/page.tsx
 // Individual market page — shows predictions, discussion, post form
 

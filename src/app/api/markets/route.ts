@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/api/markets/route.ts
 // GET  /api/markets  — list markets with filters
 // POST /api/markets  — create user-submitted topic (requires auth)

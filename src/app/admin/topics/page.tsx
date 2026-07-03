@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 // src/app/admin/topics/page.tsx
 // Admin topic review queue
 
