@@ -58,21 +58,21 @@ export async function GET(req: NextRequest) {
     )
   }
 
+  // Build orderBy based on sortBy parameter
   const orderBy = sortBy === 'accuracy'
-    ? { user: { accuracyScores: { _count: 'desc' } } }
+    ? [{ user: { accuracyScores: { scoredPredictions: 'desc' } } }, { createdAt: 'desc' }]
     : sortBy === 'recent'
-    ? { createdAt: 'desc' }
-    : { probability: 'desc' }
+    ? [{ createdAt: 'desc' }]
+    : [{ probability: 'desc' }, { createdAt: 'desc' }]
 
   const predictions = await prisma.prediction.findMany({
     where: {
       marketId,
       ...(filterUserId && { userId: filterUserId }),
-      status: { not: 'ACTIVE' === 'ACTIVE' ? undefined : undefined }, // show all statuses
     },
     skip,
     take: limit,
-    orderBy: [{ createdAt: 'desc' }],
+    orderBy,
     include: {
       user: {
         select: {
