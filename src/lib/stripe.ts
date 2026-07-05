@@ -5,10 +5,28 @@ import Stripe from 'stripe'
 import { prisma } from '@/lib/prisma'
 import { SubscriptionTier, SubscriptionStatus } from '@prisma/client'
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+// Validate Stripe API key at startup
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+
+if (!stripeSecretKey || stripeSecretKey.includes('placeholder') || !stripeSecretKey.startsWith('sk_')) {
+  console.warn('⚠️ Stripe is not configured. Set STRIPE_SECRET_KEY in .env.local to enable subscriptions.')
+}
+
+export const stripe = new Stripe(stripeSecretKey || 'sk_test_placeholder', {
   apiVersion: '2024-04-10',
   typescript: true,
 })
+
+/**
+ * Check if Stripe is properly configured.
+ */
+export function isStripeConfigured(): boolean {
+  return !!(
+    stripeSecretKey &&
+    !stripeSecretKey.includes('placeholder') &&
+    stripeSecretKey.startsWith('sk_')
+  )
+}
 
 /**
  * Get or create a Stripe customer for a user.

@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { auth } from '@/lib/auth-mock'
 import { NextRequest, NextResponse } from 'next/server'
-import { createPortalSession } from '@/lib/stripe'
+import { createPortalSession, isStripeConfigured } from '@/lib/stripe'
 import { prisma } from '@/lib/prisma'
 
 export async function POST(req: NextRequest) {
@@ -13,6 +13,14 @@ export async function POST(req: NextRequest) {
 
   const user = await prisma.user.findUnique({ where: { clerkId } })
   if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+
+  // Check if Stripe is properly configured
+  if (!isStripeConfigured()) {
+    return NextResponse.json({
+      error: 'Stripe is not configured',
+      message: 'Subscription management is not available. Please contact support to manage your subscription.'
+    }, { status: 503 })
+  }
 
   try {
     const url = await createPortalSession(user.id)
