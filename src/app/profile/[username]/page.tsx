@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth-mock'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getUserAccuracySummary } from '@/lib/scoring'
+import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -72,9 +73,23 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  {isOwnProfile ? (
-                    <Link href="/settings/profile" className="btn btn-secondary">Edit Profile</Link>
-                  ) : (
+                  {isOwnProfile && (
+                    <>
+                      <Link href="/settings/profile" className="btn btn-secondary">Edit Profile</Link>
+                      <UserButton
+                        afterSignOutUrl="/"
+                        appearance={{
+                          elements: {
+                            userButtonTrigger: {
+                              fontWeight: '500',
+                              fontSize: '14px',
+                            },
+                          },
+                        }}
+                      />
+                    </>
+                  )}
+                  {!isOwnProfile && (
                     <button className="btn btn-primary">Subscribe $9/mo</button>
                   )}
                 </div>

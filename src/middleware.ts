@@ -19,6 +19,7 @@ const isPublicRoute = createRouteMatcher ? createRouteMatcher([
   '/sign-up(.*)',
   '/api/waitlist',        // email collection
   '/api/webhooks/(.*)',   // Stripe + Clerk webhooks
+  '/me',                  // Allow /me, handle auth in page
 ]) : null
 
 export default function middleware(request: any) {

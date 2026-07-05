@@ -16,8 +16,16 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0D0F14]">
+    <div className="min-h-screen flex items-center justify-center bg-[#0D0F14] px-4 py-12">
       <div className="w-full max-w-md">
+        {/* Logo/Brand */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold tracking-widest uppercase text-[#F5F0E8]">
+            Mass<span className="text-[#C9A84C]">oteric</span>
+          </h1>
+          <p className="text-[#8A909E] mt-2 text-sm">Prediction Intelligence Platform</p>
+        </div>
+
         <SignUp
           routing="hash"
           appearance={{
@@ -64,8 +72,6 @@ export default function SignUpPage() {
               },
             },
           }}
-          redirectUrl="/onboarding"
-          afterSignInUrl="/feed"
           afterSignUpUrl="/onboarding"
         />
       </div>

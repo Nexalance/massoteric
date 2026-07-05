@@ -51,16 +51,37 @@ export default async function Nav() {
         )}
 
         {/* Right side */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           {clerkId && user ? (
             <>
+              <Link href={`/me`} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', textDecoration: 'none', letterSpacing: '1px' }}>
+                My Profile
+              </Link>
               <Link href={`/profile/${user.username}`} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', textDecoration: 'none', letterSpacing: '1px' }}>
                 {user.displayName}
                 {user.subscriptionTier !== 'FREE' && (
                   <span style={{ marginLeft: '6px', color: 'var(--gold)' }}>· {user.subscriptionTier}</span>
                 )}
               </Link>
-              <UserButton afterSignOutUrl="/" />
+              <UserButton
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    userButtonTrigger: {
+                      fontWeight: '500',
+                      fontSize: '14px',
+                      padding: '8px 16px',
+                    },
+                    userButtonPopoverCard: {
+                      background: '#151820',
+                      border: '1px solid #3A4055',
+                    },
+                    userButtonPopoverActionButton: {
+                      color: '#F5F0E8',
+                    },
+                  },
+                }}
+              />
             </>
           ) : (
             <div style={{ display: 'flex', gap: '8px' }}>

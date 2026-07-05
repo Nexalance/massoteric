@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 import { SignIn } from '@clerk/nextjs'
-import { redirect } from 'next/navigation'
+import { redirect, useSearchParams } from 'next/navigation'
 
 // Check if Clerk is properly configured (align with layout.tsx logic)
 const hasValidClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
@@ -15,9 +15,20 @@ export default function SignInPage() {
     redirect('/sign-in/mock')
   }
 
+  const searchParams = useSearchParams()
+  const redirectUrl = searchParams.get('redirect_url') || '/feed'
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0D0F14]">
+    <div className="min-h-screen flex items-center justify-center bg-[#0D0F14] px-4 py-12">
       <div className="w-full max-w-md">
+        {/* Logo/Brand */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold tracking-widest uppercase text-[#F5F0E8]">
+            Mass<span className="text-[#C9A84C]">oteric</span>
+          </h1>
+          <p className="text-[#8A909E] mt-2 text-sm">Prediction Intelligence Platform</p>
+        </div>
+
         <SignIn
           routing="hash"
           appearance={{
@@ -64,9 +75,8 @@ export default function SignInPage() {
               },
             },
           }}
-          redirectUrl="/feed"
-          afterSignInUrl="/feed"
           afterSignUpUrl="/onboarding"
+          redirectUrl={redirectUrl}
         />
       </div>
     </div>
