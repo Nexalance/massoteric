@@ -3,7 +3,7 @@
 'use client'
 
 import { useAuth } from '@/lib/useAuth'
-import { UserButton } from '@clerk/nextjs'
+import UserButtonWrapper from '@/components/UserButtonWrapper'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -69,25 +69,7 @@ export default function Nav() {
                   <span style={{ marginLeft: '6px', color: 'var(--gold)' }}>· {user.subscriptionTier}</span>
                 )}
               </Link>
-              <UserButton
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    userButtonTrigger: {
-                      fontWeight: '500',
-                      fontSize: '14px',
-                      padding: '8px 16px',
-                    },
-                    userButtonPopoverCard: {
-                      background: '#151820',
-                      border: '1px solid #3A4055',
-                    },
-                    userButtonPopoverActionButton: {
-                      color: '#F5F0E8',
-                    },
-                  },
-                }}
-              />
+              <UserButtonWrapper afterSignOutUrl="/" />
             </>
           ) : (
             <div style={{ display: 'flex', gap: '8px' }}>
