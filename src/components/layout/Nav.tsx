@@ -3,20 +3,25 @@
 'use client'
 
 import { useAuth } from '@/lib/useAuth'
+import { useCurrentUser } from '@/lib/useCurrentUser'
 import UserButtonWrapper from '@/components/UserButtonWrapper'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
 export default function Nav() {
-  const { user, isLoading } = useAuth()
+  const { isLoaded, userId, isSignedIn, user: clerkUser } = useAuth()
+  const { currentUser, loading: userLoading } = useCurrentUser()
 
   // Don't render nav while loading to avoid flash
-  if (isLoading) {
+  if (!isLoaded || userLoading) {
     return null
   }
 
-  const clerkId = user?.clerkId
+  // Combine Clerk user and database user info
+  const displayName = currentUser?.displayName || clerkUser?.fullName || clerkUser?.firstName || 'User'
+  const subscriptionTier = currentUser?.subscriptionTier || clerkUser?.publicMetadata?.subscriptionTier
+  const username = currentUser?.username
 
   return (
     <nav style={{
@@ -30,14 +35,14 @@ export default function Nav() {
     }}>
       <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         {/* Logo */}
-        <Link href={clerkId ? '/feed' : '/'} style={{ textDecoration: 'none' }}>
+        <Link href={isSignedIn ? '/feed' : '/'} style={{ textDecoration: 'none' }}>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--cream)' }}>
             Mass<span style={{ color: 'var(--gold)' }}>oteric</span>
           </div>
         </Link>
 
         {/* Nav links */}
-        {clerkId && (
+        {isSignedIn && userId && (
           <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
             {[
               { href: '/feed', label: 'Feed' },
@@ -48,7 +53,7 @@ export default function Nav() {
                 {label}
               </Link>
             ))}
-            {user?.isAdmin && (
+            {currentUser?.isAdmin && (
               <Link href="/admin" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold)', textDecoration: 'none' }}>
                 Admin
               </Link>
@@ -58,17 +63,26 @@ export default function Nav() {
 
         {/* Right side */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {clerkId && user ? (
+          {isSignedIn && userId ? (
             <>
               <Link href={`/me`} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', textDecoration: 'none', letterSpacing: '1px' }}>
                 My Profile
               </Link>
-              <Link href={`/profile/${user.username}`} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', textDecoration: 'none', letterSpacing: '1px' }}>
-                {user.displayName}
-                {user.subscriptionTier !== 'FREE' && (
-                  <span style={{ marginLeft: '6px', color: 'var(--gold)' }}>· {user.subscriptionTier}</span>
-                )}
-              </Link>
+              {username ? (
+                <Link href={`/profile/${username}`} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', textDecoration: 'none', letterSpacing: '1px' }}>
+                  {displayName}
+                  {subscriptionTier && subscriptionTier !== 'FREE' && (
+                    <span style={{ marginLeft: '6px', color: 'var(--gold)' }}>· {subscriptionTier}</span>
+                  )}
+                </Link>
+              ) : (
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', letterSpacing: '1px' }}>
+                  {displayName}
+                  {subscriptionTier && subscriptionTier !== 'FREE' && (
+                    <span style={{ marginLeft: '6px', color: 'var(--gold)' }}>· {subscriptionTier}</span>
+                  )}
+                </span>
+              )}
               <UserButtonWrapper afterSignOutUrl="/" />
             </>
           ) : (
