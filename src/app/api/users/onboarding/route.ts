@@ -42,6 +42,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Username already taken' }, { status: 409 })
   }
 
+  // Check if user exists in database (webhook might not have fired)
+  const dbUser = await prisma.user.findUnique({
+    where: { clerkId },
+    select: { id: true },
+  })
+
+  if (!dbUser) {
+    // Create user if webhook didn't create them
+    await prisma.user.create({
+      data: {
+        clerkId,
+        email: '',  // Will be filled by webhook when it fires
+        displayName,
+        username,
+        bio: bio || null,
+        occupation: occupation || null,
+        employer: employer || null,
+        educationLevel: educationLevel || null,
+        educationField: educationField || null,
+        institution: institution || null,
+        certifications: certifications ? certifications.split(',').map(s => s.trim()).filter(Boolean) : [],
+        yearsExperience: yearsExperience || null,
+        onboardingComplete: true,
+      },
+    })
+
+    return NextResponse.redirect(new URL('/feed', req.url))
+  }
+
   await prisma.user.update({
     where: { clerkId },
     data: {

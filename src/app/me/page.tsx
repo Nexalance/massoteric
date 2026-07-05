@@ -28,7 +28,7 @@ export default async function MePage() {
     },
   })
 
-  if (!user) notFound()
+  if (!user) redirect('/onboarding')
 
   return (
     <main style={{ minHeight: '100vh', padding: '40px 20px', background: '#0D0F14' }}>

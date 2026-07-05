@@ -1,9 +1,13 @@
+'use client'
+
 export const dynamic = 'force-dynamic'
 import { SignUp } from '@clerk/nextjs'
 import { redirect } from 'next/navigation'
 
-// Check if Clerk is properly configured
-const hasValidClerkKey = !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.includes('placeholder')
+// Check if Clerk is properly configured (align with layout.tsx logic)
+const hasValidClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('placeholder') &&
+  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('pk_test_placeholder')
 
 export default function SignUpPage() {
   // If no valid Clerk keys, redirect to mock sign-up
@@ -15,6 +19,7 @@ export default function SignUpPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#0D0F14]">
       <div className="w-full max-w-md">
         <SignUp
+          routing="hash"
           appearance={{
             elements: {
               rootBox: 'mx-auto',

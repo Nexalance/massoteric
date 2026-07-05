@@ -4,16 +4,8 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, DM_Mono, Libre_Baskerville } from 'next/font/google'
 import './globals.css'
+import { ClerkAuthProvider } from '@/components/providers/ClerkAuthProvider'
 import { MockAuthProvider } from '@/lib/useMockAuth'
-
-// Only import ClerkProvider if we have valid keys
-const hasValidClerkKey = !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.includes('placeholder')
-let ClerkProvider: any
-
-if (hasValidClerkKey) {
-  const clerk = require('@clerk/nextjs')
-  ClerkProvider = clerk.ClerkProvider
-}
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -49,33 +41,25 @@ export const metadata: Metadata = {
   },
 }
 
-function DevWrapper({ children }: { children: React.ReactNode }) {
-  return (
-    <MockAuthProvider>
-      <html
-        lang="en"
-        className={`${cormorant.variable} ${libreBaskerville.variable} ${dmMono.variable}`}
-      >
-        <body>{children}</body>
-      </html>
-    </MockAuthProvider>
-  )
-}
+// Check if we have valid Clerk keys
+const hasValidClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
+  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('placeholder') &&
+  !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('pk_test_placeholder')
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  // In development without Clerk keys, skip ClerkProvider
-  if (!hasValidClerkKey) {
-    return <DevWrapper>{children}</DevWrapper>
-  }
+  // Use Clerk auth provider if keys are valid, otherwise use mock auth
+  const AuthProvider = hasValidClerkKey ? ClerkAuthProvider : MockAuthProvider
 
   return (
-    <ClerkProvider>
-      <html
-        lang="en"
-        className={`${cormorant.variable} ${libreBaskerville.variable} ${dmMono.variable}`}
-      >
-        <body>{children}</body>
-      </html>
-    </ClerkProvider>
+    <html
+      lang="en"
+      className={`${cormorant.variable} ${libreBaskerville.variable} ${dmMono.variable}`}
+    >
+      <body>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
+      </body>
+    </html>
   )
 }
