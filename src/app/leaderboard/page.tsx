@@ -166,6 +166,18 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
           </div>
         )}
 
+        {/* Empty state */}
+        {scores.length === 0 && (
+          <div className="card" style={{ textAlign: 'center', padding: '60px 20px' }}>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
+            <h3 style={{ fontSize: '20px', color: 'var(--cream)', marginBottom: '8px' }}>No Rankings Yet</h3>
+            <p style={{ color: 'var(--mist)', fontSize: '14px', marginBottom: '20px', maxWidth: '400px', marginLeft: 'auto', marginRight: 'auto' }}>
+              The leaderboard is waiting for markets to resolve and predictions to be scored. Users need at least 3 scored predictions to appear.
+            </p>
+            <Link href="/feed" className="btn btn-primary">Browse Markets</Link>
+          </div>
+        )}
+
         {/* Full table */}
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>

@@ -59,11 +59,12 @@ export async function GET(req: NextRequest) {
   }
 
   // Build orderBy based on sortBy parameter
+  // Note: accuracy sorting by scoredPredictions requires complex join; using createdAt as fallback
   const orderBy = sortBy === 'accuracy'
-    ? [{ user: { accuracyScores: { scoredPredictions: 'desc' } } }, { createdAt: 'desc' }]
+    ? { createdAt: 'desc' }  // TODO: implement accuracy ranking via separate query
     : sortBy === 'recent'
-    ? [{ createdAt: 'desc' }]
-    : [{ probability: 'desc' }, { createdAt: 'desc' }]
+    ? { createdAt: 'desc' }
+    : { probability: 'desc' }
 
   const predictions = await prisma.prediction.findMany({
     where: {
@@ -121,94 +122,159 @@ export async function GET(req: NextRequest) {
 
 const CreateSchema = z.object({
   marketId: z.string(),
-  probability: z.number().min(0.01).max(0.99),  // can't predict 0% or 100%
+  probability_range: z.coerce.number().min(1).max(99).optional(),  // from form (1-99)
+  probability: z.number().min(0.01).max(0.99).optional(),  // from JSON (0.01-0.99)
   reasoning: z.string().min(50, 'Please provide at least 50 characters of reasoning').max(5000),
   editReason: z.string().max(500).optional(),
 })
 
 export async function POST(req: NextRequest) {
-  const { userId: clerkId } = await auth()
-  if (!clerkId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    const { userId: clerkId } = await auth()
+    if (!clerkId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const user = await prisma.user.findUnique({ where: { clerkId } })
-  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
-  if (user.isSuspended) return NextResponse.json({ error: 'Account suspended' }, { status: 403 })
+    const user = await prisma.user.findUnique({ where: { clerkId } })
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    if (user.isSuspended) return NextResponse.json({ error: 'Account suspended' }, { status: 403 })
 
-  const body = await req.json()
-  const parsed = CreateSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
-  }
+    // Handle both form-data and JSON
+    const contentType = req.headers.get('content-type') || ''
+    let body: any
+    const isFormSubmission = contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')
 
-  const { marketId, probability, reasoning, editReason } = parsed.data
+    if (isFormSubmission) {
+      const formData = await req.formData()
+      body = Object.fromEntries(formData.entries())
+      // Convert string values to appropriate types
+      if (body.probability_range) body.probability_range = Number(body.probability_range)
+    } else {
+      body = await req.json()
+    }
 
-  // Check market exists and is open
-  const market = await prisma.market.findUnique({ where: { id: marketId } })
-  if (!market) return NextResponse.json({ error: 'Market not found' }, { status: 404 })
-  if (market.status !== 'OPEN') {
-    return NextResponse.json({ error: 'Market is closed' }, { status: 400 })
-  }
+    const parsed = CreateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+    }
 
-  // Check prediction lock window
-  if (isPredictionLocked(market.closesAt)) {
-    return NextResponse.json(
-      { error: 'Predictions are locked within 48 hours of market close' },
-      { status: 400 }
-    )
-  }
+    const { marketId, probability_range, probability, reasoning, editReason } = parsed.data
 
-  const snippet = generateReasoningSnippet(reasoning)
+    // Convert probability_range (1-99) to probability (0.01-0.99)
+    const finalProbability = probability ?? (probability_range ? probability_range / 100 : undefined)
+    if (!finalProbability) {
+      return NextResponse.json({ error: 'Probability is required' }, { status: 400 })
+    }
 
-  // Check if user already has a prediction
-  const existing = await prisma.prediction.findUnique({
-    where: { userId_marketId: { userId: user.id, marketId } },
-  })
+    // Check market exists and is open
+    const market = await prisma.market.findUnique({ where: { id: marketId } })
+    if (!market) return NextResponse.json({ error: 'Market not found' }, { status: 404 })
+    if (market.status !== 'OPEN') {
+      return NextResponse.json({ error: 'Market is closed' }, { status: 400 })
+    }
 
-  if (existing) {
-    // Log the edit history first
-    await prisma.predictionEdit.create({
+    // Check prediction lock window
+    if (isPredictionLocked(market.closesAt)) {
+      return NextResponse.json(
+        { error: 'Predictions are locked within 48 hours of market close' },
+        { status: 400 }
+      )
+    }
+
+    const snippet = generateReasoningSnippet(reasoning)
+
+    // Check if user already has a prediction
+    const existing = await prisma.prediction.findUnique({
+      where: { userId_marketId: { userId: user.id, marketId } },
+    })
+
+    if (existing) {
+      // Log the edit history first
+      await prisma.predictionEdit.create({
+        data: {
+          predictionId: existing.id,
+          userId: user.id,
+          previousProbability: existing.probability,
+          previousReasoning: existing.reasoning,
+          editReason: editReason || null,
+        },
+      })
+
+      // Update the prediction
+      const updated = await prisma.prediction.update({
+        where: { id: existing.id },
+        data: { probability: finalProbability, reasoning, reasoningSnippet: snippet },
+      })
+
+      // Redirect back to market page for form submissions, return JSON for API calls
+      if (isFormSubmission) {
+        return NextResponse.redirect(new URL(`/market/${marketId}`, req.url), 303)
+      }
+      return NextResponse.json({ prediction: updated, action: 'updated' })
+    }
+
+    // Create new prediction
+    const prediction = await prisma.prediction.create({
       data: {
-        predictionId: existing.id,
         userId: user.id,
-        previousProbability: existing.probability,
-        previousReasoning: existing.reasoning,
-        editReason: editReason || null,
+        marketId,
+        probability: finalProbability,
+        reasoning,
+        reasoningSnippet: snippet,
+        status: isPredictionLocked(market.closesAt) ? 'LOCKED' : 'ACTIVE',
       },
     })
 
-    // Update the prediction
-    const updated = await prisma.prediction.update({
-      where: { id: existing.id },
-      data: { probability, reasoning, reasoningSnippet: snippet },
+    // Update total prediction count on accuracy score
+    await prisma.accuracyScore.upsert({
+      where: { userId_category: { userId: user.id, category: null } },
+      update: { totalPredictions: { increment: 1 } },
+      create: {
+        userId: user.id,
+        category: null,
+        totalPredictions: 1,
+        scoredPredictions: 0,
+        totalBrierScore: 0,
+      },
     })
 
-    return NextResponse.json({ prediction: updated, action: 'updated' })
+    // Redirect back to market page for form submissions, return JSON for API calls
+    if (isFormSubmission) {
+      return NextResponse.redirect(new URL(`/market/${marketId}`, req.url), 303)
+    }
+    return NextResponse.json({ prediction, action: 'created' }, { status: 201 })
+
+  } catch (error) {
+    console.error('❌ Error in POST /api/predictions:', error)
+
+    // Handle Prisma-specific errors
+    if (error && typeof error === 'object' && 'code' in error) {
+      const prismaError = error as { code: string; meta?: { target?: string[] } }
+
+      // Unique constraint violation (user already has a prediction)
+      if (prismaError.code === 'P2002') {
+        return NextResponse.json({
+          error: 'You have already submitted a prediction for this market'
+        }, { status: 409 })
+      }
+
+      // Foreign key constraint (market or user not found)
+      if (prismaError.code === 'P2003') {
+        return NextResponse.json({
+          error: 'Invalid market or user reference'
+        }, { status: 400 })
+      }
+
+      // Record not found (race condition)
+      if (prismaError.code === 'P2025') {
+        return NextResponse.json({
+          error: 'Resource not found'
+        }, { status: 404 })
+      }
+    }
+
+    // Generic error response
+    return NextResponse.json({
+      error: 'Failed to submit prediction',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
-
-  // Create new prediction
-  const prediction = await prisma.prediction.create({
-    data: {
-      userId: user.id,
-      marketId,
-      probability,
-      reasoning,
-      reasoningSnippet: snippet,
-      status: isPredictionLocked(market.closesAt) ? 'LOCKED' : 'ACTIVE',
-    },
-  })
-
-  // Update total prediction count on accuracy score
-  await prisma.accuracyScore.upsert({
-    where: { userId_category: { userId: user.id, category: null } },
-    update: { totalPredictions: { increment: 1 } },
-    create: {
-      userId: user.id,
-      category: undefined,
-      totalPredictions: 1,
-      scoredPredictions: 0,
-      totalBrierScore: 0,
-    },
-  })
-
-  return NextResponse.json({ prediction, action: 'created' }, { status: 201 })
 }

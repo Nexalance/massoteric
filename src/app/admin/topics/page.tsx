@@ -8,6 +8,7 @@ import { prisma } from '@/lib/prisma'
 import { TopicStatus } from '@prisma/client'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
+import { TopicActions } from '@/components/admin/TopicActions'
 
 export const metadata = { title: 'Topic Review Queue' }
 
@@ -109,35 +110,7 @@ export default async function AdminTopicsPage() {
                     {' · '}{topic.createdBy.email}
                   </div>
 
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={async () => {
-                        const res = await fetch('/api/admin/topics', {
-                          method: 'PATCH',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ topicId: topic.id, status: 'REJECTED' }),
-                        })
-                        if (res.ok) window.location.reload()
-                      }}
-                      className="btn btn-secondary"
-                      style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }}
-                    >
-                      Reject
-                    </button>
-                    <button
-                      onClick={async () => {
-                        const res = await fetch('/api/admin/topics', {
-                          method: 'PATCH',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ topicId: topic.id, status: 'APPROVED' }),
-                        })
-                        if (res.ok) window.location.reload()
-                      }}
-                      className="btn btn-primary"
-                    >
-                      Approve → Live
-                    </button>
-                  </div>
+                  <TopicActions topicId={topic.id} />
                 </div>
               </div>
             ))}

@@ -72,7 +72,7 @@ const CreateTopicSchema = z.object({
   description: z.string().min(20).max(2000),
   category: z.nativeEnum(MarketCategory),
   resolutionCriteria: z.string().min(20).max(1000),
-  closesAt: z.string().optional().transform(val => {
+  closesAt: z.string().nullable().optional().transform(val => {
     // Handle empty, null, undefined
     if (!val || val === '' || val === null) return undefined
 

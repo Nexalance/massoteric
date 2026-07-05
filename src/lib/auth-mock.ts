@@ -15,20 +15,26 @@ const DEV_USER = {
 
 // Ensure dev user exists in database
 async function ensureDevUser() {
-  const existing = await prisma.user.findUnique({
-    where: { clerkId: DEV_USER.clerkId }
-  })
-  if (!existing) {
-    await prisma.user.create({
-      data: {
-        id: DEV_USER.id,
-        clerkId: DEV_USER.clerkId,
-        username: DEV_USER.username,
-        displayName: DEV_USER.displayName,
-        email: DEV_USER.email,
-        onboardingComplete: true,
-      }
+  try {
+    const existing = await prisma.user.findUnique({
+      where: { clerkId: DEV_USER.clerkId }
     })
+    if (!existing) {
+      await prisma.user.create({
+        data: {
+          id: DEV_USER.id,
+          clerkId: DEV_USER.clerkId,
+          username: DEV_USER.username,
+          displayName: DEV_USER.displayName,
+          email: DEV_USER.email,
+          onboardingComplete: true,
+        }
+      })
+      console.log('✅ Dev user created')
+    }
+  } catch (error) {
+    console.error('❌ Error ensuring dev user exists:', error)
+    // Don't throw - allow the app to continue and handle auth failure in the route handler
   }
 }
 
