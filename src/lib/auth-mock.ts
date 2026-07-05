@@ -15,6 +15,11 @@ const DEV_USER = {
 
 // Ensure dev user exists in database
 async function ensureDevUser() {
+  // Skip during build time (when NEXT_PHASE is set by Next.js build)
+  if (process.env.NEXT_PHASE === 'phase-production-build' || process.env.NODE_ENV === 'production') {
+    return
+  }
+
   try {
     const existing = await prisma.user.findUnique({
       where: { clerkId: DEV_USER.clerkId }

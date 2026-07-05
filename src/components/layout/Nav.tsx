@@ -7,10 +7,20 @@ import Link from 'next/link'
 
 export default async function Nav() {
   const { userId: clerkId } = await auth()
-  const user = clerkId ? await prisma.user.findUnique({
-    where: { clerkId },
-    select: { username: true, displayName: true, subscriptionTier: true, isAdmin: true },
-  }) : null
+
+  let user = null
+  if (clerkId) {
+    try {
+      user = await prisma.user.findUnique({
+        where: { clerkId },
+        select: { username: true, displayName: true, subscriptionTier: true, isAdmin: true },
+      })
+    } catch (error) {
+      // Database not available (build time or database down)
+      // Continue without user data
+      user = null
+    }
+  }
 
   return (
     <nav style={{
