@@ -32,6 +32,30 @@ ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY \
     NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME \
     DATABASE_URL=$DATABASE_URL
 
+# ── Build-time env diagnostics ───────────────────────────────────────────────
+# Prints the values the build actually received so you can verify Dokploy is
+# forwarding them. NEXT_PUBLIC_* are baked into the client bundle by `npm run
+# build`, so if these show placeholders here, the shipped app WILL use
+# placeholders no matter what you set in Dokploy's runtime Environment tab.
+# These must be set in Dokploy's "Build Time Arguments" field (build type =
+# Dockerfile), not only in Environment. DATABASE_URL is masked to keep the
+# password out of build logs.
+RUN echo "======================================================" && \
+    echo "  BUILD-TIME ENV (values received by the Docker build)" && \
+    echo "======================================================" && \
+    echo "  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = ${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}" && \
+    echo "  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}" && \
+    echo "  NEXT_PUBLIC_APP_URL = ${NEXT_PUBLIC_APP_URL}" && \
+    echo "  NEXT_PUBLIC_APP_NAME = ${NEXT_PUBLIC_APP_NAME}" && \
+    echo "  DATABASE_URL = $(echo "$DATABASE_URL" | sed -E 's#(://[^:]+:)[^@]+@#\1****@#')" && \
+    case "$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY" in \
+      *placeholder*) echo "  >> WARNING: Clerk key is still the PLACEHOLDER default." ; \
+                     echo "  >> Dokploy did NOT forward it as a Build Time Argument." ;; \
+      *) echo "  >> OK: real Clerk key received." ;; \
+    esac && \
+    echo "======================================================"
+# ─────────────────────────────────────────────────────────────────────────────
+
 # Generate Prisma Client
 RUN npx prisma generate
 
