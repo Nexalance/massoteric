@@ -6,6 +6,9 @@ import { Cormorant_Garamond, DM_Mono, Libre_Baskerville } from 'next/font/google
 import './globals.css'
 import { ClerkAuthProvider } from '@/components/providers/ClerkAuthProvider'
 import { MockAuthProvider } from '@/lib/useMockAuth'
+import { Suspense } from 'react'
+import Nav from '@/components/layout/Nav'
+import NavWrapper from '@/components/layout/NavWrapper'
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -57,6 +60,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body>
         <AuthProvider>
+          <Nav data-massoteric-nav />
+          <NavWrapper />
           {children}
         </AuthProvider>
       </body>

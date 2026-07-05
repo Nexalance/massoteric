@@ -6,6 +6,7 @@ import { auth } from '@/lib/auth-mock'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import UserMenu from '@/components/UserMenu'
 
 export default async function MePage() {
   const { userId: clerkId } = await auth()
@@ -128,6 +129,14 @@ export default async function MePage() {
           >
             Manage Subscription
           </Link>
+        </div>
+
+        {/* Logout / Account Menu */}
+        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ fontSize: '13px', color: '#8A909E' }}>
+            Need to sign out?{' '}
+            <UserMenu />
+          </div>
         </div>
 
         {/* Quick Links */}

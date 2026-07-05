@@ -16,59 +16,120 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0D0F14] px-4 py-12">
-      <div className="w-full max-w-md">
-        {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold tracking-widest uppercase text-[#F5F0E8]">
-            Mass<span className="text-[#C9A84C]">oteric</span>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'var(--ink)',
+      padding: '20px',
+    }}>
+      <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+        {/* Logo/Brand - with proper font */}
+        <div style={{ textAlign: 'center', marginBottom: '48px' }}>
+          <h1 style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: '36px',
+            fontWeight: 'bold',
+            letterSpacing: '0.2em',
+            color: 'var(--cream)',
+            lineHeight: '1.2',
+          }}>
+            MASS<span style={{ color: 'var(--gold)' }}>OTERIC</span>
           </h1>
-          <p className="text-[#8A909E] mt-2 text-sm">Prediction Intelligence Platform</p>
+          <p style={{
+            color: 'var(--mist)',
+            marginTop: '8px',
+            fontSize: '14px',
+            letterSpacing: '0.05em',
+          }}>
+            The Prediction Intelligence Platform
+          </p>
         </div>
 
         <SignUp
           routing="hash"
           appearance={{
+            variables: {
+              colorPrimary: 'var(--gold)',
+              colorBackground: 'var(--ink2)',
+              colorInputBackground: 'var(--ink3)',
+              colorInputText: 'var(--cream)',
+              colorText: 'var(--cream)',
+              colorMuted: 'var(--mist)',
+            },
             elements: {
               rootBox: 'mx-auto',
               card: {
-                background: '#151820',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+                background: 'var(--ink2)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5)',
                 borderRadius: '8px',
+                border: '1px solid var(--border)',
               },
               headerTitle: {
-                color: '#F5F0E8',
+                color: 'var(--cream)',
                 fontWeight: '600',
               },
               headerSubtitle: {
-                color: '#8A909E',
+                color: 'var(--mist)',
               },
               socialButtonsBlockButtonText: {
-                color: '#F5F0E8',
+                color: 'var(--cream)',
               },
               socialButtonsBlockButton: {
-                background: '#1E2230',
-                border: '1px solid #3A4055',
+                background: 'var(--ink3)',
+                border: '1px solid var(--border)',
               },
               formButtonPrimary: {
-                background: '#C9A84C',
-                color: '#0D0F14',
+                background: 'var(--gold)',
+                color: 'var(--ink)',
                 fontWeight: '600',
               },
               formFieldLabel: {
-                color: '#8A909E',
+                color: 'var(--mist)',
               },
               formFieldInput: {
-                background: '#1E2230',
-                color: '#F5F0E8',
-                borderColor: '#3A4055',
+                background: 'var(--ink3)',
+                color: 'var(--cream)',
+                borderColor: 'var(--border)',
               },
               footerActionText: {
-                color: '#8A909E',
+                color: 'var(--mist)',
               },
               footerActionLink: {
-                color: '#C9A84C',
+                color: 'var(--gold)',
                 fontWeight: '500',
+              },
+              // Additional elements for complete theming
+              dividerLine: {
+                borderColor: 'var(--border)',
+              },
+              dividerText: {
+                color: 'var(--mist)',
+              },
+              alert: {
+                background: 'rgba(201, 168, 76, 0.1)',
+                color: 'var(--gold)',
+                border: '1px solid var(--border)',
+              },
+              navbar: {
+                background: 'var(--ink2)',
+                borderBottom: '1px solid var(--border)',
+              },
+              navbarMobile: {
+                background: 'var(--ink2)',
+                borderBottom: '1px solid var(--border)',
+              },
+              identityPreview: {
+                background: 'var(--ink3)',
+                color: 'var(--cream)',
+                border: '1px solid var(--border)',
+              },
+              form: {
+                background: 'transparent',
+              },
+              formField: {
+                background: 'transparent',
               },
             },
           }}

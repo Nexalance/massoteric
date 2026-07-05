@@ -75,7 +75,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 <div style={{ display: 'flex', gap: '8px' }}>
                   {isOwnProfile && (
                     <>
-                      <Link href="/settings/profile" className="btn btn-secondary">Edit Profile</Link>
                       <UserButton
                         afterSignOutUrl="/"
                         appearance={{
