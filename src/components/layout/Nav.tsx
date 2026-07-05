@@ -1,26 +1,22 @@
 // src/components/layout/Nav.tsx
 
-import { auth } from '@/lib/auth-mock'
-import { prisma } from '@/lib/prisma'
+'use client'
+
+import { useAuth } from '@/lib/useAuth'
 import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 
-export default async function Nav() {
-  const { userId: clerkId } = await auth()
+export const dynamic = 'force-dynamic'
 
-  let user = null
-  if (clerkId) {
-    try {
-      user = await prisma.user.findUnique({
-        where: { clerkId },
-        select: { username: true, displayName: true, subscriptionTier: true, isAdmin: true },
-      })
-    } catch (error) {
-      // Database not available (build time or database down)
-      // Continue without user data
-      user = null
-    }
+export default function Nav() {
+  const { user, isLoading } = useAuth()
+
+  // Don't render nav while loading to avoid flash
+  if (isLoading) {
+    return null
   }
+
+  const clerkId = user?.clerkId
 
   return (
     <nav style={{
