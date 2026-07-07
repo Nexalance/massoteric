@@ -18,23 +18,34 @@ export async function canAccess(
   // Admins and PRO users can always access everything
   if (isAdmin || tier === 'PRO') return true
 
-  const flag = await prisma.featureFlag.findUnique({
-    where: { key: feature },
-  })
-
-  if (!flag || !flag.isEnabled) return false
-  if (flag.isFree) return true  // available to all tiers
-
-  // Standard tier gets most paid features
+  // STANDARD tier gets access to specific features regardless of feature flags
+  // (fallback in case feature flags haven't been seeded yet)
   if (tier === 'STANDARD') {
-    return [
+    const standardFeatures = [
       FeatureKey.FULL_REASONING,
       FeatureKey.ACCURACY_FILTER,
       FeatureKey.USER_FILTER,
       FeatureKey.CATEGORY_LEADERBOARD,
       FeatureKey.TOPIC_CREATE,
-    ].includes(feature)
+    ]
+    if (standardFeatures.includes(feature)) {
+      // Optionally check feature flag if it exists, but don't block if missing
+      const flag = await prisma.featureFlag.findUnique({
+        where: { key: feature },
+      }).catch(() => null)
+      // Only block if flag exists and is explicitly disabled
+      if (flag && !flag.isEnabled) return false
+      return true
+    }
   }
+
+  // For FREE tier or other features, check the flag
+  const flag = await prisma.featureFlag.findUnique({
+    where: { key: feature },
+  })
+
+  if (!flag || !flag.isEnabled) return false
+  if (flag.isFree) return true
 
   return false
 }
