@@ -48,7 +48,9 @@ export default function SignUpPage() {
         </div>
 
         <SignUp
-          routing="hash"
+          routing="path"
+          path="/sign-up"
+          forceRedirectUrl={true}
           appearance={{
             variables: {
               colorPrimary: 'var(--gold)',
@@ -133,6 +135,7 @@ export default function SignUpPage() {
               },
             },
           }}
+          signInUrl="/sign-in"
           afterSignUpUrl="/onboarding"
         />
       </div>
