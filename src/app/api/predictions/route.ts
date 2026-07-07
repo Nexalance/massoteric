@@ -218,7 +218,8 @@ export async function POST(req: NextRequest) {
 
       // Redirect back to market page for form submissions, return JSON for API calls
       if (isFormSubmission) {
-        return NextResponse.redirect(new URL(`/market/${marketId}`, req.url), 303)
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://massoteric.nexalance.cloud'
+        return NextResponse.redirect(new URL(`/market/${marketId}`, appUrl), 303)
       }
       return NextResponse.json({ prediction: updated, action: 'updated' })
     }
