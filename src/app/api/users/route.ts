@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   const scores = await prisma.accuracyScore.findMany({
     where: {
       category: category ?? null,
-      scoredPredictions: { gte: 3 }, // minimum predictions to appear on leaderboard
+      scoredPredictions: { gte: 1 }, // minimum predictions to appear on leaderboard
     },
     orderBy: { avgBrierScore: 'asc' }, // lower brier = more accurate
     skip,
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
   const total = await prisma.accuracyScore.count({
     where: {
       category: category ?? null,
-      scoredPredictions: { gte: 3 },
+      scoredPredictions: { gte: 1 },
     },
   })
 

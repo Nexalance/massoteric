@@ -44,15 +44,18 @@ export default function Nav() {
         {/* Nav links */}
         {isSignedIn && userId && (
           <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-            {[
-              { href: '/feed', label: 'Feed' },
-              { href: '/leaderboard', label: 'Leaderboard' },
-              { href: '/market/new', label: 'Predict' },
-            ].map(({ href, label }) => (
-              <Link key={href} href={href} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--mist)', textDecoration: 'none', transition: 'color 0.15s' }}>
-                {label}
+            <Link href="/feed" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--mist)', textDecoration: 'none', transition: 'color 0.15s' }}>
+              Feed
+            </Link>
+            <Link href="/leaderboard" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--mist)', textDecoration: 'none', transition: 'color 0.15s' }}>
+              Leaderboard
+            </Link>
+            {/* Only show Predict link for PRO users */}
+            {(currentUser?.subscriptionTier === 'PRO' || currentUser?.subscriptionTier === 'STANDARD') && (
+              <Link href="/market/new" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--mist)', textDecoration: 'none', transition: 'color 0.15s' }}>
+                Predict
               </Link>
-            ))}
+            )}
             {currentUser?.isAdmin && (
               <Link href="/admin" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold)', textDecoration: 'none' }}>
                 Admin

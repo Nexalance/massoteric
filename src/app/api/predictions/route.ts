@@ -133,9 +133,21 @@ export async function POST(req: NextRequest) {
     const { userId: clerkId } = await auth()
     if (!clerkId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const user = await prisma.user.findUnique({ where: { clerkId } })
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      select: { id: true, isSuspended: true, subscriptionTier: true }
+    })
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
     if (user.isSuspended) return NextResponse.json({ error: 'Account suspended' }, { status: 403 })
+
+    // Check if user can submit predictions (FREE tier cannot)
+    if (user.subscriptionTier === 'FREE') {
+      return NextResponse.json({
+        error: 'Upgrade required',
+        message: 'Prediction submission is available for Standard and Pro subscribers. Upgrade to share your forecasts with the community.',
+        requiresUpgrade: true
+      }, { status: 403 })
+    }
 
     // Handle both form-data and JSON
     const contentType = req.headers.get('content-type') || ''
@@ -223,18 +235,20 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    // Update total prediction count on accuracy score
-    await prisma.accuracyScore.upsert({
-      where: { userId_category: { userId: user.id, category: null } },
-      update: { totalPredictions: { increment: 1 } },
-      create: {
-        userId: user.id,
-        category: null,
-        totalPredictions: 1,
-        scoredPredictions: 0,
-        totalBrierScore: 0,
-      },
-    })
+    // Update total prediction count on accuracy score (only if market has a category)
+    if (market.category) {
+      await prisma.accuracyScore.upsert({
+        where: { userId_category: { userId: user.id, category: market.category } },
+        update: { totalPredictions: { increment: 1 } },
+        create: {
+          userId: user.id,
+          category: market.category,
+          totalPredictions: 1,
+          scoredPredictions: 0,
+          totalBrierScore: 0,
+        },
+      })
+    }
 
     // Redirect back to market page for form submissions, return JSON for API calls
     if (isFormSubmission) {

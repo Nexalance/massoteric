@@ -6,8 +6,9 @@ export const dynamic = 'force-dynamic'
 import { auth } from '@/lib/auth-mock'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { MarketCategory, MarketStatus, MarketSource } from '@prisma/client'
+import { MarketCategory, MarketStatus, MarketSource, FeatureKey } from '@prisma/client'
 import { z } from 'zod'
+import { canAccess } from '@/lib/access'
 
 const ListSchema = z.object({
   category: z.nativeEnum(MarketCategory).optional(),
@@ -90,15 +91,52 @@ const CreateTopicSchema = z.object({
     // Already has timezone or is invalid, return as-is
     return val
   }),
+  resolvesAt: z.string().nullable().optional().transform(val => {
+    // Handle empty, null, undefined
+    if (!val || val === '' || val === null) return undefined
+
+    // Handle datetime-local format (YYYY-MM-DDTHH:mm) - add seconds and UTC
+    if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+      return val + ':00Z'
+    }
+
+    // Handle formats without timezone - append Z
+    if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)) {
+      return val + 'Z'
+    }
+
+    return val
+  }),
   tags: z.array(z.string()).max(5).default([]),
 })
 
 export async function POST(req: NextRequest) {
   const { userId: clerkId } = await auth()
-  if (!clerkId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!clerkId) {
+    return NextResponse.json({
+      error: 'Authentication required',
+      message: 'Please sign in to create topics.'
+    }, { status: 401 })
+  }
 
   const user = await prisma.user.findUnique({ where: { clerkId } })
-  if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
+  if (!user) {
+    return NextResponse.json({
+      error: 'User not found',
+      message: 'Your account could not be found. Please try signing out and back in.'
+    }, { status: 404 })
+  }
+
+  // Check if user has permission to create topics
+  const canCreate = await canAccess(user.subscriptionTier, FeatureKey.TOPIC_CREATE)
+  if (!canCreate) {
+    return NextResponse.json({
+      error: 'Upgrade required',
+      message: 'Topic creation is available for Standard and Pro subscribers. Upgrade to create your own prediction markets.',
+      tier: user.subscriptionTier,
+      requiresUpgrade: true
+    }, { status: 403 })
+  }
 
   const body = await req.json()
   const parsed = CreateTopicSchema.safeParse(body)
@@ -106,7 +144,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { title, description, category, resolutionCriteria, closesAt, tags } = parsed.data
+  const { title, description, category, resolutionCriteria, closesAt, resolvesAt, tags } = parsed.data
 
   const topic = await prisma.market.create({
     data: {
@@ -116,6 +154,7 @@ export async function POST(req: NextRequest) {
       description,
       resolutionCriteria,
       closesAt: closesAt ? new Date(closesAt) : null,
+      resolvesAt: resolvesAt ? new Date(resolvesAt) : (closesAt ? new Date(closesAt) : null), // Default to closesAt if resolvesAt not provided
       tags,
       status: MarketStatus.OPEN,
       topicStatus: 'PENDING',

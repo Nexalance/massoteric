@@ -287,10 +287,34 @@ input[type="datetime-local"] {
   margin-bottom: 16px;
 }
 
+/* ── Clerk UserButton Dropdown ── */
+.cl-userButtonPopoverMain {
+  background-color: white !important;
+  color: black !important;
+}
+
+.cl-internal-kf9owt {
+  background-color: var(--alpha);
+  color: var(--accentHover);
+}
+
+.cl-internal-kf9owt:hover {
+  background-color: var(--alpha);
+  color: var(--accentHover);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .hide-mobile { display: none !important; }
 }
 @media (min-width: 769px) {
   .hide-desktop { display: none !important; }
+}
+
+/* Leaderboard table row hover */
+table tbody tr {
+  transition: background 0.15s ease;
+}
+table tbody tr:hover {
+  background: var(--ink3);
 }

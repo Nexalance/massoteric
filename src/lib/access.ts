@@ -8,13 +8,15 @@ import { FeatureKey, SubscriptionTier } from '@prisma/client'
 /**
  * Check if a feature is accessible by a given subscription tier.
  * Checks the database feature flag — admin can toggle at any time.
+ * Admins can always access everything (pass isAdmin: true to bypass tier checks).
  */
 export async function canAccess(
   tier: SubscriptionTier,
-  feature: FeatureKey
+  feature: FeatureKey,
+  isAdmin?: boolean
 ): Promise<boolean> {
-  // Admins can always access everything
-  if (tier === 'PRO') return true
+  // Admins and PRO users can always access everything
+  if (isAdmin || tier === 'PRO') return true
 
   const flag = await prisma.featureFlag.findUnique({
     where: { key: feature },
@@ -30,6 +32,7 @@ export async function canAccess(
       FeatureKey.ACCURACY_FILTER,
       FeatureKey.USER_FILTER,
       FeatureKey.CATEGORY_LEADERBOARD,
+      FeatureKey.TOPIC_CREATE,
     ].includes(feature)
   }
 
@@ -52,9 +55,10 @@ export async function getAllFeatureAccess(tier: SubscriptionTier) {
 /**
  * Middleware helper: check if the current user can view full reasoning.
  * Used in API routes to strip/include reasoning in responses.
+ * Admins can always view full reasoning.
  */
-export function canViewFullReasoning(tier: SubscriptionTier, isFlagFree: boolean): boolean {
-  if (tier === 'PRO' || tier === 'STANDARD') return true
+export function canViewFullReasoning(tier: SubscriptionTier, isFlagFree: boolean, isAdmin?: boolean): boolean {
+  if (isAdmin || tier === 'PRO' || tier === 'STANDARD') return true
   return isFlagFree
 }
 
@@ -82,6 +86,8 @@ export function getUpgradePrompt(feature: FeatureKey): string {
       return 'Upgrade to follow and filter specific forecasters.'
     case FeatureKey.CATEGORY_LEADERBOARD:
       return 'Upgrade to see leaderboards broken down by topic.'
+    case FeatureKey.TOPIC_CREATE:
+      return 'Upgrade to create your own prediction markets and share with the community.'
     case FeatureKey.EXPERT_QA:
       return 'Upgrade to ask experts questions directly.'
     default:

@@ -18,12 +18,14 @@ export default async function AdminPage() {
   if (!clerkId) redirect('/sign-in')
   await requireAdmin(clerkId)
 
-  const [userCount, predictionCount, marketCount, paidCount, pendingTopics, flags, recentUsers] = await Promise.all([
+  const [userCount, predictionCount, marketCount, paidCount, pendingTopics, unresolvedMarkets, resolvedMarkets, flags, recentUsers] = await Promise.all([
     prisma.user.count(),
     prisma.prediction.count(),
     prisma.market.count({ where: { status: 'OPEN' } }),
     prisma.user.count({ where: { subscriptionTier: { not: 'FREE' } } }),
     prisma.market.count({ where: { source: 'USER_CREATED', topicStatus: 'PENDING' } }),
+    prisma.market.count({ where: { source: 'USER_CREATED', status: { in: ['OPEN', 'CLOSED'] } } }),
+    prisma.market.count({ where: { source: 'USER_CREATED', status: 'RESOLVED' } }),
     prisma.featureFlag.findMany({ orderBy: { key: 'asc' } }),
     prisma.user.findMany({ orderBy: { createdAt: 'desc' }, take: 5, select: { id: true, displayName: true, email: true, subscriptionTier: true, createdAt: true } }),
   ])
@@ -38,6 +40,8 @@ export default async function AdminPage() {
           </div>
           <div style={{ display: 'flex', gap: '8px' }}>
             <Link href="/admin/topics" className="btn btn-secondary">Topic Queue ({pendingTopics})</Link>
+            <Link href="/admin/markets" className="btn btn-secondary">Resolve Markets ({unresolvedMarkets})</Link>
+            <Link href="/admin/markets/resolved" className="btn btn-secondary">Resolved ({resolvedMarkets})</Link>
             <Link href="/admin/users" className="btn btn-secondary">Users</Link>
           </div>
         </div>
@@ -113,6 +117,14 @@ export default async function AdminPage() {
               <Link href="/admin/topics" className="btn btn-secondary" style={{ justifyContent: 'space-between' }}>
                 <span>Review Topic Queue</span>
                 {pendingTopics > 0 && <span className="badge badge-paid">{pendingTopics} pending</span>}
+              </Link>
+              <Link href="/admin/markets" className="btn btn-secondary" style={{ justifyContent: 'space-between' }}>
+                <span>Resolve Markets</span>
+                {unresolvedMarkets > 0 && <span className="badge badge-free">{unresolvedMarkets} to resolve</span>}
+              </Link>
+              <Link href="/admin/markets/resolved" className="btn btn-secondary" style={{ justifyContent: 'space-between' }}>
+                <span>View Resolved Markets</span>
+                {resolvedMarkets > 0 && <span className="badge badge-free">{resolvedMarkets} resolved</span>}
               </Link>
               <Link href="/admin/markets/sync" className="btn btn-secondary" style={{ justifyContent: 'center' }}>
                 Sync Polymarket Data

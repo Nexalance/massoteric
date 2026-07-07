@@ -138,10 +138,13 @@ export async function syncPolymarketMarkets(): Promise<{ synced: number; errors:
 /**
  * Check for resolved markets and trigger scoring.
  * Called periodically to catch resolutions.
+ *
+ * For POLYMARKET: Fetches live outcome from Polymarket API
+ * For USER_CREATED: Auto-closes when resolvesAt passes (admin still sets outcome)
  */
 export async function checkMarketResolutions(): Promise<void> {
-  // Markets that have passed their resolution date but aren't yet resolved
-  const pendingResolution = await prisma.market.findMany({
+  // 1. Handle Polymarket markets (full auto-resolve with API outcome)
+  const pendingPolymarket = await prisma.market.findMany({
     where: {
       status: MarketStatus.OPEN,
       resolvesAt: { lte: new Date() },
@@ -149,7 +152,7 @@ export async function checkMarketResolutions(): Promise<void> {
     },
   })
 
-  for (const market of pendingResolution) {
+  for (const market of pendingPolymarket) {
     if (!market.externalId) continue
 
     try {
@@ -190,7 +193,36 @@ export async function checkMarketResolutions(): Promise<void> {
         }
       }
     } catch (err) {
-      console.error(`Failed to check resolution for market ${market.id}:`, err)
+      console.error(`Failed to check resolution for Polymarket market ${market.id}:`, err)
     }
+  }
+
+  // 2. Handle USER_CREATED markets (auto-close when resolvesAt passes)
+  const pendingCustom = await prisma.market.findMany({
+    where: {
+      status: MarketStatus.OPEN,
+      resolvesAt: { lte: new Date() },
+      source: 'USER_CREATED',
+    },
+  })
+
+  for (const market of pendingCustom) {
+    try {
+      // Auto-close the market but DON'T resolve (admin still sets outcome)
+      await prisma.market.update({
+        where: { id: market.id },
+        data: {
+          status: MarketStatus.CLOSED,
+          // No resolvedValue - admin must set it manually
+        },
+      })
+      console.log(`[Custom Market] Auto-closed: ${market.id} (${market.title})`)
+    } catch (err) {
+      console.error(`Failed to close custom market ${market.id}:`, err)
+    }
+  }
+
+  if (pendingCustom.length > 0) {
+    console.log(`[Custom Markets] Auto-closed ${pendingCustom.length} market(s) past resolution date`)
   }
 }

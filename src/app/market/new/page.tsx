@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useCurrentUser } from '@/lib/useCurrentUser'
 import { MarketCategory } from '@prisma/client'
 
 const CATEGORIES = [
@@ -33,19 +34,88 @@ const selectStyle = {
 
 export default function NewMarketPage() {
   const router = useRouter()
+  const { currentUser, loading } = useCurrentUser()
+
+  // ALL hooks must be called before any conditional returns (Rules of Hooks)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
-
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     category: 'OTHER' as MarketCategory,
     resolutionCriteria: '',
     closesAt: '',
+    resolvesAt: '',
     tags: [] as string[],
     tagInput: '',
   })
+
+  // Check if user can create topics
+  const canCreateTopic = currentUser?.subscriptionTier === 'PRO' || currentUser?.subscriptionTier === 'STANDARD'
+
+  // Show loading state while fetching user OR if we don't have the tier yet
+  // This prevents the flash of "locked" state before the user's actual tier loads
+  if (loading || !currentUser?.subscriptionTier) {
+    return (
+      <main style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 20px', textAlign: 'center' }}>
+        <p style={{ color: 'var(--mist)' }}>Loading...</p>
+      </main>
+    )
+  }
+
+  // Show upgrade prompt for free users
+  if (!canCreateTopic) {
+    return (
+      <main style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 20px' }}>
+        <div className="card" style={{ padding: '32px', textAlign: 'center', borderColor: 'rgba(201,168,76,0.2)' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px', color: 'var(--gold)' }}>🔒</div>
+          <h1 style={{ fontSize: '24px', marginBottom: '8px', fontFamily: 'var(--font-display)' }}>Create Prediction Topics</h1>
+          <p style={{ color: 'var(--mist)', marginBottom: '24px', lineHeight: '1.6' }}>
+            Topic creation is available for Standard and Pro subscribers. Share your own prediction markets with the community and track expert opinions.
+          </p>
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '16px' }}>
+            <button
+              onClick={() => router.push('/settings/billing')}
+              style={{
+                padding: '14px 32px',
+                fontSize: '14px',
+                fontWeight: '500',
+                border: 'none',
+                borderRadius: '4px',
+                background: 'var(--gold)',
+                color: 'var(--ink)',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.5px',
+                textTransform: 'uppercase',
+              }}
+            >
+              Upgrade Now
+            </button>
+            <button
+              onClick={() => router.push('/feed')}
+              style={{
+                padding: '14px 24px',
+                fontSize: '14px',
+                border: '1px solid var(--fog)',
+                borderRadius: '4px',
+                background: 'transparent',
+                color: 'var(--cream)',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-mono)',
+              }}
+            >
+              Back to Feed
+            </button>
+          </div>
+          <p style={{ fontSize: '13px', color: 'var(--mist)' }}>
+            Already a subscriber? <button onClick={() => router.refresh()} style={{ background: 'none', border: 'none', color: 'var(--gold)', cursor: 'pointer', textDecoration: 'underline' }}>Refresh page</button>
+          </p>
+        </div>
+      </main>
+    )
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
@@ -78,13 +148,27 @@ export default function NewMarketPage() {
           category: formData.category,
           resolutionCriteria: formData.resolutionCriteria,
           closesAt: formData.closesAt || null,
+          resolvesAt: formData.resolvesAt || null,
           tags: formData.tags,
         }),
       })
 
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error || 'Failed to create topic')
+
+        // Handle upgrade required error
+        if (data.requiresUpgrade) {
+          setError('Your subscription level does not include topic creation. Please upgrade to Standard or Pro to create topics.')
+          // Optionally redirect to billing after a delay
+          setTimeout(() => {
+            if (confirm('Would you like to upgrade your subscription now?')) {
+              router.push('/settings/billing')
+            }
+          }, 1000)
+          return
+        }
+
+        throw new Error(data.message || data.error || 'Failed to create topic')
       }
 
       setSuccess(true)
@@ -109,23 +193,28 @@ export default function NewMarketPage() {
   }
 
   return (
-    <main style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 20px' }}>
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '28px', marginBottom: '8px', fontFamily: 'var(--font-display)' }}>Create New Topic</h1>
-        <p style={{ color: 'var(--mist)' }}>Submit a prediction market for community review</p>
+    <main style={{ maxWidth: '700px', margin: '0 auto', paddingTop: '60px', paddingRight: '20px', paddingBottom: '40px', paddingLeft: '20px', minHeight: '100vh' }}>
+      {/* Page Header */}
+      <div style={{ marginBottom: '40px', paddingBottom: '24px', borderBottom: '1px solid var(--border)' }}>
+        <h1 style={{ fontSize: '32px', marginBottom: '8px', fontFamily: 'var(--font-display)', fontWeight: 300, color: 'var(--cream)' }}>
+          Create New Topic
+        </h1>
+        <p style={{ color: 'var(--mist)', fontSize: '15px' }}>
+          Submit a prediction market for community review
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
         {error && (
-          <div style={{ padding: '12px 16px', background: 'rgba(224, 92, 92, 0.15)', color: 'var(--danger)', borderRadius: '4px', fontSize: '14px', border: '1px solid rgba(224, 92, 92, 0.3)' }}>
+          <div style={{ padding: '16px 20px', background: 'rgba(224, 92, 92, 0.15)', color: 'var(--danger)', borderRadius: '6px', fontSize: '14px', border: '1px solid rgba(224, 92, 92, 0.3)' }}>
             {error}
           </div>
         )}
 
         {/* Title */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--mist)', fontFamily: 'var(--font-mono)' }}>
-            Title *
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--gold)', fontFamily: 'var(--font-mono)' }}>
+            Title <span style={{ color: 'var(--danger)' }}>*</span>
           </label>
           <input
             type="text"
@@ -138,13 +227,13 @@ export default function NewMarketPage() {
             maxLength={300}
             style={inputStyle}
           />
-          <p style={{ fontSize: '12px', color: 'var(--mist)', marginTop: '4px' }}>Min 10, max 300 characters</p>
+          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>Min 10, max 300 characters</p>
         </div>
 
         {/* Category */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--mist)', fontFamily: 'var(--font-mono)' }}>
-            Category *
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--gold)', fontFamily: 'var(--font-mono)' }}>
+            Category <span style={{ color: 'var(--danger)' }}>*</span>
           </label>
           <select
             name="category"
@@ -161,8 +250,8 @@ export default function NewMarketPage() {
 
         {/* Description */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--mist)', fontFamily: 'var(--font-mono)' }}>
-            Description *
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--gold)', fontFamily: 'var(--font-mono)' }}>
+            Description <span style={{ color: 'var(--danger)' }}>*</span>
           </label>
           <textarea
             name="description"
@@ -173,15 +262,15 @@ export default function NewMarketPage() {
             minLength={20}
             maxLength={2000}
             rows={5}
-            style={{ ...inputStyle, resize: 'vertical', minHeight: '120px' }}
+            style={{ ...inputStyle, resize: 'vertical', minHeight: '140px', lineHeight: '1.6' }}
           />
-          <p style={{ fontSize: '12px', color: 'var(--mist)', marginTop: '4px' }}>Min 20, max 2000 characters</p>
+          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>Min 20, max 2000 characters</p>
         </div>
 
         {/* Resolution Criteria */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--mist)', fontFamily: 'var(--font-mono)' }}>
-            Resolution Criteria *
+          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--gold)', fontFamily: 'var(--font-mono)' }}>
+            Resolution Criteria <span style={{ color: 'var(--danger)' }}>*</span>
           </label>
           <textarea
             name="resolutionCriteria"
@@ -191,10 +280,10 @@ export default function NewMarketPage() {
             required
             minLength={20}
             maxLength={1000}
-            rows={3}
-            style={{ ...inputStyle, resize: 'vertical', minHeight: '100px' }}
+            rows={4}
+            style={{ ...inputStyle, resize: 'vertical', minHeight: '110px', lineHeight: '1.6' }}
           />
-          <p style={{ fontSize: '12px', color: 'var(--mist)', marginTop: '4px' }}>Min 20, max 1000 characters</p>
+          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>Min 20, max 1000 characters</p>
         </div>
 
         {/* Closing Date */}
@@ -212,6 +301,25 @@ export default function NewMarketPage() {
               colorScheme: 'dark',
             }}
           />
+          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>When predictions close</p>
+        </div>
+
+        {/* Resolution Date */}
+        <div>
+          <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--gold)', fontFamily: 'var(--font-mono)' }}>
+            Resolution Date <span style={{ fontSize: '10px', color: 'var(--mist)', fontWeight: 400 }}>(Recommended)</span>
+          </label>
+          <input
+            type="datetime-local"
+            name="resolvesAt"
+            value={formData.resolvesAt}
+            onChange={handleChange}
+            style={{
+              ...inputStyle,
+              colorScheme: 'dark',
+            }}
+          />
+          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>When the outcome will be known (market closes for predictions at this time)</p>
         </div>
 
         {/* Tags */}
@@ -273,27 +381,28 @@ export default function NewMarketPage() {
               </span>
             ))}
           </div>
-          <p style={{ fontSize: '12px', color: 'var(--mist)', marginTop: '4px' }}>Up to 5 tags</p>
+          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>Up to 5 tags</p>
         </div>
 
-        {/* Submit Button */}
-        <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+        {/* Submit Buttons */}
+        <div style={{ display: 'flex', gap: '16px', marginTop: '12px', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
           <button
             type="submit"
             disabled={submitting}
             style={{
-              padding: '14px 32px',
+              padding: '16px 40px',
               fontSize: '14px',
-              fontWeight: '500',
+              fontWeight: 600,
               border: 'none',
-              borderRadius: '4px',
+              borderRadius: '6px',
               background: submitting ? 'var(--fog)' : 'var(--gold)',
               color: submitting ? 'var(--mist)' : 'var(--ink)',
               cursor: submitting ? 'wait' : 'pointer',
               fontFamily: 'var(--font-mono)',
               letterSpacing: '0.5px',
               textTransform: 'uppercase',
-              opacity: submitting ? 0.7 : 1,
+              opacity: submitting ? 0.6 : 1,
+              transition: 'all 0.2s',
             }}
           >
             {submitting ? 'Submitting...' : 'Submit Topic'}
@@ -303,22 +412,24 @@ export default function NewMarketPage() {
             onClick={() => router.back()}
             disabled={submitting}
             style={{
-              padding: '14px 24px',
+              padding: '16px 32px',
               fontSize: '14px',
+              fontWeight: 500,
               border: '1px solid var(--fog)',
-              borderRadius: '4px',
+              borderRadius: '6px',
               background: 'transparent',
               color: 'var(--cream)',
               cursor: submitting ? 'not-allowed' : 'pointer',
               fontFamily: 'var(--font-mono)',
               opacity: submitting ? 0.5 : 1,
+              transition: 'all 0.2s',
             }}
           >
             Cancel
           </button>
         </div>
 
-        <p style={{ fontSize: '13px', color: 'var(--mist)', marginTop: '8px' }}>
+        <p style={{ fontSize: '13px', color: 'var(--fog)', marginTop: '12px', fontStyle: 'italic' }}>
           * Your topic will be reviewed before appearing in the feed. You'll receive a notification once it's approved.
         </p>
       </form>

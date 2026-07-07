@@ -7,9 +7,10 @@ import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { canAccess } from '@/lib/access'
 import { isPredictionLocked } from '@/lib/scoring'
-import { FeatureKey } from '@prisma/client'
+import { FeatureKey, MarketStatus } from '@prisma/client'
 import { formatDistanceToNow, format } from 'date-fns'
 import Link from 'next/link'
+import { PredictionForm } from './PredictionForm'
 
 interface MarketPageProps {
   params: { id: string }
@@ -22,7 +23,8 @@ export async function generateMetadata({ params }: MarketPageProps) {
 
 export default async function MarketPage({ params }: MarketPageProps) {
   const { userId: clerkId } = await auth()
-  if (!clerkId) redirect('/sign-in')
+  // Allow public access — no redirect
+  const isAuthenticated = !!clerkId
 
   const [market, viewer] = await Promise.all([
     prisma.market.findUnique({
@@ -31,17 +33,18 @@ export default async function MarketPage({ params }: MarketPageProps) {
         _count: { select: { predictions: true, comments: true } },
       },
     }),
-    prisma.user.findUnique({ where: { clerkId } }),
+    clerkId ? prisma.user.findUnique({ where: { clerkId } }) : null,
   ])
 
   if (!market) notFound()
-  if (!viewer) redirect('/onboarding')
+  // Note: We don't redirect to onboarding for public users
+  const viewerTier = viewer?.subscriptionTier || 'FREE'
 
   // Increment view count
   await prisma.market.update({ where: { id: market.id }, data: { viewCount: { increment: 1 } } })
 
-  const canSeeFullReasoning = await canAccess(viewer.subscriptionTier, FeatureKey.FULL_REASONING)
-  const canFilterAccuracy = await canAccess(viewer.subscriptionTier, FeatureKey.ACCURACY_FILTER)
+  const canSeeFullReasoning = viewer ? await canAccess(viewer.subscriptionTier, FeatureKey.FULL_REASONING) : false
+  const canFilterAccuracy = viewer ? await canAccess(viewer.subscriptionTier, FeatureKey.ACCURACY_FILTER) : false
   const isLocked = isPredictionLocked(market.closesAt)
 
   // Get predictions for this market
@@ -71,7 +74,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
   })
 
   // Check if viewer already has a prediction
-  const myPrediction = predictions.find(p => p.user.id === viewer.id)
+  const myPrediction = viewer ? predictions.find(p => p.user.id === viewer.id) : undefined
 
   // Avg user probability
   const avgProbability = predictions.length > 0
@@ -151,23 +154,42 @@ export default async function MarketPage({ params }: MarketPageProps) {
           <div>
             <div className="section-label" style={{ marginBottom: '16px' }}>
               {market._count.predictions} Predictions
-              {!canFilterAccuracy && (
+              {isAuthenticated && !canFilterAccuracy && (
                 <Link href="/settings/billing" style={{ marginLeft: '12px', color: 'var(--mist)', fontSize: '9px' }}>
                   UPGRADE TO SORT BY ACCURACY →
                 </Link>
               )}
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {predictions.map((prediction) => {
-                const overallScore = prediction.user.accuracyScores[0]
-                const isMyPrediction = prediction.user.id === viewer.id
-                const showFullReasoning = canSeeFullReasoning || isMyPrediction
+            {!isAuthenticated ? (
+              <div className="card" style={{
+                padding: '40px 20px',
+                textAlign: 'center',
+                borderColor: 'rgba(201,168,76,0.2)'
+              }}>
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🔒</div>
+                <h3 style={{ fontSize: '20px', fontWeight: 600, marginBottom: '10px' }}>
+                  Sign in to view predictions
+                </h3>
+                <p style={{ fontSize: '14px', color: 'var(--mist)', marginBottom: '20px', lineHeight: '1.6' }}>
+                  See what other forecasters are predicting and their reasoning. Join the conversation.
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <Link href="/sign-in" className="btn btn-ghost">Sign In</Link>
+                  <Link href="/sign-up" className="btn btn-primary">Create Account</Link>
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {predictions.map((prediction) => {
+                  const overallScore = prediction.user.accuracyScores[0]
+                  const isMyPrediction = viewer ? prediction.user.id === viewer.id : false
+                  const showFullReasoning = canSeeFullReasoning || isMyPrediction
 
-                return (
-                  <div key={prediction.id} className="card" style={{
-                    borderLeft: isMyPrediction ? '3px solid var(--gold)' : '3px solid transparent',
-                  }}>
+                  return (
+                    <div key={prediction.id} className="card" style={{
+                      borderLeft: isMyPrediction ? '3px solid var(--gold)' : '3px solid transparent',
+                    }}>
                     {/* User header */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                       <Link href={`/profile/${prediction.user.username}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
@@ -256,68 +278,80 @@ export default async function MarketPage({ params }: MarketPageProps) {
                   </div>
                 )
               })}
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Post prediction sidebar */}
           <aside style={{ position: 'sticky', top: '80px' }}>
             <div className="card" style={{ borderTop: '2px solid var(--gold)' }}>
-              <div className="section-label" style={{ marginBottom: '16px' }}>
-                {myPrediction ? 'Update Your Prediction' : 'Post Your Prediction'}
-              </div>
-
-              {isLocked ? (
-                <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                  <div style={{ fontSize: '24px', marginBottom: '12px' }}>🔒</div>
-                  <p style={{ fontSize: '14px', color: 'var(--mist)' }}>
-                    Predictions are locked within 48 hours of market close.
-                  </p>
-                  {myPrediction && (
-                    <p style={{ fontSize: '13px', color: 'var(--gold)', marginTop: '12px', fontStyle: 'italic' }}>
-                      Your prediction: {Math.round(myPrediction.probability * 100)}%
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <form action={`/api/predictions`} method="POST">
-                  <input type="hidden" name="marketId" value={market.id} />
-
-                  <label className="label">Your Probability Estimate</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
-                    <input
-                      type="range" name="probability_range" min={1} max={99}
-                      defaultValue={myPrediction ? Math.round(myPrediction.probability * 100) : 50}
-                      style={{ flex: 1, accentColor: 'var(--gold)' }}
-                    />
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: '28px', fontWeight: 300, color: 'var(--signal)', width: '56px', textAlign: 'right' }}>
-                      {myPrediction ? `${Math.round(myPrediction.probability * 100)}%` : '50%'}
-                    </span>
+              {!isAuthenticated ? (
+                <>
+                  <div className="section-label" style={{ marginBottom: '16px' }}>
+                    Post Your Prediction
                   </div>
-
-                  <label className="label">Your Reasoning</label>
-                  <textarea
-                    name="reasoning"
-                    className="input"
-                    placeholder="Explain your reasoning (minimum 50 characters). This builds your reputation and track record."
-                    defaultValue={myPrediction?.reasoning || ''}
-                    style={{ marginBottom: '12px', minHeight: '140px' }}
-                  />
-
-                  {myPrediction && (
-                    <>
-                      <label className="label">Reason for Update (optional)</label>
-                      <input type="text" name="editReason" className="input" placeholder="Why are you revising?" style={{ marginBottom: '12px' }} />
-                    </>
-                  )}
-
-                  <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                    {myPrediction ? 'Update Prediction' : 'Submit Prediction'}
-                  </button>
-
-                  <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--fog)', marginTop: '10px', lineHeight: '1.5' }}>
-                    All edits are timestamped and public. Predictions lock 48 hours before market close.
-                  </p>
-                </form>
+                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '12px' }}>🔒</div>
+                    <p style={{ fontSize: '14px', color: 'var(--mist)', marginBottom: '16px' }}>
+                      Sign in to submit predictions and track your accuracy
+                    </p>
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                      <Link href="/sign-in" className="btn btn-ghost">Sign In</Link>
+                      <Link href="/sign-up" className="btn btn-primary">Create Account</Link>
+                    </div>
+                  </div>
+                </>
+              ) : viewerTier === 'FREE' ? (
+                <>
+                  <div className="section-label" style={{ marginBottom: '16px' }}>
+                    Post Your Prediction
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '32px 24px' }}>
+                    <div style={{ fontSize: '32px', marginBottom: '16px' }}>🔒</div>
+                    <h3 style={{ fontSize: '18px', marginBottom: '12px', fontFamily: 'var(--font-display)', color: 'var(--cream)' }}>
+                      Upgrade to Submit Predictions
+                    </h3>
+                    <p style={{ fontSize: '14px', color: 'var(--mist)', marginBottom: '20px', lineHeight: '1.6' }}>
+                      Join Standard or Pro to share your forecasts, track your accuracy, and compete with experts.
+                    </p>
+                    <Link href="/settings/billing" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                      Upgrade Now — from $9/mo
+                    </Link>
+                  </div>
+                </>
+              ) : market.status === MarketStatus.RESOLVED ? (
+                <>
+                  <div className="section-label" style={{ marginBottom: '16px' }}>
+                    Market Resolved
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '12px' }}>✓</div>
+                    <p style={{ fontSize: '14px', color: 'var(--mist)', marginBottom: '12px' }}>
+                      This market has been resolved.
+                    </p>
+                    <p style={{ fontSize: '14px', color: 'var(--cream)', marginBottom: '16px', fontWeight: 600 }}>
+                      Outcome: <span style={{ color: market.resolvedValue ? 'var(--signal)' : '#ef4444' }}>
+                        {market.resolvedValue ? 'YES' : 'NO'}
+                      </span>
+                    </p>
+                    {myPrediction && (
+                      <p style={{ fontSize: '13px', color: 'var(--gold)', marginTop: '12px', fontStyle: 'italic' }}>
+                        Your prediction: {Math.round(myPrediction.probability * 100)}%
+                      </p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <PredictionForm
+                  marketId={market.id}
+                  marketStatus={market.status}
+                  closesAt={market.closesAt}
+                  existingPrediction={myPrediction ? {
+                    probability: myPrediction.probability,
+                    reasoning: myPrediction.reasoning
+                  } : undefined}
+                  isLocked={isLocked}
+                />
               )}
             </div>
 

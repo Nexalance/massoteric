@@ -29,7 +29,22 @@ interface FeedPageProps {
 
 export default async function FeedPage({ searchParams }: FeedPageProps) {
   const { userId: clerkId } = await auth()
-  if (!clerkId) redirect('/sign-in')
+  // Allow public access — no redirect
+  const isAuthenticated = !!clerkId
+
+  // Fetch user to check subscription tier
+  let userTier: 'FREE' | 'STANDARD' | 'PRO' = 'FREE'
+  let canCreateTopic = false
+  if (clerkId) {
+    const user = await prisma.user.findUnique({
+      where: { clerkId },
+      select: { subscriptionTier: true }
+    })
+    if (user) {
+      userTier = user.subscriptionTier
+      canCreateTopic = userTier === 'PRO' || userTier === 'STANDARD'
+    }
+  }
 
   const category = searchParams.category as MarketCategory | undefined
   const page = parseInt(searchParams.page || '1')
@@ -56,7 +71,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     prisma.market.count({ where }),
     // Top predictors sidebar
     prisma.accuracyScore.findMany({
-      where: { category: null, scoredPredictions: { gte: 3 } },
+      where: { category: null, scoredPredictions: { gte: 1 } },
       orderBy: { avgBrierScore: 'asc' },
       take: 5,
       include: {
@@ -95,6 +110,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
               </Link>
             )
           })}
+          {canCreateTopic && (
           <Link
             href="/market/new"
             style={{
@@ -112,6 +128,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
           >
             + New Topic
           </Link>
+          )}
         </div>
       </div>
 
@@ -123,6 +140,11 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', letterSpacing: '1px' }}>
                 {total} OPEN MARKETS
+                {!isAuthenticated && (
+                  <span style={{ marginLeft: '12px', color: 'var(--gold)' }}>
+                    · Sign up to predict
+                  </span>
+                )}
               </p>
             </div>
 
@@ -197,6 +219,27 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                 )}
               </div>
             )}
+
+            {/* Public CTA section */}
+            {!isAuthenticated && (
+              <div className="card" style={{
+                marginTop: '24px',
+                padding: '20px',
+                textAlign: 'center',
+                borderColor: 'rgba(201,168,76,0.2)'
+              }}>
+                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '10px' }}>
+                  Ready to make predictions?
+                </h3>
+                <p style={{ fontSize: '14px', color: 'var(--mist)', marginBottom: '16px' }}>
+                  Join Massoteric to track your accuracy and compete with experts
+                </p>
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                  <Link href="/sign-in" className="btn btn-ghost">Sign In</Link>
+                  <Link href="/sign-up" className="btn btn-primary">Create Free Account</Link>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sidebar */}
@@ -245,18 +288,45 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
               </Link>
             </div>
 
-            {/* Upgrade prompt for free users */}
-            <div className="card" style={{ marginTop: '16px', borderColor: 'rgba(201,168,76,0.2)' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 600, marginBottom: '10px' }}>
-                Unlock full analysis
+            {/* Upgrade card — tier aware */}
+            {!isAuthenticated ? (
+              <div className="card" style={{ marginTop: '16px', borderColor: 'rgba(201,168,76,0.2)' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 600, marginBottom: '10px' }}>
+                  See Full Analysis
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--mist)', marginBottom: '16px', lineHeight: '1.6' }}>
+                  Join to view complete reasoning from top forecasters. Filter by accuracy. Follow the experts.
+                </p>
+                <Link href="/sign-up" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                  Join Free — Sign Up
+                </Link>
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--mist)', marginBottom: '16px', lineHeight: '1.6' }}>
-                See complete reasoning from every forecaster. Filter by accuracy. Follow the experts who've been right.
-              </p>
-              <Link href="/settings/billing" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                Upgrade — from $9/mo
-              </Link>
-            </div>
+            ) : userTier === 'FREE' ? (
+              <div className="card" style={{ marginTop: '16px', borderColor: 'rgba(201,168,76,0.2)' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 600, marginBottom: '10px' }}>
+                  Unlock full analysis
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--mist)', marginBottom: '16px', lineHeight: '1.6' }}>
+                  See complete reasoning from every forecaster. Filter by accuracy. Follow the experts who've been right.
+                </p>
+                <Link href="/settings/billing" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                  Upgrade — from $9/mo
+                </Link>
+              </div>
+            ) : (
+              // STANDARD or PRO subscriber - show they already have access
+              <div className="card" style={{ marginTop: '16px', borderColor: 'rgba(79,195,161,0.2)', background: 'rgba(79,195,161,0.05)' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 600, marginBottom: '10px', color: 'var(--signal)' }}>
+                  ✓ Full Access Unlocked
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--mist)', marginBottom: '16px', lineHeight: '1.6' }}>
+                  You're on the <strong style={{ color: 'var(--gold)' }}>{userTier}</strong> plan. You have full access to reasoning, accuracy filters, and expert leaderboards.
+                </p>
+                <Link href="/settings/billing" className="btn btn-ghost" style={{ width: '100%', justifyContent: 'center' }}>
+                  Manage Subscription
+                </Link>
+              </div>
+            )}
           </aside>
         </div>
       </div>

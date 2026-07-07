@@ -50,7 +50,7 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
     prisma.accuracyScore.findMany({
       where: {
         category: effectiveCategory ?? null,
-        scoredPredictions: { gte: 3 },
+        scoredPredictions: { gte: 1 },
       },
       orderBy: { avgBrierScore: 'asc' },
       skip,
@@ -66,7 +66,7 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
       },
     }),
     prisma.accuracyScore.count({
-      where: { category: effectiveCategory ?? null, scoredPredictions: { gte: 3 } },
+      where: { category: effectiveCategory ?? null, scoredPredictions: { gte: 1 } },
     }),
   ])
 
@@ -80,7 +80,7 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 300, color: 'var(--cream)' }}>
             The Leaderboard
           </h1>
-          <p style={{ color: 'var(--mist)', marginTop: '8px' }}>Ranked by Brier Score accuracy. Minimum 3 scored predictions to qualify.</p>
+          <p style={{ color: 'var(--mist)', marginTop: '8px' }}>Ranked by Brier Score accuracy. Minimum 1 scored prediction to qualify.</p>
         </div>
 
         {/* Filters */}
@@ -172,7 +172,7 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
             <h3 style={{ fontSize: '20px', color: 'var(--cream)', marginBottom: '8px' }}>No Rankings Yet</h3>
             <p style={{ color: 'var(--mist)', fontSize: '14px', marginBottom: '20px', maxWidth: '400px', marginLeft: 'auto', marginRight: 'auto' }}>
-              The leaderboard is waiting for markets to resolve and predictions to be scored. Users need at least 3 scored predictions to appear.
+              The leaderboard is waiting for markets to resolve and predictions to be scored. Users need at least 1 scored prediction to appear.
             </p>
             <Link href="/feed" className="btn btn-primary">Browse Markets</Link>
           </div>
@@ -194,9 +194,7 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
               {scores.map((score, idx) => {
                 const rank = skip + idx + 1
                 return (
-                  <tr key={score.userId} style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--ink3)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
+                  <tr key={score.userId} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: rank <= 3 ? 'var(--gold)' : 'var(--fog)', fontWeight: rank <= 3 ? '500' : '400' }}>
                       #{rank}
                     </td>

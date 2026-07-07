@@ -9,7 +9,7 @@ import Link from 'next/link'
 import UserMenu from '@/components/UserMenu'
 
 export default async function MePage() {
-  const { userId: clerkId } = await auth()
+  const { userId: clerkId, user: clerkUser } = await auth()
   if (!clerkId) redirect('/sign-in')
 
   const user = await prisma.user.findUnique({
@@ -30,6 +30,10 @@ export default async function MePage() {
   })
 
   if (!user) redirect('/onboarding')
+
+  // Use Clerk data as fallback if database values are missing
+  const displayDisplayName = user.displayName || clerkUser?.fullName || clerkUser?.firstName || 'User'
+  const displayEmail = user.email || clerkUser?.emailAddresses?.[0]?.emailAddress || clerkUser?.email || 'No email'
 
   return (
     <main style={{ minHeight: '100vh', padding: '40px 20px', background: '#0D0F14' }}>
@@ -63,8 +67,8 @@ export default async function MePage() {
           {/* Other Info */}
           <div style={{ padding: '20px' }}>
             {[
-              { label: 'Display Name', value: user.displayName },
-              { label: 'Email', value: user.email },
+              { label: 'Display Name', value: displayDisplayName },
+              { label: 'Email', value: displayEmail },
               { label: 'Internal ID', value: user.id, monospace: true },
               { label: 'Clerk ID', value: user.clerkId, monospace: true },
               { label: 'Subscription Tier', value: user.subscriptionTier, highlight: true },

@@ -4,5 +4,8 @@
       "path": "/api/sync",
       "schedule": "*/5 * * * *"
     }
-  ]
+  ],
+  "env": {
+    "CRON_SECRET": "@cron-secret"
+  }
 }
