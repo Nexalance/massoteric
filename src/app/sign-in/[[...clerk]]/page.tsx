@@ -4,12 +4,12 @@ export const dynamic = 'force-dynamic'
 import { SignIn } from '@clerk/nextjs'
 import { redirect } from 'next/navigation'
 
-// Check if Clerk is properly configured (align with layout.tsx logic)
+// Check if Clerk is properly configured
 const hasValidClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
   !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('placeholder') &&
   !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('pk_test_placeholder')
 
-export default function SignInPage() {
+export default function SignInCatchAllPage() {
   // If no valid Clerk keys, redirect to mock sign-in
   if (!hasValidClerkKey) {
     redirect('/sign-in/mock')
@@ -25,7 +25,7 @@ export default function SignInPage() {
       padding: '20px',
     }}>
       <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}>
-        {/* Logo/Brand - with proper font */}
+        {/* Logo/Brand */}
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
           <h1 style={{
             fontFamily: 'var(--font-display)',
@@ -49,7 +49,6 @@ export default function SignInPage() {
 
         <SignIn
           routing="path"
-          path="/sign-in"
           appearance={{
             variables: {
               colorPrimary: 'var(--gold)',
@@ -101,7 +100,6 @@ export default function SignInPage() {
                 color: 'var(--gold)',
                 fontWeight: '500',
               },
-              // Additional elements for complete theming
               dividerLine: {
                 borderColor: 'var(--border)',
               },
