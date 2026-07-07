@@ -4,12 +4,12 @@ export const dynamic = 'force-dynamic'
 import { SignUp } from '@clerk/nextjs'
 import { redirect } from 'next/navigation'
 
-// Check if Clerk is properly configured (align with layout.tsx logic)
+// Check if Clerk is properly configured
 const hasValidClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
   !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('placeholder') &&
   !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('pk_test_placeholder')
 
-export default function SignUpPage() {
+export default function SignUpCatchAllPage() {
   // If no valid Clerk keys, redirect to mock sign-up
   if (!hasValidClerkKey) {
     redirect('/sign-up/mock')
@@ -25,7 +25,7 @@ export default function SignUpPage() {
       padding: '20px',
     }}>
       <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}>
-        {/* Logo/Brand - with proper font */}
+        {/* Logo/Brand */}
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
           <h1 style={{
             fontFamily: 'var(--font-display)',
@@ -49,7 +49,6 @@ export default function SignUpPage() {
 
         <SignUp
           routing="path"
-          path="/sign-up"
           appearance={{
             variables: {
               colorPrimary: 'var(--gold)',
@@ -101,7 +100,6 @@ export default function SignUpPage() {
                 color: 'var(--gold)',
                 fontWeight: '500',
               },
-              // Additional elements for complete theming
               dividerLine: {
                 borderColor: 'var(--border)',
               },
