@@ -136,7 +136,7 @@ export default function SignInPage() {
             },
           }}
           signUpUrl="/sign-up"
-          afterSignUpUrl="/onboarding"
+          redirectUrl="/feed"
         />
       </div>
     </div>
