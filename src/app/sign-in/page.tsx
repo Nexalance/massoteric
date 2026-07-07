@@ -50,7 +50,6 @@ export default function SignInPage() {
         <SignIn
           routing="path"
           path="/sign-in"
-          forceRedirectUrl={true}
           appearance={{
             variables: {
               colorPrimary: 'var(--gold)',
@@ -136,7 +135,6 @@ export default function SignInPage() {
             },
           }}
           signUpUrl="/sign-up"
-          redirectUrl="/feed"
         />
       </div>
     </div>
