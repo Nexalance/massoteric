@@ -9,6 +9,7 @@ import { prisma } from '@/lib/prisma'
 import { MarketCategory, MarketStatus, MarketSource, FeatureKey } from '@prisma/client'
 import { z } from 'zod'
 import { canAccess } from '@/lib/access'
+import { ensureFeatureFlags } from '@/lib/init-feature-flags'
 
 const ListSchema = z.object({
   category: z.nativeEnum(MarketCategory).optional(),
@@ -111,6 +112,9 @@ const CreateTopicSchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  // Ensure feature flags exist in database (one-time setup)
+  await ensureFeatureFlags()
+
   const { userId: clerkId } = await auth()
   if (!clerkId) {
     return NextResponse.json({
