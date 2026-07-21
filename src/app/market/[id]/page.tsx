@@ -47,6 +47,9 @@ export default async function MarketPage({ params }: MarketPageProps) {
   const canFilterAccuracy = viewer ? await canAccess(viewer.subscriptionTier, FeatureKey.ACCURACY_FILTER) : false
   const isLocked = isPredictionLocked(market.closesAt)
 
+  // Check if market has expired (past resolvesAt)
+  const isExpired = market.resolvesAt ? new Date(market.resolvesAt) < new Date() : false
+
   // Get predictions for this market
   const predictions = await prisma.prediction.findMany({
     where: { marketId: market.id },
@@ -333,6 +336,26 @@ export default async function MarketPage({ params }: MarketPageProps) {
                       Outcome: <span style={{ color: market.resolvedValue ? 'var(--signal)' : '#ef4444' }}>
                         {market.resolvedValue ? 'YES' : 'NO'}
                       </span>
+                    </p>
+                    {myPrediction && (
+                      <p style={{ fontSize: '13px', color: 'var(--gold)', marginTop: '12px', fontStyle: 'italic' }}>
+                        Your prediction: {Math.round(myPrediction.probability * 100)}%
+                      </p>
+                    )}
+                  </div>
+                </>
+              ) : isExpired ? (
+                <>
+                  <div className="section-label" style={{ marginBottom: '16px' }}>
+                    Market Expired
+                  </div>
+                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <div style={{ fontSize: '24px', marginBottom: '12px' }}>⏰</div>
+                    <p style={{ fontSize: '14px', color: 'var(--mist)', marginBottom: '12px' }}>
+                      This market has passed its resolution date and is no longer accepting predictions.
+                    </p>
+                    <p style={{ fontSize: '13px', color: 'var(--fog)', marginTop: '8px' }}>
+                      Resolution date: {format(market.resolvesAt!, 'MMMM d, yyyy')}
                     </p>
                     {myPrediction && (
                       <p style={{ fontSize: '13px', color: 'var(--gold)', marginTop: '12px', fontStyle: 'italic' }}>

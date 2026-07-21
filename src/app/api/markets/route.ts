@@ -32,22 +32,45 @@ export async function GET(req: NextRequest) {
   const { category, source, status, featured, search, page, limit } = query.data
   const skip = (page - 1) * limit
 
+  const now = new Date()
+
   const where = {
     ...(category && { category }),
     ...(source && { source }),
     ...(status ? { status } : { status: MarketStatus.OPEN }),
     ...(featured !== undefined && { featured }),
+    // Only show markets that haven't closed yet (no closesAt, or closesAt is in the future)
+    AND: [
+      {
+        closesAt: {
+          OR: [
+            null,
+            { gte: now }
+          ]
+        }
+      },
+      {
+        resolvesAt: {
+          OR: [
+            null,
+            { gte: now }
+          ]
+        }
+      },
+      // Only show approved user topics
+      {
+        OR: [
+          { source: { not: MarketSource.USER_CREATED } },
+          { source: MarketSource.USER_CREATED, topicStatus: 'APPROVED' },
+        ]
+      }
+    ],
     ...(search && {
       OR: [
         { title: { contains: search, mode: 'insensitive' as const } },
         { description: { contains: search, mode: 'insensitive' as const } },
       ],
     }),
-    // Only show approved user topics
-    OR: [
-      { source: { not: MarketSource.USER_CREATED } },
-      { source: MarketSource.USER_CREATED, topicStatus: 'APPROVED' },
-    ],
   }
 
   const [markets, total] = await Promise.all([

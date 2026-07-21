@@ -49,6 +49,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
   const category = searchParams.category as MarketCategory | undefined
   const page = parseInt(searchParams.page || '1')
   const limit = 20
+  const now = new Date()
 
   // Fetch markets
   const where = {
@@ -79,6 +80,13 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
       },
     }),
   ])
+
+  // Filter out expired markets (closesAt < now OR resolvesAt < now)
+  const filteredMarkets = markets.filter(m => {
+    const closesAtValid = !m.closesAt || new Date(m.closesAt) >= now
+    const resolvesAtValid = !m.resolvesAt || new Date(m.resolvesAt) >= now
+    return closesAtValid && resolvesAtValid
+  })
 
   const totalPages = Math.ceil(total / limit)
 
@@ -149,7 +157,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {markets.map(market => (
+              {filteredMarkets.map(market => (
                 <Link key={market.id} href={`/market/${market.id}`} style={{ textDecoration: 'none' }}>
                   <div className="card" style={{
                     borderLeft: market.featured ? '3px solid var(--gold)' : '3px solid transparent',

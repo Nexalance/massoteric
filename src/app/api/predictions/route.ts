@@ -191,6 +191,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Check if market has expired (past resolvesAt)
+    if (market.resolvesAt && new Date(market.resolvesAt) < new Date()) {
+      return NextResponse.json(
+        { error: 'This market has passed its resolution date and is no longer accepting predictions' },
+        { status: 400 }
+      )
+    }
+
     const snippet = generateReasoningSnippet(reasoning)
 
     // Check if user already has a prediction

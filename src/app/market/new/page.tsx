@@ -51,6 +51,15 @@ export default function NewMarketPage() {
     tagInput: '',
   })
 
+  // Validation state
+  const [fieldValid, setFieldValid] = useState({
+    title: false,
+    description: false,
+    resolutionCriteria: false,
+  })
+
+  const isFormValid = fieldValid.title && fieldValid.description && fieldValid.resolutionCriteria
+
   // Check if user can create topics
   const canCreateTopic = currentUser?.subscriptionTier === 'PRO' || currentUser?.subscriptionTier === 'STANDARD'
 
@@ -120,6 +129,15 @@ export default function NewMarketPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+
+    // Update validation state
+    if (name === 'title') {
+      setFieldValid(prev => ({ ...prev, title: value.length >= 10 }))
+    } else if (name === 'description') {
+      setFieldValid(prev => ({ ...prev, description: value.length >= 20 }))
+    } else if (name === 'resolutionCriteria') {
+      setFieldValid(prev => ({ ...prev, resolutionCriteria: value.length >= 20 }))
+    }
   }
 
   const handleAddTag = () => {
@@ -227,7 +245,12 @@ export default function NewMarketPage() {
             maxLength={300}
             style={inputStyle}
           />
-          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>Min 10, max 300 characters</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '6px' }}>
+            <span style={{ color: fieldValid.title ? 'var(--signal)' : 'var(--mist)' }}>
+              {fieldValid.title ? '✓' : `${10 - formData.title.length} more needed`}
+            </span>
+            <span style={{ color: 'var(--fog)' }}>{formData.title.length}/300</span>
+          </div>
         </div>
 
         {/* Category */}
@@ -264,7 +287,12 @@ export default function NewMarketPage() {
             rows={5}
             style={{ ...inputStyle, resize: 'vertical', minHeight: '140px', lineHeight: '1.6' }}
           />
-          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>Min 20, max 2000 characters</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '6px' }}>
+            <span style={{ color: fieldValid.description ? 'var(--signal)' : 'var(--mist)' }}>
+              {fieldValid.description ? '✓' : `${20 - formData.description.length} more needed`}
+            </span>
+            <span style={{ color: 'var(--fog)' }}>{formData.description.length}/2000</span>
+          </div>
         </div>
 
         {/* Resolution Criteria */}
@@ -283,7 +311,12 @@ export default function NewMarketPage() {
             rows={4}
             style={{ ...inputStyle, resize: 'vertical', minHeight: '110px', lineHeight: '1.6' }}
           />
-          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>Min 20, max 1000 characters</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '6px' }}>
+            <span style={{ color: fieldValid.resolutionCriteria ? 'var(--signal)' : 'var(--mist)' }}>
+              {fieldValid.resolutionCriteria ? '✓' : `${20 - formData.resolutionCriteria.length} more needed`}
+            </span>
+            <span style={{ color: 'var(--fog)' }}>{formData.resolutionCriteria.length}/1000</span>
+          </div>
         </div>
 
         {/* Closing Date */}
@@ -388,20 +421,20 @@ export default function NewMarketPage() {
         <div style={{ display: 'flex', gap: '16px', marginTop: '12px', paddingTop: '8px', borderTop: '1px solid var(--border)' }}>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || !isFormValid}
             style={{
               padding: '16px 40px',
               fontSize: '14px',
               fontWeight: 600,
               border: 'none',
               borderRadius: '6px',
-              background: submitting ? 'var(--fog)' : 'var(--gold)',
-              color: submitting ? 'var(--mist)' : 'var(--ink)',
-              cursor: submitting ? 'wait' : 'pointer',
+              background: (submitting || !isFormValid) ? 'var(--fog)' : 'var(--gold)',
+              color: (submitting || !isFormValid) ? 'var(--mist)' : 'var(--ink)',
+              cursor: submitting ? 'wait' : (!isFormValid ? 'not-allowed' : 'pointer'),
               fontFamily: 'var(--font-mono)',
               letterSpacing: '0.5px',
               textTransform: 'uppercase',
-              opacity: submitting ? 0.6 : 1,
+              opacity: (submitting || !isFormValid) ? 0.6 : 1,
               transition: 'all 0.2s',
             }}
           >

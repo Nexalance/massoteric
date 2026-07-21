@@ -18,16 +18,29 @@ export function PredictionForm({ marketId, marketStatus, closesAt, existingPredi
   const [sliderValue, setSliderValue] = useState(
     existingPrediction ? Math.round(existingPrediction.probability * 100) : 50
   )
+  const [reasoning, setReasoning] = useState(existingPrediction?.reasoning || '')
+  const [charCount, setCharCount] = useState(existingPrediction?.reasoning?.length || 0)
+  const [isValid, setIsValid] = useState((existingPrediction?.reasoning?.length || 0) >= 50)
 
   // Update when existingPrediction changes
   useEffect(() => {
     if (existingPrediction) {
       setSliderValue(Math.round(existingPrediction.probability * 100))
+      setReasoning(existingPrediction.reasoning)
+      setCharCount(existingPrediction.reasoning.length)
+      setIsValid(existingPrediction.reasoning.length >= 50)
     }
   }, [existingPrediction])
 
   const handleSliderChange = (e: FormEvent<HTMLInputElement>) => {
     setSliderValue(Number(e.currentTarget.value))
+  }
+
+  const handleReasoningChange = (e: FormEvent<HTMLTextAreaElement>) => {
+    const value = e.currentTarget.value
+    setReasoning(value)
+    setCharCount(value.length)
+    setIsValid(value.length >= 50)
   }
 
   if (marketStatus === 'RESOLVED') {
@@ -56,6 +69,20 @@ export function PredictionForm({ marketId, marketStatus, closesAt, existingPredi
         {existingPrediction ? 'Update Your Prediction' : 'Post Your Prediction'}
       </div>
 
+      {existingPrediction && (
+        <div style={{
+          padding: '12px',
+          background: 'rgba(201,168,76,0.08)',
+          border: '1px solid rgba(201,168,76,0.2)',
+          marginBottom: '16px',
+          fontSize: '13px',
+          color: 'var(--gold)',
+          borderRadius: '2px'
+        }}>
+          📝 You are editing your existing prediction ({Math.round(existingPrediction.probability * 100)}%)
+        </div>
+      )}
+
       <form action="/api/predictions" method="POST">
         <input type="hidden" name="marketId" value={marketId} />
 
@@ -78,11 +105,18 @@ export function PredictionForm({ marketId, marketStatus, closesAt, existingPredi
         <label className="label">Your Reasoning</label>
         <textarea
           name="reasoning"
+          value={reasoning}
+          onChange={handleReasoningChange}
           className="input"
           placeholder="Explain your reasoning (minimum 50 characters). This builds your reputation and track record."
-          defaultValue={existingPrediction?.reasoning || ''}
-          style={{ marginBottom: '12px', minHeight: '140px' }}
+          style={{ marginBottom: '4px', minHeight: '140px' }}
         />
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '4px', marginBottom: '12px' }}>
+          <span style={{ color: isValid ? 'var(--signal)' : 'var(--mist)' }}>
+            {isValid ? '✓ Minimum met' : `${50 - charCount} more characters needed`}
+          </span>
+          <span style={{ color: 'var(--fog)' }}>{charCount}/50</span>
+        </div>
 
         {existingPrediction && (
           <>
@@ -97,7 +131,17 @@ export function PredictionForm({ marketId, marketStatus, closesAt, existingPredi
           </>
         )}
 
-        <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+        <button
+          type="submit"
+          disabled={!isValid}
+          className={isValid ? 'btn btn-primary' : 'btn-disabled'}
+          style={{
+            width: '100%',
+            justifyContent: 'center',
+            opacity: isValid ? 1 : 0.5,
+            cursor: isValid ? 'pointer' : 'not-allowed'
+          }}
+        >
           {existingPrediction ? 'Update Prediction' : 'Submit Prediction'}
         </button>
 
