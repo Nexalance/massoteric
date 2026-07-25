@@ -2,7 +2,8 @@
 
 export const dynamic = 'force-dynamic'
 import { SignUp } from '@clerk/nextjs'
-import { redirect } from 'next/navigation'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 // Check if Clerk is properly configured
 const hasValidClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
@@ -10,10 +11,14 @@ const hasValidClerkKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
   !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY.includes('pk_test_placeholder')
 
 export default function SignUpCatchAllPage() {
-  // If no valid Clerk keys, redirect to mock sign-up
-  if (!hasValidClerkKey) {
-    redirect('/sign-up/mock')
-  }
+  const router = useRouter()
+
+  // If no valid Clerk keys, redirect to mock sign-up (client-side)
+  useEffect(() => {
+    if (!hasValidClerkKey) {
+      router.push('/sign-up/mock')
+    }
+  }, [router])
 
   return (
     <div style={{

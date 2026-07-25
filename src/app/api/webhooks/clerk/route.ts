@@ -5,10 +5,53 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { Webhook } from 'svix'
 
 export async function POST(req: NextRequest) {
-  const payload = await req.json()
-  const { type, data } = payload
+  // Get webhook headers for signature verification
+  const svix_id = req.headers.get('svix-id')
+  const svix_timestamp = req.headers.get('svix-timestamp')
+  const svix_signature = req.headers.get('svix-signature')
+
+  // If no headers, return error (might be a test request)
+  if (!svix_id || !svix_timestamp || !svix_signature) {
+    return NextResponse.json(
+      { error: 'Missing svix headers' },
+      { status: 400 }
+    )
+  }
+
+  // Get webhook secret from env
+  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET
+  if (!webhookSecret) {
+    console.error('CLERK_WEBHOOK_SECRET not set')
+    return NextResponse.json(
+      { error: 'Webhook not configured' },
+      { status: 500 }
+    )
+  }
+
+  // Get raw body for verification
+  const payload = await req.text()
+
+  // Verify signature
+  const wh = new Webhook(webhookSecret)
+  let evt: any
+  try {
+    evt = wh.verify(payload, {
+      'svix-id': svix_id,
+      'svix-timestamp': svix_timestamp,
+      'svix-signature': svix_signature,
+    })
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err)
+    return NextResponse.json(
+      { error: 'Invalid signature' },
+      { status: 401 }
+    )
+  }
+
+  const { type, data } = evt.data
 
   switch (type) {
     case 'user.created': {
