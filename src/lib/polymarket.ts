@@ -73,7 +73,7 @@ function mapCategory(tags: { label: string }[]): MarketCategory {
   if (labels.some(l => ['sports', 'nfl', 'nba', 'soccer', 'football'].includes(l))) return 'SPORTS'
   if (labels.some(l => ['science', 'climate', 'health', 'medicine'].includes(l))) return 'SCIENCE'
   if (labels.some(l => ['tech', 'technology', 'ai', 'artificial intelligence'].includes(l))) return 'TECH'
-  if (labels.some(l => ['macro', 'gdp', 'inflation', 'recession'].includes(l))) return 'MACRO'
+  if (labels.some(l => ['macro', 'gdp', 'inflation', 'recession'].includes(l))) return 'ECONOMY'
 
   return 'OTHER'
 }
@@ -224,5 +224,34 @@ export async function checkMarketResolutions(): Promise<void> {
 
   if (pendingCustom.length > 0) {
     console.log(`[Custom Markets] Auto-closed ${pendingCustom.length} market(s) past resolution date`)
+  }
+
+  // 3. Catch-all: auto-close any remaining OPEN market past its resolution date
+  //    from sources without their own handler (KALSHI, METACULUS, etc.).
+  //    POLYMARKET is excluded so block 1 can still resolve it once Polymarket's
+  //    API confirms the outcome. We mark CLOSED (not RESOLVED) because the
+  //    outcome isn't known — admin or the source can set it later.
+  const pendingStale = await prisma.market.findMany({
+    where: {
+      status: MarketStatus.OPEN,
+      resolvesAt: { lte: new Date() },
+      source: { notIn: ['POLYMARKET', 'USER_CREATED'] },
+    },
+  })
+
+  for (const market of pendingStale) {
+    try {
+      await prisma.market.update({
+        where: { id: market.id },
+        data: { status: MarketStatus.CLOSED },
+      })
+      console.log(`[Stale Market] Auto-closed: ${market.id} (${market.title})`)
+    } catch (err) {
+      console.error(`Failed to auto-close stale market ${market.id}:`, err)
+    }
+  }
+
+  if (pendingStale.length > 0) {
+    console.log(`[Stale Markets] Auto-closed ${pendingStale.length} market(s) past resolution date`)
   }
 }

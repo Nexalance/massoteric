@@ -12,7 +12,7 @@ const CATEGORIES = [
   { value: 'SPORTS' as const, label: 'Sports' },
   { value: 'SCIENCE' as const, label: 'Science' },
   { value: 'TECH' as const, label: 'Tech' },
-  { value: 'MACRO' as const, label: 'Macro' },
+  { value: 'ECONOMY' as const, label: 'Economy' },
   { value: 'OTHER' as const, label: 'Other' },
 ]
 

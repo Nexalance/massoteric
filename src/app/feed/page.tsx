@@ -8,23 +8,15 @@ import { prisma } from '@/lib/prisma'
 import { MarketCategory } from '@prisma/client'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
+import { CATEGORIES, SORTS, SortValue } from '@/lib/categories'
 
 export const metadata = { title: 'Feed' }
 
-// Category display config
-const CATEGORIES = [
-  { value: 'ALL', label: 'All Topics' },
-  { value: 'FINANCE', label: 'Finance' },
-  { value: 'POLITICS', label: 'Politics' },
-  { value: 'CRYPTO', label: 'Crypto' },
-  { value: 'SPORTS', label: 'Sports' },
-  { value: 'TECH', label: 'Tech' },
-  { value: 'MACRO', label: 'Macro' },
-  { value: 'OTHER', label: 'Other' },
-]
+// Category list + sort modes come from lib/categories.ts so the Feed page
+// and the top-nav TopicsMenu always stay in sync.
 
 interface FeedPageProps {
-  searchParams: { category?: string; page?: string }
+  searchParams: { category?: string; page?: string; sort?: string; search?: string }
 }
 
 export default async function FeedPage({ searchParams }: FeedPageProps) {
@@ -51,22 +43,55 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
   const limit = 20
   const now = new Date()
 
+  // Sort mode (defaults to Trending). Validated against the known sort list.
+  const sortParam = (searchParams.sort || 'trending') as SortValue
+  const sort: SortValue = SORTS.some(s => s.value === sortParam) ? sortParam : 'trending'
+
+  // Free-text search across title / description / tags
+  const search = searchParams.search?.trim() || undefined
+
   // Fetch markets
   const where = {
     status: 'OPEN' as const,
     ...(category && { category }),
-    OR: [
-      { source: { not: 'USER_CREATED' as const } },
-      { source: 'USER_CREATED' as const, topicStatus: 'APPROVED' as const },
+    AND: [
+      // Skip stale OPEN markets that have already closed / resolved
+      { OR: [{ closesAt: null }, { closesAt: { gte: now } }] },
+      { OR: [{ resolvesAt: null }, { resolvesAt: { gte: now } }] },
+      // Only show approved user topics (or external / Polymarket markets)
+      {
+        OR: [
+          { source: { not: 'USER_CREATED' as const } },
+          { source: 'USER_CREATED' as const, topicStatus: 'APPROVED' as const },
+        ],
+      },
+      // Free-text search
+      ...(search
+        ? [{
+            OR: [
+              { title: { contains: search, mode: 'insensitive' as const } },
+              { description: { contains: search, mode: 'insensitive' as const } },
+              { tags: { has: search } },
+            ],
+          }]
+        : []),
     ],
   }
+
+  // Sort order per the selected tab
+  const orderBy =
+    sort === 'new'
+      ? [{ createdAt: 'desc' as const }]
+      : sort === 'breaking'
+      ? [{ featured: 'desc' as const }, { createdAt: 'desc' as const }]
+      : [{ featured: 'desc' as const }, { viewCount: 'desc' as const }, { createdAt: 'desc' as const }]
 
   const [markets, total, topUsers] = await Promise.all([
     prisma.market.findMany({
       where,
       skip: (page - 1) * limit,
       take: limit,
-      orderBy: [{ featured: 'desc' }, { viewCount: 'desc' }, { createdAt: 'desc' }],
+      orderBy,
       include: { _count: { select: { predictions: true, comments: true } } },
     }),
     prisma.market.count({ where }),
@@ -81,26 +106,60 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     }),
   ])
 
-  // Filter out expired markets (closesAt < now OR resolvesAt < now)
-  const filteredMarkets = markets.filter(m => {
-    const closesAtValid = !m.closesAt || new Date(m.closesAt) >= now
-    const resolvesAtValid = !m.resolvesAt || new Date(m.resolvesAt) >= now
-    return closesAtValid && resolvesAtValid
-  })
-
   const totalPages = Math.ceil(total / limit)
+
+  // Build a /feed href that preserves active sort/search across navigation.
+  function feedHref(opts: { category?: string; sort?: string; search?: string; page?: number }) {
+    const sp = new URLSearchParams()
+    if (opts.category && opts.category !== 'ALL') sp.set('category', opts.category)
+    if (opts.sort && opts.sort !== 'trending') sp.set('sort', opts.sort)
+    if (opts.search) sp.set('search', opts.search)
+    if (opts.page && opts.page > 1) sp.set('page', String(opts.page))
+    const s = sp.toString()
+    return s ? `/feed?${s}` : '/feed'
+  }
 
   return (
     <main>
-      {/* Category filter */}
+      {/* Filter bar: sort tabs + category pills (Polymarket-style) */}
       <div style={{ borderBottom: '1px solid var(--border)', padding: '0 var(--page-pad)' }}>
-        <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto', display: 'flex', gap: '4px', overflowX: 'auto', padding: '12px 0' }}>
+        <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto', display: 'flex', gap: '4px', overflowX: 'auto', padding: '12px 0', alignItems: 'center' }}>
+          {/* Sort tabs */}
+          {SORTS.map(s => {
+            const isActive = sort === s.value
+            return (
+              <Link
+                key={s.value}
+                href={feedHref({ sort: s.value, search })}
+                style={{
+                  padding: '7px 16px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '11px',
+                  letterSpacing: '1px',
+                  textTransform: 'uppercase',
+                  color: isActive ? 'var(--cream)' : 'var(--mist)',
+                  background: isActive ? 'rgba(201,168,76,0.15)' : 'transparent',
+                  border: isActive ? '1px solid var(--gold)' : '1px solid transparent',
+                  borderRadius: '2px',
+                  whiteSpace: 'nowrap',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {s.label}
+              </Link>
+            )
+          })}
+
+          {/* Divider */}
+          <div style={{ width: '1px', height: '20px', background: 'var(--border)', margin: '0 8px', flexShrink: 0 }} />
+
+          {/* Category pills */}
           {CATEGORIES.map(cat => {
             const isActive = (!category && cat.value === 'ALL') || category === cat.value
             return (
               <Link
                 key={cat.value}
-                href={cat.value === 'ALL' ? '/feed' : `/feed?category=${cat.value}`}
+                href={feedHref({ category: cat.value, sort, search })}
                 style={{
                   padding: '7px 16px',
                   fontFamily: 'var(--font-mono)',
@@ -147,7 +206,13 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', letterSpacing: '1px' }}>
-                {total} OPEN MARKETS
+                {search ? (
+                  <>
+                    RESULTS FOR <span style={{ color: 'var(--cream)' }}>“{search}”</span> · {total}
+                  </>
+                ) : (
+                  <>{total} OPEN MARKETS</>
+                )}
                 {!isAuthenticated && (
                   <span style={{ marginLeft: '12px', color: 'var(--gold)' }}>
                     · Sign up to predict
@@ -157,7 +222,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {filteredMarkets.map(market => (
+              {markets.map(market => (
                 <Link key={market.id} href={`/market/${market.id}`} style={{ textDecoration: 'none' }}>
                   <div className="card" style={{
                     borderLeft: market.featured ? '3px solid var(--gold)' : '3px solid transparent',
@@ -209,11 +274,27 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
               ))}
             </div>
 
+            {/* Empty state */}
+            {markets.length === 0 && (
+              <div className="card" style={{ padding: '48px 24px', textAlign: 'center' }}>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', fontWeight: 600, color: 'var(--cream)', marginBottom: '8px' }}>
+                  {search ? 'No matching markets' : 'No open markets here yet'}
+                </div>
+                <p style={{ fontSize: '13px', color: 'var(--mist)', lineHeight: 1.6 }}>
+                  {search ? (
+                    <>Try a different term, or browse <Link href="/feed" style={{ color: 'var(--gold)', textDecoration: 'none' }}>all topics</Link>.</>
+                  ) : (
+                    <>Try another category — new markets are added regularly.</>
+                  )}
+                </p>
+              </div>
+            )}
+
             {/* Pagination */}
             {totalPages > 1 && (
               <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '32px' }}>
                 {page > 1 && (
-                  <Link href={`/feed?page=${page - 1}${category ? `&category=${category}` : ''}`} className="btn btn-secondary">
+                  <Link href={feedHref({ category, sort, search, page: page - 1 })} className="btn btn-secondary">
                     ← Previous
                   </Link>
                 )}
@@ -221,7 +302,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                   {page} / {totalPages}
                 </span>
                 {page < totalPages && (
-                  <Link href={`/feed?page=${page + 1}${category ? `&category=${category}` : ''}`} className="btn btn-secondary">
+                  <Link href={feedHref({ category, sort, search, page: page + 1 })} className="btn btn-secondary">
                     Next →
                   </Link>
                 )}

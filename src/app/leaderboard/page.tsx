@@ -23,7 +23,7 @@ const CATEGORIES = [
   { value: 'CRYPTO', label: 'Crypto' },
   { value: 'SPORTS', label: 'Sports' },
   { value: 'TECH', label: 'Tech' },
-  { value: 'MACRO', label: 'Macro' },
+  { value: 'ECONOMY', label: 'Economy' },
 ]
 
 interface LeaderboardPageProps {

@@ -86,7 +86,7 @@ async function main() {
     },
     {
       source: MarketSource.KALSHI,
-      category: MarketCategory.MACRO,
+      category: MarketCategory.ECONOMY,
       title: 'Will US GDP growth exceed 2% in 2025?',
       description: 'Resolves YES if the Bureau of Economic Analysis reports full-year 2025 US real GDP growth above 2.0%.',
       marketProbability: 0.58,

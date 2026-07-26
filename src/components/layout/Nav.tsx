@@ -5,7 +5,10 @@
 import { useAuth } from '@/lib/useAuth'
 import { useCurrentUser } from '@/lib/useCurrentUser'
 import UserButtonWrapper from '@/components/UserButtonWrapper'
+import SearchBar from '@/components/SearchBar'
+import TopicsMenu from '@/components/layout/TopicsMenu'
 import Link from 'next/link'
+import { Suspense } from 'react'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,53 +36,56 @@ export default function Nav() {
       display: 'flex', alignItems: 'center',
       padding: '0 var(--page-pad)',
     }}>
-      <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        {/* Logo */}
-        <Link href={isSignedIn ? '/feed' : '/'} style={{ textDecoration: 'none' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--cream)' }}>
-            Mass<span style={{ color: 'var(--gold)' }}>oteric</span>
-          </div>
-        </Link>
+      <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+        {/* LEFT zone — logo + browse */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <Link href={isSignedIn ? '/feed' : '/'} style={{ textDecoration: 'none' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--cream)' }}>
+              Mass<span style={{ color: 'var(--gold)' }}>oteric</span>
+            </div>
+          </Link>
 
-        {/* Nav links */}
-        {isSignedIn && userId && (
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-            <Link href="/feed" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--mist)', textDecoration: 'none', transition: 'color 0.15s' }}>
-              Feed
-            </Link>
-            <Link href="/leaderboard" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--mist)', textDecoration: 'none', transition: 'color 0.15s' }}>
-              Leaderboard
-            </Link>
-            {/* Only show Predict link for PRO users */}
-            {(currentUser?.subscriptionTier === 'PRO' || currentUser?.subscriptionTier === 'STANDARD') && (
-              <Link href="/market/new" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--mist)', textDecoration: 'none', transition: 'color 0.15s' }}>
-                Predict
-              </Link>
-            )}
-            {currentUser?.isAdmin && (
-              <Link href="/admin" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold)', textDecoration: 'none' }}>
-                Admin
-              </Link>
-            )}
-          </div>
-        )}
+          {/* Topics dropdown — always visible (browse is public) */}
+          <Suspense fallback={null}>
+            <TopicsMenu />
+          </Suspense>
 
-        {/* Right side */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Quick links */}
+          {isSignedIn && userId && (
+            <>
+              <span className="nav-divider" />
+              <div style={{ display: 'flex', gap: '22px', alignItems: 'center' }}>
+                <Link href="/feed" className="nav-link">Feed</Link>
+                <Link href="/leaderboard" className="nav-link">Leaderboard</Link>
+                {/* Only show Predict link for PRO/STANDARD users */}
+                {(currentUser?.subscriptionTier === 'PRO' || currentUser?.subscriptionTier === 'STANDARD') && (
+                  <Link href="/market/new" className="nav-link">Predict</Link>
+                )}
+                {currentUser?.isAdmin && (
+                  <Link href="/admin" className="nav-link nav-link-admin">Admin</Link>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* CENTER zone — search (own space, away from the links) */}
+        <SearchBar />
+
+        {/* RIGHT zone — account */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           {isSignedIn && userId ? (
             <>
-              <Link href={`/me`} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', textDecoration: 'none', letterSpacing: '1px' }}>
-                My Profile
-              </Link>
+              <Link href={`/me`} className="nav-link" style={{ letterSpacing: '1px' }}>My Profile</Link>
               {username ? (
-                <Link href={`/profile/${username}`} style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', textDecoration: 'none', letterSpacing: '1px' }}>
+                <Link href={`/profile/${username}`} className="nav-link" style={{ letterSpacing: '1px' }}>
                   {displayName}
                   {subscriptionTier && subscriptionTier !== 'FREE' && (
                     <span style={{ marginLeft: '6px', color: 'var(--gold)' }}>· {subscriptionTier}</span>
                   )}
                 </Link>
               ) : (
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', letterSpacing: '1px' }}>
+                <span className="nav-link" style={{ letterSpacing: '1px' }}>
                   {displayName}
                   {subscriptionTier && subscriptionTier !== 'FREE' && (
                     <span style={{ marginLeft: '6px', color: 'var(--gold)' }}>· {subscriptionTier}</span>
