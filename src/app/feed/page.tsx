@@ -9,6 +9,7 @@ import { MarketCategory } from '@prisma/client'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { CATEGORIES, SORTS, SortValue } from '@/lib/categories'
+import { ensureMigrated } from '@/lib/migrations'
 
 export const metadata = { title: 'Feed' }
 
@@ -23,6 +24,10 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
   const { userId: clerkId } = await auth()
   // Allow public access — no redirect
   const isAuthenticated = !!clerkId
+
+  // Apply pending DB migrations at runtime (idempotent; once per instance).
+  // Lets schema changes ship via `git push` with no manual database access.
+  await ensureMigrated()
 
   // Fetch user to check subscription tier
   let userTier: 'FREE' | 'STANDARD' | 'PRO' = 'FREE'

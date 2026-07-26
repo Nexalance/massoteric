@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { syncPolymarketMarkets, checkMarketResolutions } from '@/lib/polymarket';
+import { ensureMigrated } from '@/lib/migrations';
 import { NextRequest } from 'next/server';
 
 export async function GET(req: NextRequest) {
@@ -17,6 +18,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    console.log('[Sync] Applying pending DB migrations...')
+    await ensureMigrated();
+
     console.log('[Sync] Starting Polymarket sync...')
     const result = await syncPolymarketMarkets();
 
