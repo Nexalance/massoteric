@@ -368,7 +368,7 @@ export async function handleStripeWebhook(event: Stripe.Event): Promise<void> {
 
       if (!userId) {
         console.error('❌ Could not determine userId for subscription:', subscription.id)
-        break
+        throw new Error(`Could not determine userId for subscription: ${subscription.id}`)
       }
 
       const status = stripeStatusToOurs(subscription.status)
@@ -434,7 +434,7 @@ export async function handleStripeWebhook(event: Stripe.Event): Promise<void> {
 
       if (!userId) {
         console.error('❌ Could not determine userId for subscription:', subscription.id)
-        break
+        throw new Error(`Could not determine userId for subscription: ${subscription.id}`)
       }
 
       await prisma.user.update({
@@ -750,6 +750,51 @@ export async function requestCreatorPayout(userId: string, amountCents: number):
     })
     throw error
   }
+}
+
+/**
+ * Process an existing payout request (for admin approval).
+ * Updates the existing payout record and initiates the Stripe transfer.
+ * Use this when approving a pending payout request to avoid creating duplicates.
+ */
+export async function processCreatorPayout(payoutId: string): Promise<void> {
+  const payout = await prisma.payout.findUnique({
+    where: { id: payoutId },
+    include: {
+      user: {
+        select: {
+          id: true,
+          stripeAccountId: true,
+          stripeOnboardingComplete: true,
+        },
+      },
+    },
+  })
+
+  if (!payout) throw new Error('Payout not found')
+  if (payout.status !== 'PENDING') throw new Error('Payout already processed')
+  if (!payout.user.stripeAccountId) throw new Error('No Stripe Connect account found')
+  if (!payout.user.stripeOnboardingComplete) throw new Error('Stripe onboarding not complete')
+
+  // Initiate Stripe transfer
+  const transfer = await stripe.transfers.create({
+    amount: payout.amountCents,
+    currency: 'usd',
+    destination: payout.user.stripeAccountId,
+    metadata: {
+      payoutId: payout.id,
+      userId: payout.user.id,
+    },
+  })
+
+  // Update existing payout with transfer ID and status
+  await prisma.payout.update({
+    where: { id: payoutId },
+    data: {
+      stripeTransferId: transfer.id,
+      status: 'PROCESSING',
+    },
+  })
 }
 
 /**

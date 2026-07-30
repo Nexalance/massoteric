@@ -4,7 +4,7 @@
 import { auth } from '@/lib/auth-mock'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requestCreatorPayout } from '@/lib/stripe'
+import { processCreatorPayout } from '@/lib/stripe'
 import { z } from 'zod'
 
 const payoutActionSchema = z.object({
@@ -109,10 +109,10 @@ export async function PATCH(
         )
       }
 
-      // Call requestCreatorPayout to create Stripe transfer
-      // This will update the Payout record to PROCESSING
+      // Call processCreatorPayout to process the existing payout record
+      // This will update the existing Payout record to PROCESSING and create the Stripe transfer
       try {
-        await requestCreatorPayout(payout.user.id, payout.amountCents)
+        await processCreatorPayout(payoutId)
       } catch (err) {
         console.error('Failed to process payout:', err)
         return NextResponse.json(

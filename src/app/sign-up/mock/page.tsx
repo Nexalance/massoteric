@@ -119,7 +119,7 @@ export default function MockSignUpPage() {
           {/* Creator Income Note */}
           <div style={{ padding: '12px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', textAlign: 'center' }}>
             <p style={{ fontSize: '10px', color: '#C9A84C', letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 6px 0' }}>
-              Coming Soon: Creator Subscriptions
+              Creator Subscriptions
             </p>
             <p style={{ fontSize: '11px', color: '#8A909E', margin: '0 0 4px 0' }}>Proven forecasters can offer subscriptions and earn income</p>
             <p style={{ fontSize: '11px', color: '#C9A84C', margin: 0, fontWeight: 500 }}>Set your own price. Keep 80% of revenue.</p>

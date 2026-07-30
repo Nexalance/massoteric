@@ -259,7 +259,7 @@ export default function SignUpCatchAllPage() {
               textTransform: 'uppercase',
               margin: '0 0 6px 0',
             }}>
-              Coming Soon: Creator Subscriptions
+              Creator Subscriptions
             </p>
             <p style={{ fontSize: '12px', color: 'var(--mist)', margin: '0 0 4px 0' }}>
               Proven forecasters can offer subscriptions and earn income from their expertise
