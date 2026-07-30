@@ -14,13 +14,18 @@ console.log(`.env.local exists: ${hasEnvLocal}`);
 const prefix = hasEnvLocal ? 'dotenv -e .env.local --' : '';
 
 try {
-  // Prisma generate
+  // Prisma generate (always needed)
   console.log('Running prisma generate...');
   execSync(`${prefix} prisma generate`, { stdio: 'inherit' });
 
-  // Prisma db push
-  console.log('Running prisma db push...');
-  execSync(`${prefix} prisma db push --skip-generate`, { stdio: 'inherit' });
+  // Prisma db push - ONLY in local development
+  // In Docker/Dokploy, this runs at runtime via docker-entrypoint.sh
+  if (hasEnvLocal) {
+    console.log('Running prisma db push (local development)...');
+    execSync(`${prefix} prisma db push --skip-generate`, { stdio: 'inherit' });
+  } else {
+    console.log('Skipping prisma db push (will run at Docker runtime via docker-entrypoint.sh)');
+  }
 
   // Next build
   console.log('Running next build...');
