@@ -265,7 +265,7 @@ export default function SignUpCatchAllPage() {
               Proven forecasters can offer subscriptions and earn income from their expertise
             </p>
             <p style={{ fontSize: '11px', color: 'var(--gold)', margin: 0, fontWeight: 500 }}>
-              Set your own price. Keep 85% of revenue.
+              Set your own price. Keep 80% of revenue.
             </p>
           </div>
         </div>
