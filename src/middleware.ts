@@ -23,6 +23,7 @@ const isPublicRoute = createRouteMatcher ? createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/waitlist',        // email collection
+  '/api/sync',            // public sync endpoint for cron jobs
   '/api/webhooks/(.*)',   // Stripe + Clerk webhooks
   '/me',                  // Allow /me, handle auth in page
   '/creator(.*)',         // Creator routes — handle auth in page, allow middleware to pass through
