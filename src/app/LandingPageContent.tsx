@@ -8,7 +8,34 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './LandingPageContent.module.css'
 
-export default function LandingPageContent() {
+interface TickerMarket {
+  prob: string
+  text: string
+  cat: string
+}
+
+interface LandingPageContentProps {
+  userCount: number
+  marketCount: number
+  predictionCount: number
+  tickerMarkets: TickerMarket[]
+}
+
+// Format compact numbers (e.g., 47000 -> "47k+")
+function formatCompact(num: number): string {
+  if (num >= 1000) {
+    const suffixes = ['', 'k', 'M', 'B']
+    const tier = Math.floor(Math.log10(Math.abs(num)) / 3)
+    if (tier === 0) return num.toString()
+    const suffix = suffixes[tier]
+    const scale = Math.pow(10, tier * 3)
+    const scaled = num / scale
+    return `${Math.floor(scaled)}${suffix}+`
+  }
+  return num.toString()
+}
+
+export default function LandingPageContent(props: LandingPageContentProps) {
   const router = useRouter()
   const dotsRef = useRef<HTMLDivElement>(null)
   const [email, setEmail] = useState({ hero: '', cta: '' })
@@ -117,39 +144,21 @@ export default function LandingPageContent() {
       {/* Live market ticker */}
       <div className={styles.tickerWrap}>
         <div className={styles.ticker}>
-          {[
-            { prob: '62%', text: 'Fed rate cut before Sept 2025', cat: 'Finance' },
-            { prob: '44%', text: 'Bitcoin exceeds $120k by Dec 2025', cat: 'Crypto' },
-            { prob: '31%', text: 'S&P 500 hits 6,500 in Q3', cat: 'Finance' },
-            { prob: '78%', text: 'US GDP growth above 2% in 2025', cat: 'Economy' },
-            { prob: '55%', text: 'Apple releases AR glasses in 2025', cat: 'Tech' },
-            { prob: '19%', text: 'US recession declared in 2025', cat: 'Economy' },
-            { prob: '67%', text: 'Ethereum surpasses $6k by EOY', cat: 'Crypto' },
-          ].map((item, i) => (
-            <div key={i} className={styles.tickerItem}>
-              <span className={styles.tickerProb}>{item.prob}</span>
-              <span className={styles.tickerDotSep}>·</span>
-              {item.text}
-              <span className={styles.tickerDotSep}>·</span>
-              {item.cat}
-            </div>
-          )).concat([
-            { prob: '62%', text: 'Fed rate cut before Sept 2025', cat: 'Finance' },
-            { prob: '44%', text: 'Bitcoin exceeds $120k by Dec 2025', cat: 'Crypto' },
-            { prob: '31%', text: 'S&P 500 hits 6,500 in Q3', cat: 'Finance' },
-            { prob: '78%', text: 'US GDP growth above 2% in 2025', cat: 'Economy' },
-            { prob: '55%', text: 'Apple releases AR glasses in 2025', cat: 'Tech' },
-            { prob: '19%', text: 'US recession declared in 2025', cat: 'Economy' },
-            { prob: '67%', text: 'Ethereum surpasses $6k by EOY', cat: 'Crypto' },
-          ].map((item, i) => (
-            <div key={`dup-${i}`} className={styles.tickerItem}>
-              <span className={styles.tickerProb}>{item.prob}</span>
-              <span className={styles.tickerDotSep}>·</span>
-              {item.text}
-              <span className={styles.tickerDotSep}>·</span>
-              {item.cat}
-            </div>
-          )))}
+          {(() => {
+            const displayMarkets = props.tickerMarkets.length > 0
+              ? props.tickerMarkets
+              : [{ prob: '50%', text: 'Loading live markets...', cat: 'All' }]
+            const duplicated = [...displayMarkets, ...displayMarkets]
+            return duplicated.map((item, i) => (
+              <div key={i} className={styles.tickerItem}>
+                <span className={styles.tickerProb}>{item.prob}</span>
+                <span className={styles.tickerDotSep}>·</span>
+                {item.text}
+                <span className={styles.tickerDotSep}>·</span>
+                {item.cat}
+              </div>
+            ))
+          })()}
         </div>
       </div>
 
@@ -286,17 +295,17 @@ export default function LandingPageContent() {
             <div className={styles.demoRight}>
               <div className={styles.demoStatRow}>
                 <div className={styles.demoStat}>
-                  <span className={styles.demoStatVal}>12,439</span>
+                  <span className={styles.demoStatVal}>{props.userCount.toLocaleString()}</span>
                   <span className={styles.demoStatLabel}>Registered Users</span>
                 </div>
                 <div className={styles.demoStat}>
-                  <span className={styles.demoStatVal}>284</span>
+                  <span className={styles.demoStatVal}>{props.marketCount.toLocaleString()}</span>
                   <span className={styles.demoStatLabel}>Live Markets</span>
                 </div>
               </div>
               <div className={styles.demoStatRow}>
                 <div className={styles.demoStat}>
-                  <span className={styles.demoStatVal}>47k+</span>
+                  <span className={styles.demoStatVal}>{formatCompact(props.predictionCount)}</span>
                   <span className={styles.demoStatLabel}>Predictions Made</span>
                 </div>
                 <div className={styles.demoStat}>
