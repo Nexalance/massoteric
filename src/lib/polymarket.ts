@@ -132,6 +132,29 @@ export async function syncPolymarketMarkets(): Promise<{ synced: number; errors:
   }
 
   console.log(`Polymarket sync: ${synced} synced, ${errors} errors`)
+
+  // Clean up: Close any Polymarket markets that are no longer in the API response
+  // These are markets that were closed/archived on Polymarket but not yet marked in our DB
+  const activePolymarketIds = new Set(events.map(e => e.id))
+  const stalePolymarketMarkets = await prisma.market.findMany({
+    where: {
+      source: 'POLYMARKET',
+      status: MarketStatus.OPEN,
+      externalId: { notIn: Array.from(activePolymarketIds) },
+    },
+    select: { id: true, title: true },
+  })
+
+  if (stalePolymarketMarkets.length > 0) {
+    await prisma.market.updateMany({
+      where: {
+        id: { in: stalePolymarketMarkets.map(m => m.id) },
+      },
+      data: { status: MarketStatus.CLOSED },
+    })
+    console.log(`[Sync] Closed ${stalePolymarketMarkets.length} stale Polymarket markets:`, stalePolymarketMarkets.map(m => m.title))
+  }
+
   return { synced, errors }
 }
 
