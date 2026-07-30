@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 
 // Paths where we don't want to show the navbar
-const EXCLUDED_PATHS = ['/sign-in', '/sign-up']
+const EXCLUDED_PATHS = ['/', '/sign-in', '/sign-up']
 
 export default function NavWrapper() {
   const pathname = usePathname()
@@ -18,7 +18,18 @@ export default function NavWrapper() {
     // Find the navbar element and toggle its visibility
     const navbar = document.querySelector('nav[data-massoteric-nav]')
     if (navbar) {
-      (navbar as HTMLElement).style.display = shouldHideNav ? 'none' : 'flex'
+      const navElement = navbar as HTMLElement
+      if (shouldHideNav) {
+        navElement.style.display = 'none'
+        navElement.style.visibility = 'hidden'
+        navElement.style.position = 'absolute'
+        navElement.style.left = '-9999px'
+      } else {
+        navElement.style.display = ''
+        navElement.style.visibility = ''
+        navElement.style.position = ''
+        navElement.style.left = ''
+      }
     }
   }, [pathname])
 

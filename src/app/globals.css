@@ -26,7 +26,7 @@
 
   /* Spacing */
   --page-pad: clamp(20px, 4vw, 48px);
-  --content-max: 1080px;
+  --content-max: 1280px;
 
   /* Radius */
   --radius: 4px;
@@ -184,6 +184,23 @@ code, pre {
 .nav-link:hover { color: var(--cream); }
 .nav-link-admin { color: var(--gold); }
 .nav-link-admin:hover { color: var(--gold2); }
+
+	/* Polymarket external link */
+	.polymarket-link {
+		font-family: var(--font-mono);
+		font-size: 9px;
+		color: var(--mist);
+		letter-spacing: 1px;
+		text-decoration: none;
+		padding: 4px 10px;
+		border: 1px solid var(--fog);
+		border-radius: 2px;
+		transition: all 0.15s ease;
+	}
+	.polymarket-link:hover {
+		border-color: var(--gold);
+		color: var(--gold);
+	}
 
 .nav-divider {
   width: 1px;

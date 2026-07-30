@@ -83,6 +83,49 @@ export default function MockSignUpPage() {
           </div>
         </div>
 
+        {/* Tier Information */}
+        <div style={{ marginTop: '24px', padding: '24px', background: '#151820', border: '1px solid #3A4055', borderRadius: '8px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#F5F0E8', marginBottom: '16px', textAlign: 'center' }}>
+            Choose Your Plan
+          </h3>
+
+          {/* FREE */}
+          <div style={{ padding: '12px', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#8A909E', letterSpacing: '1px' }}>Free</span>
+              <span style={{ fontSize: '18px', fontWeight: 300, color: '#F5F0E8' }}>$0/mo</span>
+            </div>
+            <p style={{ fontSize: '11px', color: '#8A909E', margin: 0 }}>Make predictions, track accuracy, browse markets</p>
+          </div>
+
+          {/* STANDARD */}
+          <div style={{ padding: '12px', background: '#0D0F14', border: '1px solid #C9A84C', borderRadius: '4px', marginBottom: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#C9A84C', letterSpacing: '1px' }}>Standard</span>
+              <span style={{ fontSize: '18px', fontWeight: 300, color: '#F5F0E8' }}>$9/mo</span>
+            </div>
+            <p style={{ fontSize: '11px', color: '#F5F0E8', margin: 0 }}><strong>Full reasoning access,</strong> filter by accuracy, follow experts</p>
+          </div>
+
+          {/* PRO */}
+          <div style={{ padding: '12px', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', marginBottom: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#8A909E', letterSpacing: '1px' }}>Pro</span>
+              <span style={{ fontSize: '18px', fontWeight: 300, color: '#F5F0E8' }}>$29/mo</span>
+            </div>
+            <p style={{ fontSize: '11px', color: '#F5F0E8', margin: 0 }}><strong>Everything in Standard</strong> + expert Q&A, early access</p>
+          </div>
+
+          {/* Creator Income Note */}
+          <div style={{ padding: '12px', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)', borderRadius: '4px', textAlign: 'center' }}>
+            <p style={{ fontSize: '10px', color: '#C9A84C', letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 6px 0' }}>
+              Coming Soon: Creator Subscriptions
+            </p>
+            <p style={{ fontSize: '11px', color: '#8A909E', margin: '0 0 4px 0' }}>Proven forecasters can offer subscriptions and earn income</p>
+            <p style={{ fontSize: '11px', color: '#C9A84C', margin: 0, fontWeight: 500 }}>Set your own price. Keep 80% of revenue.</p>
+          </div>
+        </div>
+
         {/* Footer */}
         <div style={{ textAlign: 'center', marginTop: '32px' }}>
           <p style={{ color: '#8A909E', fontSize: '12px' }}>

@@ -59,21 +59,16 @@ export async function GET(req: NextRequest) {
   }
 
   // Build orderBy based on sortBy parameter
-  // Note: accuracy sorting by scoredPredictions requires complex join; using createdAt as fallback
-  const orderBy = sortBy === 'accuracy'
-    ? { createdAt: 'desc' }  // TODO: implement accuracy ranking via separate query
-    : sortBy === 'recent'
-    ? { createdAt: 'desc' }
-    : { probability: 'desc' }
+  const baseOrderBy = sortBy === 'probability' ? { probability: 'desc' } : { createdAt: 'desc' }
 
-  const predictions = await prisma.prediction.findMany({
+  let predictions = await prisma.prediction.findMany({
     where: {
       marketId,
       ...(filterUserId && { userId: filterUserId }),
     },
     skip,
     take: limit,
-    orderBy,
+    orderBy: baseOrderBy,
     include: {
       user: {
         select: {
@@ -84,7 +79,7 @@ export async function GET(req: NextRequest) {
           subscriptionTier: true,
           accuracyScores: {
             where: { category: null }, // overall score
-            select: { accuracyPct: true, scoredPredictions: true },
+            select: { accuracyPct: true, scoredPredictions: true, avgBrierScore: true },
           },
         },
       },
@@ -100,6 +95,28 @@ export async function GET(req: NextRequest) {
       },
     },
   })
+
+  // If sorting by accuracy, sort in-memory after fetching
+  // This is because we need to sort by user's overall accuracy score
+  if (sortBy === 'accuracy') {
+    predictions.sort((a, b) => {
+      const aScore = a.user.accuracyScores[0]
+      const bScore = b.user.accuracyScores[0]
+
+      // Prioritize users with scored predictions
+      const aHasScore = aScore && aScore.scoredPredictions > 0
+      const bHasScore = bScore && bScore.scoredPredictions > 0
+
+      if (aHasScore && !bHasScore) return -1
+      if (!aHasScore && bHasScore) return 1
+      if (!aHasScore && !bHasScore) return 0
+
+      // Sort by Brier score (lower is better)
+      const aBrier = aScore?.avgBrierScore ?? 1
+      const bBrier = bScore?.avgBrierScore ?? 1
+      return aBrier - bBrier
+    })
+  }
 
   // Apply access control to reasoning field
   const sanitized = predictions.map(p => ({

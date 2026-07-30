@@ -187,3 +187,112 @@ export function generateReasoningSnippet(reasoning: string): string {
   const lastSpace = truncated.lastIndexOf(' ')
   return truncated.slice(0, lastSpace) + '...'
 }
+
+/**
+ * Update competition member scores after a market is resolved.
+ * This ensures competition leaderboards reflect the latest prediction scores.
+ *
+ * @param marketId - the resolved market
+ * @param resolvedAt - when the market was resolved
+ */
+export async function updateCompetitionScores(marketId: string, resolvedAt: Date): Promise<void> {
+  // Find all competitions that are currently active and include this market's resolution time
+  // A competition is considered active if: startsAt <= now <= endsAt
+  // But we also need to check if the market resolved within the competition period
+  const now = new Date()
+
+  const competitions = await prisma.competition.findMany({
+    where: {
+      startsAt: { lte: resolvedAt },
+      endsAt: { gte: resolvedAt },
+    },
+    include: {
+      members: {
+        include: {
+          user: {
+            select: {
+              id: true,
+            },
+          },
+        },
+      },
+    },
+  })
+
+  if (competitions.length === 0) {
+    console.log(`No active competitions include market ${marketId} resolution time`)
+    return
+  }
+
+  console.log(`Updating scores for ${competitions.length} competitions after market ${marketId} resolved`)
+
+  // For each competition, update members who made predictions on this market
+  for (const competition of competitions) {
+    // Get all predictions on this market from competition members
+    const predictions = await prisma.prediction.findMany({
+      where: {
+        marketId,
+        status: 'SCORED', // Only scored predictions count
+        userId: {
+          in: competition.members.map(m => m.userId),
+        },
+      },
+      select: {
+        id: true,
+        userId: true,
+        brierScore: true,
+      },
+    })
+
+    if (predictions.length === 0) continue
+
+    console.log(`  Competition "${competition.name}": ${predictions.length} member predictions to update`)
+
+    // Update each competition member's stats
+    for (const prediction of predictions) {
+      const member = competition.members.find(m => m.userId === prediction.userId)
+      if (!member || prediction.brierScore === null) continue // Explicit null check - 0 is a valid perfect score
+
+      // Get total scored predictions and total Brier score for this member in this competition
+      const memberStats = await prisma.prediction.findMany({
+        where: {
+          userId: prediction.userId,
+          status: 'SCORED',
+          market: {
+            resolvedAt: {
+              gte: competition.startsAt,
+              lte: competition.endsAt, // Use actual resolvedAt instead of expected resolvesAt
+            },
+          },
+        },
+        select: {
+          brierScore: true,
+        },
+      })
+
+      const totalPredictions = memberStats.length
+      const totalBrierScore = memberStats.reduce((sum, p) => sum + (p.brierScore || 0), 0)
+      const avgBrierScore = totalPredictions > 0 ? totalBrierScore / totalPredictions : null
+
+      // Update the CompetitionMember record
+      await prisma.competitionMember.update({
+        where: {
+          competitionId_userId: {
+            competitionId: competition.id,
+            userId: prediction.userId,
+          },
+        },
+        data: {
+          totalPredictions,
+          scoredPredictions: totalPredictions,
+          totalBrierScore,
+          avgBrierScore: avgBrierScore,
+        },
+      })
+    }
+
+    console.log(`  ✓ Updated competition "${competition.name}" leaderboard`)
+  }
+
+  console.log(`✅ Competition scores updated for market ${marketId}`)
+}

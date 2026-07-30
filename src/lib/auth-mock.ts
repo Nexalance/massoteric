@@ -36,6 +36,7 @@ async function ensureDevUser() {
           displayName: DEV_USER.displayName,
           email: DEV_USER.email,
           onboardingComplete: true,
+          hasSeenLanding: true,
         }
       })
       console.log('✅ Dev user created')
@@ -144,6 +145,7 @@ async function syncClerkUserToDb(clerkId: string, clerkUser?: any) {
         displayName: displayName.trim(),
         email,
         onboardingComplete: false,
+        hasSeenLanding: false, // New users haven't seen landing page yet
         subscriptionTier: userIsAdmin ? 'PRO' : 'FREE',
       }
     })

@@ -51,12 +51,10 @@ export default async function MarketPage({ params }: MarketPageProps) {
   const isExpired = market.resolvesAt ? new Date(market.resolvesAt) < new Date() : false
 
   // Get predictions for this market
-  const predictions = await prisma.prediction.findMany({
+  let predictions = await prisma.prediction.findMany({
     where: { marketId: market.id },
-    orderBy: canFilterAccuracy
-      ? [{ user: { accuracyScores: { _count: 'desc' } } }]
-      : [{ createdAt: 'desc' }],
-    take: 20,
+    orderBy: [{ createdAt: 'desc' }], // Default sort by recent
+    take: canFilterAccuracy ? 100 : 20, // Fetch more if we need to sort by accuracy
     include: {
       user: {
         select: {
@@ -64,7 +62,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
           occupation: true,
           accuracyScores: {
             where: { category: null },
-            select: { accuracyPct: true, scoredPredictions: true },
+            select: { avgBrierScore: true, scoredPredictions: true },
           },
         },
       },
@@ -75,6 +73,16 @@ export default async function MarketPage({ params }: MarketPageProps) {
       },
     },
   })
+
+  // Sort by accuracy if user has access
+  if (canFilterAccuracy) {
+    predictions.sort((a, b) => {
+      const aScore = a.user.accuracyScores[0]?.avgBrierScore ?? Infinity
+      const bScore = b.user.accuracyScores[0]?.avgBrierScore ?? Infinity
+      return aScore - bScore // Lower Brier score = better accuracy
+    })
+    predictions = predictions.slice(0, 20) // Limit to top 20 after sorting
+  }
 
   // Check if viewer already has a prediction
   const myPrediction = viewer ? predictions.find(p => p.user.id === viewer.id) : undefined

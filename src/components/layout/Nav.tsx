@@ -10,9 +10,7 @@ import TopicsMenu from '@/components/layout/TopicsMenu'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
-export const dynamic = 'force-dynamic'
-
-export default function Nav() {
+export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string }) {
   const { isLoaded, userId, isSignedIn, user: clerkUser } = useAuth()
   const { currentUser, loading: userLoading } = useCurrentUser()
 
@@ -27,7 +25,7 @@ export default function Nav() {
   const username = currentUser?.username
 
   return (
-    <nav style={{
+    <nav {...(dataMassotericNav && { 'data-massoteric-nav': dataMassotericNav })} style={{
       position: 'fixed', top: 0, left: 0, right: 0, zIndex: 900,
       background: 'rgba(13,15,20,0.97)',
       borderBottom: '1px solid var(--border)',
@@ -56,11 +54,14 @@ export default function Nav() {
               <span className="nav-divider" />
               <div style={{ display: 'flex', gap: '22px', alignItems: 'center' }}>
                 <Link href="/feed" className="nav-link">Feed</Link>
+                <Link href="/competitions" className="nav-link">Competitions</Link>
                 <Link href="/leaderboard" className="nav-link">Leaderboard</Link>
                 {/* Only show Predict link for PRO/STANDARD users */}
                 {(currentUser?.subscriptionTier === 'PRO' || currentUser?.subscriptionTier === 'STANDARD') && (
                   <Link href="/market/new" className="nav-link">Predict</Link>
                 )}
+                {/* Creator Dashboard - show to all signed-in users */}
+                <Link href="/creator/dashboard" className="nav-link">Creator</Link>
                 {currentUser?.isAdmin && (
                   <Link href="/admin" className="nav-link nav-link-admin">Admin</Link>
                 )}
@@ -69,7 +70,7 @@ export default function Nav() {
           )}
         </div>
 
-        {/* CENTER zone — search (own space, away from the links) */}
+        {/* CENTER zone — search */}
         <SearchBar />
 
         {/* RIGHT zone — account */}

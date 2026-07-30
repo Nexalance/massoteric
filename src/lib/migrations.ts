@@ -38,6 +38,21 @@ export async function ensureMigrated() {
       console.log('[migrate] applied: rename MarketCategory MACRO -> ECONOMY')
     }
 
+    // --- Migration: add hasSeenLanding column to User table ----------------
+    // Adds the hasSeenLanding column with default false if it doesn't exist.
+    const columns = (await prisma.$queryRaw`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = 'User'
+    `) as { column_name: string }[]
+
+    if (!columns.some((c) => c.column_name === 'hasSeenLanding')) {
+      await prisma.$executeRaw`
+        ALTER TABLE "User" ADD COLUMN "hasSeenLanding" BOOLEAN NOT NULL DEFAULT false
+      `
+      console.log('[migrate] applied: add User.hasSeenLanding column')
+    }
+
     migrated = true
   } catch (err) {
     // Never break the page render or the sync cron. Retry on the next call.

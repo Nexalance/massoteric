@@ -187,9 +187,10 @@ export async function checkMarketResolutions(): Promise<void> {
             },
           })
 
-          // Trigger scoring
-          const { scoreMarket } = await import('@/lib/scoring')
+          // Trigger scoring and update competition leaderboards
+          const { scoreMarket, updateCompetitionScores } = await import('@/lib/scoring')
           await scoreMarket(market.id, resolvedValue)
+          await updateCompetitionScores(market.id, new Date())
         }
       }
     } catch (err) {
@@ -253,5 +254,32 @@ export async function checkMarketResolutions(): Promise<void> {
 
   if (pendingStale.length > 0) {
     console.log(`[Stale Markets] Auto-closed ${pendingStale.length} market(s) past resolution date`)
+  }
+
+  // 4. Fallback: Auto-close any OPEN market where closesAt has passed,
+  //    even if resolvesAt is NULL. This catches old markets like World Cup
+  //    that were synced before we started tracking resolvesAt properly.
+  const pendingByClosesAt = await prisma.market.findMany({
+    where: {
+      status: MarketStatus.OPEN,
+      resolvesAt: null, // Only for markets without resolvesAt
+      closesAt: { lte: new Date() }, // But closesAt has passed
+    },
+  })
+
+  for (const market of pendingByClosesAt) {
+    try {
+      await prisma.market.update({
+        where: { id: market.id },
+        data: { status: MarketStatus.CLOSED },
+      })
+      console.log(`[Fallback] Auto-closed market by closesAt: ${market.id} (${market.title})`)
+    } catch (err) {
+      console.error(`Failed to auto-close market by closesAt ${market.id}:`, err)
+    }
+  }
+
+  if (pendingByClosesAt.length > 0) {
+    console.log(`[Fallback] Auto-closed ${pendingByClosesAt.length} market(s) past closesAt date`)
   }
 }

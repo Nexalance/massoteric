@@ -8,6 +8,7 @@ import { getUserAccuracySummary } from '@/lib/scoring'
 import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
+import SubscribeButton from './SubscribeButton'
 
 interface ProfilePageProps { params: { username: string } }
 
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: ProfilePageProps) {
 }
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
-  const { userId: clerkId } = await auth()
+  const { userId: clerkId, user: authUser } = await auth()
   if (!clerkId) redirect('/sign-in')
 
   const [profileUser, viewer] = await Promise.all([
@@ -25,6 +26,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       where: { username: params.username },
       include: {
         _count: { select: { predictions: true, subscribers: true, subscriptions: true } },
+        creatorSettings: true,
       },
     }),
     prisma.user.findUnique({ where: { clerkId } }),
@@ -33,6 +35,18 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   if (!profileUser || profileUser.isSuspended) notFound()
 
   const isOwnProfile = viewer?.id === profileUser.id
+
+  // Fetch existing subscription after we have both profileUser and viewer
+  const existingSubscription = viewer?.id
+    ? await prisma.userSubscription.findUnique({
+        where: {
+          subscriberId_expertId: {
+            subscriberId: viewer.id,
+            expertId: profileUser.id,
+          },
+        },
+      })
+    : null
 
   const [accuracySummary, recentPredictions] = await Promise.all([
     getUserAccuracySummary(profileUser.id),
@@ -89,7 +103,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                     </>
                   )}
                   {!isOwnProfile && (
-                    <button className="btn btn-primary">Subscribe $9/mo</button>
+                    <SubscribeButton
+                      creatorId={profileUser.id}
+                      creatorUsername={profileUser.username}
+                      monthlyPrice={profileUser.creatorSettings?.monthlyPriceCents
+                        ? profileUser.creatorSettings.monthlyPriceCents / 100
+                        : 9.99}
+                      hasStripeAccount={!!profileUser.stripeAccountId}
+                      isOnboarded={profileUser.stripeOnboardingComplete || false}
+                      existingSubscription={existingSubscription}
+                    />
                   )}
                 </div>
               </div>

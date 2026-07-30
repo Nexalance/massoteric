@@ -18,17 +18,13 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    console.log('[Sync] Applying pending DB migrations...')
     await ensureMigrated();
 
-    console.log('[Sync] Starting Polymarket sync...')
     const result = await syncPolymarketMarkets();
 
     // Check for resolved markets and trigger scoring
-    console.log('[Sync] Checking market resolutions...')
     await checkMarketResolutions();
 
-    console.log('[Sync] Complete', { synced: result.synced, errors: result.errors.length })
 
     return Response.json({
       success: true,

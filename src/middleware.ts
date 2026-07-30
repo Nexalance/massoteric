@@ -19,11 +19,14 @@ const isPublicRoute = createRouteMatcher ? createRouteMatcher([
   '/market(.*)',          // public market pages — browse without auth
   '/leaderboard',         // public leaderboard
   '/profile(.*)',         // public profiles — browse without auth
+  '/competitions(.*)',     // public competitions — browse without auth
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/waitlist',        // email collection
   '/api/webhooks/(.*)',   // Stripe + Clerk webhooks
   '/me',                  // Allow /me, handle auth in page
+  '/creator(.*)',         // Creator routes — handle auth in page, allow middleware to pass through
+  '/admin(.*)',          // Admin routes — handle auth in page
 ]) : null
 
 export default function middleware(request: any) {

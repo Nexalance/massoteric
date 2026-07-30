@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { MarketCategory } from '@prisma/client'
 import Link from 'next/link'
+import PolymarketLink from '@/components/PolymarketLink'
 import { formatDistanceToNow } from 'date-fns'
 import { CATEGORIES, SORTS, SortValue } from '@/lib/categories'
 import { ensureMigrated } from '@/lib/migrations'
@@ -270,9 +271,14 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                       <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--mist)' }}>
                         {market._count.predictions} predictions · {market._count.comments} comments
                       </span>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--gold)', letterSpacing: '1px' }}>
-                        PREDICT →
-                      </span>
+                      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                        {market.source === 'POLYMARKET' && market.externalUrl && (
+                          <PolymarketLink url={market.externalUrl} />
+                        )}
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--gold)', letterSpacing: '1px' }}>
+                          PREDICT →
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </Link>

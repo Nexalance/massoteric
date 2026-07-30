@@ -39,22 +39,40 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
 
   const canFilterCategory = await canAccess(viewer.subscriptionTier, FeatureKey.CATEGORY_LEADERBOARD)
   const category = (searchParams.category as MarketCategory) || undefined
+  const period = searchParams.period || 'all'
   const page = parseInt(searchParams.page || '1')
   const limit = 25
   const skip = (page - 1) * limit
 
+  // Calculate date filter for period
+  let periodStartDate: Date | undefined
+  if (period === '30d') {
+    periodStartDate = new Date()
+    periodStartDate.setDate(periodStartDate.getDate() - 30)
+  } else if (period === '90d') {
+    periodStartDate = new Date()
+    periodStartDate.setDate(periodStartDate.getDate() - 90)
+  }
+  // 'all' means no date filter
+
   // Block category filter for free users
   const effectiveCategory = canFilterCategory ? category : undefined
 
-  const [scores, total] = await Promise.all([
-    prisma.accuracyScore.findMany({
+  // For period-filtered views, query predictions directly and aggregate
+  // For 'all' time, use the pre-computed AccuracyScore table
+  const usePeriodFilter = period !== 'all' && periodStartDate !== undefined
+
+  let scores: any[]
+  let total: number
+
+  if (usePeriodFilter) {
+    // Query predictions with date filter and aggregate by user
+    const scoredPredictions = await prisma.prediction.findMany({
       where: {
-        category: effectiveCategory ?? null,
-        scoredPredictions: { gte: 1 },
+        status: 'SCORED',
+        scoredAt: { gte: periodStartDate },
+        market: effectiveCategory ? { category: effectiveCategory } : undefined,
       },
-      orderBy: { avgBrierScore: 'asc' },
-      skip,
-      take: limit,
       include: {
         user: {
           select: {
@@ -64,11 +82,66 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
           },
         },
       },
-    }),
-    prisma.accuracyScore.count({
-      where: { category: effectiveCategory ?? null, scoredPredictions: { gte: 1 } },
-    }),
-  ])
+      orderBy: { brierScore: 'asc' },
+    })
+
+    // Aggregate by user
+    const userScores = new Map<string, any>()
+    for (const pred of scoredPredictions) {
+      const existing = userScores.get(pred.userId)
+      if (existing) {
+        existing.totalPredictions++
+        existing.totalBrierScore += pred.brierScore
+      } else {
+        userScores.set(pred.userId, {
+          userId: pred.userId,
+          user: pred.user,
+          totalPredictions: 1,
+          totalBrierScore: pred.brierScore,
+          avgBrierScore: pred.brierScore,
+        })
+      }
+    }
+
+    // Calculate final averages and convert to array
+    scores = Array.from(userScores.values())
+      .filter(s => s.totalPredictions >= 1)
+      .map(s => ({
+        ...s,
+        avgBrierScore: s.totalBrierScore / s.totalPredictions,
+      }))
+      .sort((a, b) => a.avgBrierScore - b.avgBrierScore)
+      .slice(skip, skip + limit)
+
+    total = userScores.size
+  } else {
+    // Use pre-computed AccuracyScore for 'all time'
+    const result = await Promise.all([
+      prisma.accuracyScore.findMany({
+        where: {
+          category: effectiveCategory ?? null,
+          scoredPredictions: { gte: 1 },
+        },
+        orderBy: { avgBrierScore: 'asc' },
+        skip,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true, username: true, displayName: true,
+              avatarUrl: true, occupation: true, subscriptionTier: true,
+              _count: { select: { predictions: true, subscribers: true } },
+            },
+          },
+        },
+      }),
+      prisma.accuracyScore.count({
+        where: { category: effectiveCategory ?? null, scoredPredictions: { gte: 1 } },
+      }),
+    ])
+    scores = result[0]
+    total = result[1]
+  }
 
   const totalPages = Math.ceil(total / limit)
 
@@ -233,9 +306,19 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
         {/* Pagination */}
         {totalPages > 1 && (
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '24px' }}>
-            {page > 1 && <Link href={`/leaderboard?page=${page - 1}`} className="btn btn-secondary">← Previous</Link>}
+            {page > 1 && (
+              <Link
+                href={`/leaderboard?page=${page - 1}${period !== 'all' ? `&period=${period}` : ''}${category ? `&category=${category}` : ''}`}
+                className="btn btn-secondary"
+              >← Previous</Link>
+            )}
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', alignSelf: 'center' }}>{page} / {totalPages}</span>
-            {page < totalPages && <Link href={`/leaderboard?page=${page + 1}`} className="btn btn-secondary">Next →</Link>}
+            {page < totalPages && (
+              <Link
+                href={`/leaderboard?page=${page + 1}${period !== 'all' ? `&period=${period}` : ''}${category ? `&category=${category}` : ''}`}
+                className="btn btn-secondary"
+              >Next →</Link>
+            )}
           </div>
         )}
       </div>

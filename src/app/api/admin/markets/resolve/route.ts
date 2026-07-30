@@ -7,7 +7,7 @@ import { auth } from '@/lib/auth-mock'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import { scoreMarket } from '@/lib/scoring'
+import { scoreMarket, updateCompetitionScores } from '@/lib/scoring'
 
 async function requireAdmin(clerkId: string) {
   const adminIds = (process.env.ADMIN_USER_IDS || '').split(',').map(s => s.trim())
@@ -47,6 +47,9 @@ export async function PATCH(req: NextRequest) {
 
     // Trigger scoring for all predictions
     await scoreMarket(marketId, outcome)
+
+    // Update competition leaderboards for active competitions
+    await updateCompetitionScores(marketId, new Date())
 
     return NextResponse.json({
       success: true,

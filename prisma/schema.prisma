@@ -97,14 +97,21 @@ model User {
   websiteUrl        String?
 
   // Subscription
-  stripeCustomerId  String?   @unique
-  subscriptionTier  SubscriptionTier @default(FREE)
-  subscriptionStatus SubscriptionStatus?
+  stripeCustomerId     String?   @unique
+  subscriptionTier      SubscriptionTier @default(FREE)
+  subscriptionStatus    SubscriptionStatus?
+
+  // Creator monetization (Stripe Connect)
+  stripeAccountId       String?   @unique  // Stripe Connect Express account ID
+  stripeOnboardingComplete Boolean @default(false)
+  creatorSettings       CreatorSettings?
+  payouts               Payout[]
 
   // Flags
   isAdmin           Boolean   @default(false)
   isSuspended       Boolean   @default(false)
   onboardingComplete Boolean  @default(false)
+  hasSeenLanding    Boolean   @default(false)  // track if user has seen landing page
 
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -118,6 +125,9 @@ model User {
   subscribers       UserSubscription[]  @relation("expert")
   accuracyScores    AccuracyScore[]
   topicsCreated     Market[]            @relation("topicCreator")
+  competitions      Competition[]
+  competitionsWon   Competition[]       @relation("CompetitionWinner")
+  competitionMembers CompetitionMember[]
 
   @@index([clerkId])
   @@index([username])
@@ -290,6 +300,59 @@ model AccuracyScore {
   @@index([category, avgBrierScore])
 }
 
+// ─── CREATOR SETTINGS (subscription pricing & revenue share) ─
+
+model CreatorSettings {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Pricing
+  monthlyPriceCents Int    @default(999)  // e.g., 999 = $9.99
+
+  // Revenue share (platform fee percentage)
+  // 1500 = 15% platform fee, 85% to creator
+  platformFeeBps   Int     @default(1500)
+
+  createdAt       DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+// ─── PAYOUT (creator withdrawal requests) ─────────────────────
+
+model Payout {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Amount
+  amountCents     Int      // amount to be paid to creator (after platform fee)
+
+  // Stripe
+  stripeTransferId String? @unique  // Stripe Connect transfer ID
+
+  // Status
+  status          PayoutStatus @default(PENDING)
+  requestedAt     DateTime @default(now())
+  processedAt     DateTime?
+
+  // Notes
+  notes           String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
 // ─── USER SUBSCRIPTION (expert → subscriber) ─────────────
 
 model UserSubscription {
@@ -307,6 +370,9 @@ model UserSubscription {
 
   // Expert's pricing
   monthlyPriceCents     Int       // e.g. 999 = $9.99
+
+  // Revenue share (snapshot of platform fee at subscription time)
+  platformFeeBps        Int       @default(1500)  // 1500 = 15%
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -349,6 +415,65 @@ model FeatureFlag {
 
 // ─── SEED DATA: default feature flags ────────────────────
 // (populated via prisma/seed.ts)
+
+// ─── FANTASY LEAGUE: COMPETITION ─────────────────────────────
+
+model Competition {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?  @db.Text
+
+  // Time period
+  startsAt        DateTime
+  endsAt          DateTime
+
+  // Access control
+  isPublic        Boolean  @default(true)
+  entryCode       String?  // for private competitions
+
+  // Prize info
+  prizeDescription String? @db.Text
+  prizeImageUrl   String?
+
+  // Metadata
+  maxParticipants Int?     // null = unlimited
+  participantCount Int     @default(0)
+
+  // Relations
+  createdBy       String
+  creator         User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  winnerId        String?
+  winner          User?    @relation("CompetitionWinner", fields: [winnerId], references: [id])
+  members         CompetitionMember[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isPublic])
+  @@index([startsAt])
+  @@index([endsAt])
+}
+
+model CompetitionMember {
+  id              String   @id @default(cuid())
+  competitionId   String
+  competition     Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Stats (computed from predictions within competition period)
+  totalPredictions Int     @default(0)
+  scoredPredictions Int    @default(0)
+  totalBrierScore  Float   @default(0)
+  avgBrierScore    Float?
+
+  joinedAt        DateTime @default(now())
+
+  @@unique([competitionId, userId])
+  @@index([competitionId])
+  @@index([userId])
+  @@index([avgBrierScore])
+}
 
 // ─── EMAIL WAITLIST ───────────────────────────────────────
 

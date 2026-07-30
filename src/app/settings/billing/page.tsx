@@ -22,7 +22,6 @@ export default async function BillingPage({ searchParams }: { searchParams: { su
   // Server-side sync: When returning from successful Stripe payment, sync immediately
   // This happens before the page renders, ensuring the user sees their updated plan
   if (searchParams.success === 'true' && user.stripeCustomerId) {
-    console.log('🔄 Auto-syncing subscription for user:', user.id, 'after successful payment')
     await syncSubscriptionFromStripe(user.id)
 
     // Redirect to clean URL (remove query params) - the subscription is now synced

@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
         certifications: certifications ? certifications.split(',').map(s => s.trim()).filter(Boolean) : [],
         yearsExperience: yearsExperience || null,
         onboardingComplete: true,
+        hasSeenLanding: true, // User has completed onboarding, mark landing as seen
       },
     })
 
@@ -85,6 +86,7 @@ export async function POST(req: NextRequest) {
       certifications: certifications ? certifications.split(',').map(s => s.trim()).filter(Boolean) : [],
       yearsExperience: yearsExperience || null,
       onboardingComplete: true,
+      hasSeenLanding: true, // User has completed onboarding, mark landing as seen
     },
   })
 
