@@ -42,6 +42,7 @@ export default async function AdminPage() {
             <Link href="/admin/topics" className="btn btn-secondary">Topic Queue ({pendingTopics})</Link>
             <Link href="/admin/markets" className="btn btn-secondary">Resolve Markets ({unresolvedMarkets})</Link>
             <Link href="/admin/markets/resolved" className="btn btn-secondary">Resolved ({resolvedMarkets})</Link>
+            <Link href="/admin/payouts" className="btn btn-secondary">Payouts</Link>
             <Link href="/admin/users" className="btn btn-secondary">Users</Link>
           </div>
         </div>
