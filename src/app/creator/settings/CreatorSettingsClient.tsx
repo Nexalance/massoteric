@@ -99,6 +99,7 @@ export default function CreatorSettingsClient({
               border: '1px solid var(--border)',
               borderRadius: '4px',
               color: 'var(--cream)',
+              opacity: !isOnboarded ? 0.5 : 1,
             }}
           />
           <span style={{ fontSize: '14px', color: 'var(--mist)' }}>%</span>
@@ -106,6 +107,11 @@ export default function CreatorSettingsClient({
             (You keep {100 - platformFeePercent}%)
           </span>
         </div>
+        {!isOnboarded && (
+          <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--gold)', fontStyle: 'italic' }}>
+            💡 Complete Stripe Connect onboarding to update platform fee
+          </div>
+        )}
       </div>
 
       {/* Message */}
