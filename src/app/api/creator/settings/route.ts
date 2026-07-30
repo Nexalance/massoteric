@@ -35,9 +35,13 @@ export async function PUT(req: NextRequest) {
     const body = await req.json()
     const validated = updateSettingsSchema.parse(body)
 
-    const settings = await prisma.creatorSettings.update({
+    const settings = await prisma.creatorSettings.upsert({
       where: { userId: dbUser.id },
-      data: validated,
+      create: {
+        userId: dbUser.id,
+        ...validated,
+      },
+      update: validated,
     })
 
     return NextResponse.json({
