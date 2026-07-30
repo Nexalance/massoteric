@@ -122,7 +122,7 @@ export default function MockSignUpPage() {
               Coming Soon: Creator Subscriptions
             </p>
             <p style={{ fontSize: '11px', color: '#8A909E', margin: '0 0 4px 0' }}>Proven forecasters can offer subscriptions and earn income</p>
-            <p style={{ fontSize: '11px', color: '#C9A84C', margin: 0, fontWeight: 500 }}>Set your own price. Keep 80% of revenue.</p>
+            <p style={{ fontSize: '11px', color: '#C9A84C', margin: 0, fontWeight: 500 }}>Set your own price. Keep 85% of revenue.</p>
           </div>
         </div>
 
