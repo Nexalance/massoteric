@@ -46,7 +46,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
   const category = searchParams.category as MarketCategory | undefined
   const page = parseInt(searchParams.page || '1')
-  const limit = 20
+  const limit = 50  // Show more markets per page (Polymarket-style)
   const now = new Date()
 
   // Sort mode (defaults to Trending). Validated against the known sort list.
