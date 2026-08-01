@@ -1,9 +1,7 @@
 'use client'
 
 export default function PolymarketLink({ url }: { url: string }) {
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.stopPropagation()
-  }
+  if (!url) return null
 
   return (
     <a
@@ -11,9 +9,17 @@ export default function PolymarketLink({ url }: { url: string }) {
       target="_blank"
       rel="noopener noreferrer"
       className="polymarket-link"
-      onClick={handleClick}
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '4px',
+        fontSize: '10px',
+        padding: '3px 8px',
+        textDecoration: 'none',
+        whiteSpace: 'nowrap',
+      }}
     >
-      View on Polymarket ↗
+      View ↗
     </a>
   )
 }

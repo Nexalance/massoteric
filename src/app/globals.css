@@ -188,18 +188,31 @@ code, pre {
 	/* Polymarket external link */
 	.polymarket-link {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: 10px;
 		color: var(--mist);
-		letter-spacing: 1px;
+		letter-spacing: 0.5px;
 		text-decoration: none;
-		padding: 4px 10px;
+		padding: 3px 8px;
 		border: 1px solid var(--fog);
-		border-radius: 2px;
+		border-radius: 3px;
 		transition: all 0.15s ease;
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		white-space: nowrap;
 	}
 	.polymarket-link:hover {
 		border-color: var(--gold);
 		color: var(--gold);
+	}
+
+	/* Mobile-specific adjustments */
+	@media (max-width: 768px) {
+		.polymarket-link {
+			font-size: 9px;
+			padding: 2px 6px;
+			letter-spacing: 0;
+		}
 	}
 
 .nav-divider {

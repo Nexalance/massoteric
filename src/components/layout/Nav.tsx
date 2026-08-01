@@ -56,6 +56,7 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
                 <Link href="/feed" className="nav-link">Feed</Link>
                 <Link href="/competitions" className="nav-link">Competitions</Link>
                 <Link href="/leaderboard" className="nav-link">Leaderboard</Link>
+                <Link href="/" className="nav-link" style={{ color: 'var(--gold)' }}>Home</Link>
                 {/* Only show Predict link for PRO/STANDARD users */}
                 {(currentUser?.subscriptionTier === 'PRO' || currentUser?.subscriptionTier === 'STANDARD') && (
                   <Link href="/market/new" className="nav-link">Predict</Link>

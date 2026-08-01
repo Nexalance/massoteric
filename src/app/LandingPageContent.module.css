@@ -198,6 +198,9 @@
   max-width: 520px;
   margin: 0 auto 48px;
   line-height: 1.75;
+  padding: 0 20px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
   opacity: 0;
   animation: fadeUp 0.9s ease 0.8s forwards;
 }
@@ -986,6 +989,21 @@
 
   .hero {
     padding: 100px 20px 64px !important;
+  }
+
+  .heroTitle {
+    font-size: clamp(28px, 8vw, 48px) !important;
+  }
+
+  .heroSubtitle {
+    font-size: clamp(16px, 4vw, 22px) !important;
+    padding: 0 10px !important;
+  }
+
+  .heroDesc {
+    font-size: 15px !important;
+    padding: 0 15px !important;
+    max-width: 100% !important;
   }
 
   .problemGrid,
