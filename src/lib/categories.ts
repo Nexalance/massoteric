@@ -26,6 +26,11 @@ export const CATEGORIES: CategoryDef[] = [
   { value: 'SCIENCE', label: 'Science' },
   { value: 'TECH', label: 'Tech' },
   { value: 'ECONOMY', label: 'Economy' },
+  { value: 'IRAN', label: 'Iran' },
+  { value: 'GEOPOLITICS', label: 'Geopolitics' },
+  { value: 'CULTURE', label: 'Culture' },
+  { value: 'WEATHER', label: 'Weather' },
+  { value: 'ELECTIONS', label: 'Elections' },
   { value: 'OTHER', label: 'Other' },
 ]
 

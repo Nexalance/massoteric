@@ -103,6 +103,13 @@ export function BillingContent({ initialTier, subscriptionStatus, hasStripeCusto
 
         {/* Plan cards */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '40px' }}>
+          <style>{`
+            @media (max-width: 600px) {
+              div[style*="gridTemplateColumns: repeat(3, 1fr)"] {
+                grid-template-columns: 1fr !important;
+              }
+            }
+          `}</style>
           {PLANS.map(plan => {
             const isCurrent = plan.tier === currentTier
             return (

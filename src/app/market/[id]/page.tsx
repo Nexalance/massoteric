@@ -161,20 +161,23 @@ export default async function MarketPage({ params }: MarketPageProps) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '24px', alignItems: 'start' }}>
           <style>{`
-            @media (max-width: 900px) {
+            @media (max-width: 768px) {
               div[style*="gridTemplateColumns: 1fr 360px"] {
                 grid-template-columns: 1fr !important;
               }
+              aside[style*="position: sticky"] {
+                position: static !important;
+                maxHeight: none !important;
+              }
             }
-            @media (min-width: 901px) {
+            @media (min-width: 769px) {
               aside[style*="position: sticky"] {
                 position: sticky !important;
               }
             }
-            @media (max-width: 900px) {
-              aside[style*="position: sticky"] {
-                position: static !important;
-                maxHeight: none !important;
+            @media (max-width: 600px) {
+              div[style*="gridTemplateColumns: repeat(3, 1fr)"] {
+                grid-template-columns: 1fr !important;
               }
             }
           `}</style>
@@ -312,7 +315,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
           </div>
 
           {/* Post prediction sidebar */}
-          <aside style={{ position: 'sticky', top: '80px', alignSelf: 'start', maxHeight: 'calc(100vh - 100px)', overflowY: 'auto' }}>
+          <aside style={{ position: 'sticky', top: '80px', alignSelf: 'start' }}>
             <div className="card" style={{ borderTop: '2px solid var(--gold)' }}>
               {!isAuthenticated ? (
                 <>

@@ -8,12 +8,12 @@
   --gold:       #C9A84C;
   --gold2:      #E8C96A;
   --cream:      #F5F0E8;
-  --mist:       #8A909E;
-  --fog:        #3A4055;
+  --mist:       #B8BCC6; /* Improved from #8A909E for better contrast */
+  --fog:        #5A6075; /* Improved from #3A4055 for better contrast */
   --signal:     #4FC3A1;
   --danger:     #E05C5C;
   --warning:    #F4A836;
-  --border:     rgba(58, 64, 85, 0.6);
+  --border:     rgba(90, 96, 117, 0.6); /* Updated --fog reference */
 
   /* Card & Input backgrounds */
   --card-bg:    var(--ink2);
@@ -124,6 +124,67 @@ code, pre {
 .badge-paid { background: rgba(201,168,76,0.12); color: var(--gold); }
 .badge-category { background: rgba(255,255,255,0.06); color: var(--mist); }
 
+/* ── Subcategory Menu Pills (Polymarket-style) ── */
+.subcategory-menu {
+  border-bottom: 1px solid var(--border);
+  padding: 0 var(--page-pad);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.subcategory-menu-inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px 0;
+  align-items: center;
+  /* Hide scrollbar but allow scrolling */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.subcategory-menu-inner::-webkit-scrollbar {
+  display: none;
+}
+
+.subcategory-pill {
+  padding: 6px 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: var(--cream);
+  background: transparent;
+  border: 1px solid var(--fog);
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.subcategory-pill:hover {
+  transform: translateY(-1px);
+}
+
+.subcategory-pill-count {
+  color: var(--fog);
+  margin-left: 4px;
+  font-size: 10px;
+}
+
+.subcategory-pill.active {
+  color: var(--ink);
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.subcategory-pill.active .subcategory-pill-count {
+  color: var(--ink);
+}
+
+/* ── Buttons ── */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -209,8 +270,9 @@ code, pre {
 	/* Mobile-specific adjustments */
 	@media (max-width: 768px) {
 		.polymarket-link {
-			font-size: 9px;
-			padding: 2px 6px;
+			font-size: 11px;
+			padding: 8px 12px;
+			min-height: 44px;
 			letter-spacing: 0;
 		}
 	}
@@ -371,16 +433,6 @@ input[type="datetime-local"] {
   color: black !important;
 }
 
-.cl-internal-kf9owt {
-  background-color: var(--alpha);
-  color: var(--accentHover);
-}
-
-.cl-internal-kf9owt:hover {
-  background-color: var(--alpha);
-  color: var(--accentHover);
-}
-
 /* Responsive */
 @media (max-width: 768px) {
   .hide-mobile { display: none !important; }
@@ -395,4 +447,127 @@ table tbody tr {
 }
 table tbody tr:hover {
   background: var(--ink3);
+}
+
+/* ── Mobile Responsive Improvements ── */
+@media (max-width: 768px) {
+  /* Better contrast for text on mobile */
+  :root {
+    --mist: #C5CAD5; /* Lighter for mobile readability */
+    --fog: #6A7085; /* Lighter fog for better contrast */
+  }
+
+  /* Full-width cards on mobile */
+  .card {
+    margin: 0 !important;
+  }
+
+  /* Better spacing for polymarket link on mobile */
+  .polymarket-link {
+    margin-right: 4px;
+    flex-shrink: 0;
+  }
+
+  /* Feed grid layout - single column on mobile */
+  .feed-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  .feed-grid aside {
+    position: static !important;
+    max-height: none !important;
+  }
+
+  .page-container {
+    padding: 0 16px !important;
+  }
+
+  /* TopicsMenu popup - full width on mobile with better positioning */
+  .topics-dropdown {
+    position: fixed !important;
+    top: 60px !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: none !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5) !important;
+  }
+
+  /* Navigation improvements on mobile */
+  nav {
+    padding: 0 16px !important;
+  }
+
+  /* Better touch targets for buttons */
+  button, .btn {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Better touch targets for subcategory pills */
+  .subcategory-pill {
+    padding: 12px 16px !important;
+    min-height: 44px !important;
+    font-size: 12px !important;
+  }
+
+  /* Mobile menu search bar - larger and full-width */
+  .nav-search {
+    height: 48px !important;
+    font-size: 16px !important;
+    padding: 0 40px 0 40px !important;
+  }
+
+  /* SearchBar container in mobile menu - full width */
+  div[style*="position: relative; width: 196"] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Better spacing in mobile menu links */
+  /* Mobile menu links already have proper spacing via inline styles */
+}
+
+@media (max-width: 480px) {
+  /* Even smaller padding for tiny screens */
+  .polymarket-link {
+    padding: 6px 10px !important;
+    min-height: 44px !important;
+    font-size: 10px !important;
+  }
+
+  .card {
+    padding: 16px !important;
+  }
+
+  /* Smaller nav on tiny phones */
+  nav {
+    height: 56px !important;
+  }
+
+  /* Adjust main padding for smaller nav */
+  main {
+    padding-top: 56px !important;
+  }
+}
+
+/* Topics dropdown popup - better mobile positioning */
+.topics-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  min-width: 320px;
+  max-width: calc(100vw - 40px);
+  background: var(--ink2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  box-shadow: var(--shadow-md);
+  z-index: 1000;
+  padding: 14px;
 }

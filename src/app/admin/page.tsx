@@ -49,6 +49,13 @@ export default async function AdminPage() {
 
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '32px' }}>
+          <style>{`
+            @media (max-width: 600px) {
+              div[style*="gridTemplateColumns: repeat(3, 1fr)"] {
+                grid-template-columns: 1fr !important;
+              }
+            }
+          `}</style>
           {[
             { label: 'Total Users', value: userCount.toLocaleString(), sub: 'registered accounts' },
             { label: 'Paid Subscribers', value: paidCount.toLocaleString(), sub: `${Math.round(paidCount / Math.max(userCount, 1) * 100)}% conversion` },

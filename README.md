@@ -2,7 +2,7 @@
 
 **The Prediction Intelligence Platform**
 
-A social prediction platform that aggregates markets from Polymarket, Kalshi, and Metaculus — and layers on a community where users post forecasts with reasoning, get scored on accuracy, and build verifiable reputations.
+A social prediction platform that aggregates markets from Polymarket — with planned support for Kalshi, Metaculus, and more. Users post forecasts with reasoning, get scored on accuracy, and build verifiable reputations.
 
 ---
 

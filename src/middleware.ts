@@ -16,6 +16,7 @@ if (!DEV_MODE) {
 const isPublicRoute = createRouteMatcher ? createRouteMatcher([
   '/',                    // landing page
   '/feed',                // public feed — browse without auth
+  '/feed/(.*)',           // all feed sub-routes including categories and subcategories
   '/market(.*)',          // public market pages — browse without auth
   '/leaderboard',         // public leaderboard
   '/profile(.*)',         // public profiles — browse without auth

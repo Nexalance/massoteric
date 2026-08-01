@@ -53,6 +53,100 @@ export async function ensureMigrated() {
       console.log('[migrate] applied: add User.hasSeenLanding column')
     }
 
+    // --- Migration: add Subcategory table and Market.subcategoryId column ----------------
+    // Creates the Subcategory table and adds the subcategoryId foreign key to Market.
+    const tables = (await prisma.$queryRaw`
+      SELECT table_name
+      FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_name = 'Subcategory'
+    `) as { table_name: string }[]
+
+    if (tables.length === 0) {
+      // Create Subcategory table with correct enum type for category
+      await prisma.$executeRawUnsafe(`
+        CREATE TABLE "Subcategory" (
+          "id" TEXT NOT NULL PRIMARY KEY,
+          "slug" TEXT NOT NULL UNIQUE,
+          "label" TEXT NOT NULL,
+          "category" "MarketCategory" NOT NULL,
+          "description" TEXT,
+          "order" INTEGER NOT NULL DEFAULT 0,
+          "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+      `)
+      await prisma.$executeRawUnsafe(`CREATE INDEX "Subcategory_category_idx" ON "Subcategory"("category");`)
+      await prisma.$executeRawUnsafe(`CREATE INDEX "Subcategory_category_order_idx" ON "Subcategory"("category", "order");`)
+      console.log('[migrate] applied: create Subcategory table')
+    } else {
+      // Table exists - check for missing columns (in case migration was partially applied)
+      const subcategoryColumns = (await prisma.$queryRaw`
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = 'Subcategory'
+      `) as { column_name: string; data_type: string }[]
+
+      // Fix category column type if it's TEXT instead of enum
+      const categoryCol = subcategoryColumns.find((c) => c.column_name === 'category')
+      if (categoryCol && categoryCol.data_type === 'text') {
+        // First, drop any indexes on the category column
+        await prisma.$executeRawUnsafe(`DROP INDEX IF EXISTS "Subcategory_category_idx";`)
+        await prisma.$executeRawUnsafe(`DROP INDEX IF EXISTS "Subcategory_category_order_idx";`)
+
+        // Cast existing values to the enum type and alter the column
+        await prisma.$executeRawUnsafe(`
+          ALTER TABLE "Subcategory"
+          ALTER COLUMN "category" TYPE "MarketCategory"
+          USING "category"::text::"MarketCategory";
+        `)
+
+        // Recreate indexes
+        await prisma.$executeRawUnsafe(`CREATE INDEX "Subcategory_category_idx" ON "Subcategory"("category");`)
+        await prisma.$executeRawUnsafe(`CREATE INDEX "Subcategory_category_order_idx" ON "Subcategory"("category", "order");`)
+        console.log('[migrate] applied: fix Subcategory.category column type to MarketCategory enum')
+      }
+
+      // Add missing createdAt column
+      if (!subcategoryColumns.some((c) => c.column_name === 'createdAt')) {
+        await prisma.$executeRawUnsafe(`ALTER TABLE "Subcategory" ADD COLUMN "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;`)
+        console.log('[migrate] applied: add Subcategory.createdAt column')
+      }
+
+      // Add missing updatedAt column
+      if (!subcategoryColumns.some((c) => c.column_name === 'updatedAt')) {
+        await prisma.$executeRawUnsafe(`ALTER TABLE "Subcategory" ADD COLUMN "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;`)
+        console.log('[migrate] applied: add Subcategory.updatedAt column')
+      }
+    }
+
+    // Add subcategoryId column to Market if it doesn't exist
+    const marketColumns = (await prisma.$queryRaw`
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = 'Market'
+    `) as { column_name: string }[]
+
+    if (!marketColumns.some((c) => c.column_name === 'subcategoryId')) {
+      await prisma.$executeRawUnsafe(`ALTER TABLE "Market" ADD COLUMN "subcategoryId" TEXT;`)
+      await prisma.$executeRawUnsafe(`CREATE INDEX "Market_subcategoryId_idx" ON "Market"("subcategoryId");`)
+      console.log('[migrate] applied: add Market.subcategoryId column')
+    }
+
+    // Add foreign key constraint if it doesn't exist
+    const constraints = (await prisma.$queryRaw`
+      SELECT constraint_name
+      FROM information_schema.table_constraints
+      WHERE table_name = 'Market' AND constraint_name = 'Market_subcategoryId_Subcategory_id_fk'
+    `) as { constraint_name: string }[]
+
+    if (constraints.length === 0) {
+      await prisma.$executeRawUnsafe(`
+        ALTER TABLE "Market" ADD CONSTRAINT "Market_subcategoryId_Subcategory_id_fk"
+        FOREIGN KEY ("subcategoryId") REFERENCES "Subcategory"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+      `)
+      console.log('[migrate] applied: add Market.subcategoryId foreign key')
+    }
+
     migrated = true
   } catch (err) {
     // Never break the page render or the sync cron. Retry on the next call.

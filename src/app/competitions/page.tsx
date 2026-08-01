@@ -39,6 +39,13 @@ export default async function CompetitionsPage() {
             How Fantasy Leagues Work
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+            <style>{`
+              @media (max-width: 600px) {
+                div[style*="gridTemplateColumns: repeat(3, 1fr)"] {
+                  grid-template-columns: 1fr !important;
+                }
+              }
+            `}</style>
             {[
               {
                 step: '1',

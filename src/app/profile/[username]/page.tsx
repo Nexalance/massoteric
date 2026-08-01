@@ -134,6 +134,13 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
               {/* Stat pills */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '20px' }}>
+                <style>{`
+                  @media (max-width: 600px) {
+                    div[style*="gridTemplateColumns: repeat(3, 1fr)"] {
+                      grid-template-columns: 1fr !important;
+                    }
+                  }
+                `}</style>
                 {[
                   { label: 'Overall Accuracy', value: accuracySummary.overall ? `${accuracySummary.overall.accuracyPct}%` : '—', color: 'var(--signal)' },
                   { label: 'Predictions Made', value: profileUser._count.predictions.toString(), color: 'var(--cream)' },

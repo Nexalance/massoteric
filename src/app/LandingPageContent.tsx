@@ -390,7 +390,7 @@ export default function LandingPageContent(props: LandingPageContentProps) {
           </div>
           <div className={styles.featuresGrid}>
             {[
-              { icon: '📡', title: 'Market Aggregation', body: 'Live markets from Polymarket — with future updates planned for Kalshi, Metaculus and more. One organized feed with community-created questions on any subject.', tag: 'Free', tagType: 'free' },
+              { icon: '📡', title: 'Market Aggregation', body: 'Live markets from Polymarket across Politics, Finance, Crypto, Sports, Tech, Science, Economy, Iran, Geopolitics, Culture, Weather, and Elections. Future updates may include all major markets like Kalshi, Metaculus, and more prediction market platforms.', tag: 'Free', tagType: 'free' },
               { icon: '📝', title: 'Prediction with Reasoning', body: 'Post a probability estimate alongside your written logic. Every edit is timestamped. Predictions lock before market resolution.', tag: 'Free', tagType: 'free' },
               { icon: '📊', title: 'Brier Score Accuracy', body: 'The gold standard of forecasting measurement. Your score is calculated automatically at resolution — overall and by topic.', tag: 'Free', tagType: 'free' },
               { icon: '🔒', title: 'Full Analysis Access', body: 'Free users see a teaser. Paid members read the complete reasoning, filter by accuracy score, and follow specific forecasters.', tag: 'Paid', tagType: 'paid' },

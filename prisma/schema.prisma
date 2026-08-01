@@ -36,6 +36,11 @@ enum MarketCategory {
   SCIENCE
   TECH
   ECONOMY
+  GEOPOLITICS
+  IRAN
+  CULTURE
+  WEATHER
+  ELECTIONS
   OTHER
 }
 
@@ -71,6 +76,29 @@ enum FeatureKey {
   CATEGORY_LEADERBOARD
   EXPERT_QA
   TOPIC_CREATE
+}
+
+// ─── SUBCATEGORY ───────────────────────────────────────────
+// Curated subcategories within each market category
+// e.g., Politics → Trump, Elections, Geopolitics
+
+model Subcategory {
+  id          String        @id @default(cuid())
+  slug        String                 // URL-friendly identifier
+  label       String                 // Display name
+  category    MarketCategory         // Parent category
+  description String?       @db.Text
+  order       Int           @default(0)  // For ordering within category
+
+  // Relations
+  markets     Market[]
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([slug, category])  // Allow same slug in different categories
+  @@index([category])
+  @@index([category, order])
 }
 
 // ─── USER ────────────────────────────────────────────────
@@ -171,6 +199,10 @@ model Market {
   featured          Boolean       @default(false)
   viewCount         Int           @default(0)
 
+  // Subcategory (optional, for structured navigation)
+  subcategoryId     String?
+  subcategory       Subcategory?  @relation(fields: [subcategoryId], references: [id])
+
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
@@ -183,6 +215,7 @@ model Market {
   @@index([source])
   @@index([closesAt])
   @@index([featured])
+  @@index([subcategoryId])
 }
 
 // ─── PREDICTION ───────────────────────────────────────────
