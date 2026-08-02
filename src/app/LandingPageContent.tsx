@@ -360,7 +360,7 @@ export default function LandingPageContent(props: LandingPageContentProps) {
           </div>
           <div className={styles.whoGrid}>
             {[
-              { icon: '🎯', title: 'The Experts', body: 'You&apos;ve been right. Consistently. About markets, politics, macro trends — topics where most people are just guessing. Massoteric gives you a platform to prove it publicly and profit from it.', list: ['Build a verified, permanent track record', 'Attract subscribers who pay for your analysis', 'Rise through leaderboards by topic', 'Your accuracy score does the marketing for you'] },
+              { icon: '🎯', title: 'The Experts', body: 'You\'ve been right. Consistently. About markets, politics, macro trends — topics where most people are just guessing. Massoteric gives you a platform to prove it publicly and profit from it.', list: ['Build a verified, permanent track record', 'Attract subscribers who pay for your analysis', 'Rise through leaderboards by topic', 'Your accuracy score does the marketing for you'] },
               { icon: '🔍', title: 'The Curious', body: 'You want signal, not noise. Access to the kind of clear-eyed analysis that used to be reserved for institutions and insiders. Massoteric brings it into the open — ranked, scored, and searchable.', list: ['Follow experts proven accurate on your topics', 'Filter by accuracy, not follower count', 'Read the reasoning, not just the conclusion', 'Access insights on finance, politics, crypto, and more'] },
             ].map((card, i) => (
               <div key={i} className={styles.whoCard}>

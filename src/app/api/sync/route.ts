@@ -7,25 +7,34 @@ export async function GET(req: NextRequest) {
   try {
     await ensureMigrated();
 
+    // Get optional category parameter for selective syncing
+    // e.g., /api/sync?category=POLITICS will only sync POLITICS subcategories
+    const categoryParam = req.nextUrl.searchParams.get('category');
+    const selectedCategory = categoryParam ? categoryParam.toUpperCase() : null;
+
+    console.log(`[Sync] Starting sync${selectedCategory ? ` for category: ${selectedCategory}` : ' (all categories)'}`)
+
     // Sync subcategories first (creates new ones if needed)
     const subcatResult = await syncPolymarketSubcategories();
 
     // Then sync markets (now can use new subcategories)
-    const result = await syncPolymarketMarkets();
+    const result = await syncPolymarketMarkets(selectedCategory);
 
     // Check for resolved markets and trigger scoring
     await checkMarketResolutions();
 
     return Response.json({
       success: true,
+      category: selectedCategory || 'ALL',
       subcategories: {
         created: subcatResult.created,
         updated: subcatResult.updated,
         deleted: subcatResult.deleted || 0,
       },
       synced: result.synced,
+      totalFetched: result.totalFetched,
       errors: result.errors,
-      iranSynced: result.iranSynced || 0
+      subcategoryCounts: result.subcategoryCounts
     });
   } catch (error) {
     console.error('[Sync] Error:', error)

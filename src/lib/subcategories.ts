@@ -16,79 +16,185 @@ export interface SubcategoryDef {
 export const SUBCATEGORIES: Record<MarketCategory, SubcategoryDef[]> = {
   POLITICS: [
     { slug: 'trump', label: 'Trump', category: 'POLITICS', description: 'Trump-related markets and administration policies' },
-    { slug: 'elections', label: 'Elections', category: 'POLITICS', description: 'US and global election markets' },
+    { slug: 'trump-daily', label: 'Trump Daily', category: 'POLITICS', description: 'Daily Trump-related markets' },
     { slug: 'midterms', label: 'Midterms', category: 'POLITICS', description: 'Congressional and midterm elections' },
-    { slug: 'geopolitics', label: 'Geopolitics', category: 'POLITICS', description: 'International relations and conflicts' },
+    { slug: 'global-elections', label: 'Global Elections', category: 'POLITICS', description: 'Global election markets' },
+    { slug: 'primaries', label: 'Primaries', category: 'POLITICS', description: 'Primary elections' },
     { slug: 'congress', label: 'Congress', category: 'POLITICS', description: 'House and Senate legislation' },
+    { slug: 'trump-cabinet', label: 'Trump Cabinet', category: 'POLITICS', description: 'Trump cabinet nominations and confirmations' },
     { slug: 'courts', label: 'Courts', category: 'POLITICS', description: 'Supreme Court and judicial decisions' },
-    { slug: 'iran', label: 'Iran', category: 'POLITICS', description: 'Iran-related politics and sanctions' },
-    { slug: 'ukraine', label: 'Ukraine', category: 'POLITICS', description: 'Ukraine-Russia conflict' },
-    { slug: 'china', label: 'China', category: 'POLITICS', description: 'China-US relations and policy' },
-    { slug: 'government-shutdown', label: 'Government Shutdown', category: 'POLITICS', description: 'Federal funding and shutdowns' },
+    { slug: 'epstein', label: 'Epstein', category: 'POLITICS', description: 'Epstein-related markets' },
+    { slug: 'gov-shutdown', label: 'Gov Shutdown', category: 'POLITICS', description: 'Federal funding and shutdowns' },
+    { slug: 'la-mayor', label: 'LA Mayor', category: 'POLITICS', description: 'Los Angeles mayoral election' },
+    { slug: 'uk-elections', label: 'UK Elections', category: 'POLITICS', description: 'UK election markets' },
+    { slug: 'german-elections', label: 'German Elections', category: 'POLITICS', description: 'German election markets' },
+    { slug: 'french-elections', label: 'French Elections', category: 'POLITICS', description: 'French election markets' },
+    { slug: 'us-presidential-election', label: 'US Election', category: 'POLITICS', description: 'US Presidential election' },
+    { slug: 'mayoral-elections', label: 'Mayoral Elections', category: 'POLITICS', description: 'Mayoral election markets' },
+    { slug: 'south-korea', label: 'South Korea', category: 'POLITICS', description: 'South Korea politics' },
+    { slug: 'japan', label: 'Japan', category: 'POLITICS', description: 'Japan politics' },
+    { slug: 'china', label: 'China', category: 'POLITICS', description: 'China politics and relations' },
+    { slug: 'brazil', label: 'Brazil', category: 'POLITICS', description: 'Brazil politics' },
+    { slug: 'canada', label: 'Canada', category: 'POLITICS', description: 'Canada politics' },
+    { slug: 'venezuela', label: 'Venezuela', category: 'POLITICS', description: 'Venezuela politics' },
+    { slug: 'turkey', label: 'Turkey', category: 'POLITICS', description: 'Turkey politics' },
+  ],
+
+  IRAN: [
+    { slug: 'ceasefire', label: 'Iran Ceasefire', category: 'IRAN', description: 'Iran ceasefire and negotiations' },
+    { slug: 'us-iran', label: 'U.S. x Iran', category: 'IRAN', description: 'US-Iran relations and conflicts' },
+    { slug: 'strait-of-hormuz', label: 'Strait of Hormuz', category: 'IRAN', description: 'Strait of Hormuz shipping and tensions' },
+    { slug: 'peace-deal', label: 'Peace Deal', category: 'IRAN', description: 'Iran peace deal markets' },
+    { slug: 'negotiations', label: 'Negotiation Topics', category: 'IRAN', description: 'Iran nuclear negotiations' },
+    { slug: 'oil', label: 'Oil', category: 'IRAN', description: 'Iran oil exports and production' },
+    { slug: 'israel-x-iran', label: 'Israel x Iran', category: 'IRAN', description: 'Israel-Iran conflict and tensions' },
+    { slug: 'lebanon', label: 'Lebanon', category: 'IRAN', description: 'Lebanon-Iran relations' },
+    { slug: 'iran', label: 'Iran Regime', category: 'IRAN', description: 'Iran internal politics and regime' },
+    { slug: 'nuclear', label: 'Nuclear', category: 'IRAN', description: 'Iran nuclear program' },
   ],
 
   FINANCE: [
     { slug: 'stocks', label: 'Stocks', category: 'FINANCE', description: 'Equity markets and company performance' },
-    { slug: 'fed', label: 'Fed', category: 'FINANCE', description: 'Federal Reserve policy and rates' },
-    { slug: 'inflation', label: 'Inflation', category: 'FINANCE', description: 'CPI, PCE, and price indicators' },
-    { slug: 'economy', label: 'Economy', category: 'FINANCE', description: 'GDP, unemployment, and economic data' },
     { slug: 'earnings', label: 'Earnings', category: 'FINANCE', description: 'Quarterly earnings and company results' },
-    { slug: 'recession', label: 'Recession', category: 'FINANCE', description: 'Recession probability and indicators' },
-    { slug: 'largest-company', label: 'Largest Company', category: 'FINANCE', description: 'Market cap leader markets' },
+    { slug: 'quarterly', label: 'Quarterly', category: 'FINANCE', description: 'Quarterly financial results' },
+    { slug: 'commodities', label: 'Commodities', category: 'FINANCE', description: 'Commodity markets and prices' },
+    { slug: 'forex', label: 'Forex', category: 'FINANCE', description: 'Foreign exchange and currency markets' },
+    { slug: 'privates', label: 'Privates', category: 'FINANCE', description: 'Private company markets' },
+    { slug: 'acquisitions', label: 'Acquisitions', category: 'FINANCE', description: 'M&A and acquisition markets' },
+    { slug: 'ipos', label: 'IPOs', category: 'FINANCE', description: 'Initial public offering markets' },
+    { slug: 'fed-rates', label: 'Fed Rates', category: 'FINANCE', description: 'Federal Reserve policy and rates' },
+    { slug: 'prediction-markets', label: 'Prediction Markets', category: 'FINANCE', description: 'Prediction market platforms' },
+    { slug: 'treasuries', label: 'Treasuries', category: 'FINANCE', description: 'Treasury bond markets' },
+    { slug: 'kpis', label: 'KPIs', category: 'FINANCE', description: 'Key performance indicator markets' },
   ],
 
   CRYPTO: [
     { slug: 'bitcoin', label: 'Bitcoin', category: 'CRYPTO', description: 'BTC price and adoption markets' },
     { slug: 'ethereum', label: 'Ethereum', category: 'CRYPTO', description: 'ETH price and ecosystem markets' },
     { slug: 'solana', label: 'Solana', category: 'CRYPTO', description: 'SOL price and developments' },
-    { slug: '5min', label: '5 Min', category: 'CRYPTO', description: '5-minute price prediction markets' },
-    { slug: 'hourly', label: 'Hourly', category: 'CRYPTO', description: '1-hour price prediction markets' },
-    { slug: 'daily', label: 'Daily', category: 'CRYPTO', description: 'Daily price targets' },
-    { slug: 'weekly', label: 'Weekly', category: 'CRYPTO', description: 'Weekly price targets' },
-    { slug: 'monthly', label: 'Monthly', category: 'CRYPTO', description: 'Monthly price targets' },
-    { slug: 'targets', label: 'Targets', category: 'CRYPTO', description: 'Price level targets' },
-    { slug: 'institutions', label: 'Institutions', category: 'CRYPTO', description: 'Institutional adoption and ETFs' },
-    { slug: 'protocol-metrics', label: 'Protocol Metrics', category: 'CRYPTO', description: 'On-chain metrics and data' },
+    { slug: 'xrp', label: 'XRP', category: 'CRYPTO', description: 'XRP price and developments' },
+    { slug: 'dogecoin', label: 'Dogecoin', category: 'CRYPTO', description: 'DOGE price and developments' },
+    { slug: 'bnb', label: 'BNB', category: 'CRYPTO', description: 'BNB price and developments' },
+    { slug: 'microstrategy', label: 'MicroStrategy', category: 'CRYPTO', description: 'MicroStrategy bitcoin holdings' },
   ],
 
   SPORTS: [
-    { slug: 'nfl', label: 'NFL', category: 'SPORTS', description: 'Football markets and Super Bowl' },
-    { slug: 'nba', label: 'NBA', category: 'SPORTS', description: 'Basketball markets and championships' },
     { slug: 'mlb', label: 'MLB', category: 'SPORTS', description: 'Baseball markets and World Series' },
+    { slug: 'ufc', label: 'UFC', category: 'SPORTS', description: 'MMA and fighting markets' },
     { slug: 'soccer', label: 'Soccer', category: 'SPORTS', description: 'Football leagues and tournaments' },
-    { slug: 'mma', label: 'MMA', category: 'SPORTS', description: 'UFC and fighting markets' },
-    { slug: 'college-football', label: 'College Football', category: 'SPORTS', description: 'NCAA football and championships' },
-    { slug: 'golf', label: 'Golf', category: 'SPORTS', description: 'PGA tournaments and majors' },
     { slug: 'tennis', label: 'Tennis', category: 'SPORTS', description: 'ATP and WTA tournaments' },
+    { slug: 'cricket', label: 'Cricket', category: 'SPORTS', description: 'Cricket matches and tournaments' },
+    { slug: 'basketball', label: 'Basketball', category: 'SPORTS', description: 'Basketball markets and championships' },
+    { slug: 'baseball', label: 'Baseball', category: 'SPORTS', description: 'Baseball markets and World Series' },
+    { slug: 'football', label: 'Football', category: 'SPORTS', description: 'Football markets and Super Bowl' },
+    { slug: 'hockey', label: 'Hockey', category: 'SPORTS', description: 'Hockey markets and Stanley Cup' },
+    { slug: 'rugby', label: 'Rugby', category: 'SPORTS', description: 'Rugby matches and tournaments' },
+    { slug: 'table-tennis', label: 'Table Tennis', category: 'SPORTS', description: 'Table tennis matches' },
+    { slug: 'volleyball', label: 'Volleyball', category: 'SPORTS', description: 'Volleyball matches and tournaments' },
+    { slug: 'golf', label: 'Golf', category: 'SPORTS', description: 'PGA tournaments and majors' },
+    { slug: 'combat', label: 'Combat', category: 'SPORTS', description: 'Combat sports and fighting' },
+    { slug: 'motorsports', label: 'Motorsports', category: 'SPORTS', description: 'Racing and motorsports' },
+    { slug: 'cycling', label: 'Cycling', category: 'SPORTS', description: 'Cycling races and tours' },
+    { slug: 'poker', label: 'Poker', category: 'SPORTS', description: 'Poker tournaments' },
+    { slug: 'chess', label: 'Chess', category: 'SPORTS', description: 'Chess matches and tournaments' },
+    { slug: 'pickleball', label: 'Pickleball', category: 'SPORTS', description: 'Pickleball matches' },
+    { slug: 'lacrosse', label: 'Lacrosse', category: 'SPORTS', description: 'Lacrosse matches' },
+    { slug: 'esports', label: 'Esports', category: 'SPORTS', description: 'Esports competitions' },
   ],
 
   SCIENCE: [
-    { slug: 'climate', label: 'Climate', category: 'SCIENCE', description: 'Climate change and temperature records' },
-    { slug: 'health', label: 'Health', category: 'SCIENCE', description: 'Medical breakthroughs and pandemics' },
-    { slug: 'space', label: 'Space', category: 'SCIENCE', description: 'Space exploration and launches' },
-    { slug: 'technology', label: 'Technology', category: 'SCIENCE', description: 'Scientific and tech developments' },
+    { slug: 'hurricanes', label: 'Hurricanes', category: 'SCIENCE', description: 'Hurricane tracking and severity markets' },
+    { slug: 'global-temp', label: 'Global Temp', category: 'SCIENCE', description: 'Global temperature records' },
+    { slug: 'weather', label: 'Weather', category: 'SCIENCE', description: 'Weather patterns and events' },
     { slug: 'ai', label: 'AI', category: 'SCIENCE', description: 'Artificial intelligence milestones' },
+    { slug: 'spacex', label: 'SpaceX', category: 'SCIENCE', description: 'SpaceX launches and developments' },
+    { slug: 'pandemics', label: 'Pandemics', category: 'SCIENCE', description: 'Pandemic tracking and health events' },
   ],
 
   TECH: [
     { slug: 'ai', label: 'AI', category: 'TECH', description: 'Artificial intelligence and LLMs' },
+    { slug: 'elon-musk', label: 'Elon Musk', category: 'TECH', description: 'Elon Musk companies and developments' },
+    { slug: 'app-store', label: 'App Store', category: 'TECH', description: 'App store policies and developments' },
+    { slug: 'spacex', label: 'SpaceX', category: 'TECH', description: 'SpaceX launches and developments' },
     { slug: 'apple', label: 'Apple', category: 'TECH', description: 'Apple product releases and performance' },
-    { slug: 'google', label: 'Google', category: 'TECH', description: 'Alphabet, Google, and AI developments' },
-    { slug: 'microsoft', label: 'Microsoft', category: 'TECH', description: 'Microsoft products and AI investments' },
-    { slug: 'meta', label: 'Meta', category: 'TECH', description: 'Meta platforms and VR/AR' },
-    { slug: 'amazon', label: 'Amazon', category: 'TECH', description: 'Amazon services and performance' },
-    { slug: 'tesla', label: 'Tesla', category: 'TECH', description: 'Tesla production and stock' },
-    { slug: 'startups', label: 'Startups', category: 'TECH', description: 'Tech startup IPOs and outcomes' },
+    { slug: 'science', label: 'Science', category: 'TECH', description: 'Scientific developments and research' },
+    { slug: 'openai', label: 'OpenAI', category: 'TECH', description: 'OpenAI products and developments' },
+    { slug: 'microstrategy', label: 'MicroStrategy', category: 'TECH', description: 'MicroStrategy stock and bitcoin holdings' },
+    { slug: 'big-tech', label: 'Big Tech', category: 'TECH', description: 'Big tech company markets' },
+    { slug: 'tiktok', label: 'TikTok', category: 'TECH', description: 'TikTok and ByteDance developments' },
+    { slug: 'prediction-markets', label: 'Prediction Markets', category: 'TECH', description: 'Prediction market platforms' },
   ],
 
   ECONOMY: [
-    { slug: 'gdp', label: 'GDP', category: 'ECONOMY', description: 'GDP growth and economic output' },
+    { slug: 'trade-war', label: 'Trade War', category: 'ECONOMY', description: 'Trade war and tariff markets' },
+    { slug: 'fed-rates', label: 'Fed Rates', category: 'ECONOMY', description: 'Federal Reserve policy and rates' },
     { slug: 'inflation', label: 'Inflation', category: 'ECONOMY', description: 'CPI, PCE, and price indicators' },
-    { slug: 'unemployment', label: 'Unemployment', category: 'ECONOMY', description: 'Jobs data and labor market' },
-    { slug: 'recession', label: 'Recession', category: 'ECONOMY', description: 'Recession probability and indicators' },
-    { slug: 'fed-rate', label: 'Fed Rate', category: 'ECONOMY', description: 'Federal funds rate decisions' },
+    { slug: 'macro-indicators', label: 'Macro Indicators', category: 'ECONOMY', description: 'Macroeconomic indicators' },
+    { slug: 'gdp', label: 'GDP', category: 'ECONOMY', description: 'GDP growth and economic output' },
+    { slug: 'global-rates', label: 'Global Rates', category: 'ECONOMY', description: 'Global interest rates' },
+    { slug: 'taxes', label: 'Taxes', category: 'ECONOMY', description: 'Tax policy and rates' },
+    { slug: 'treasuries', label: 'Treasuries', category: 'ECONOMY', description: 'Treasury bond markets' },
     { slug: 'consumer', label: 'Consumer', category: 'ECONOMY', description: 'Consumer spending and sentiment' },
     { slug: 'housing', label: 'Housing', category: 'ECONOMY', description: 'Real estate and mortgage markets' },
+    { slug: 'labor', label: 'Labor', category: 'ECONOMY', description: 'Jobs data and labor market' },
+  ],
+
+  GEOPOLITICS: [
+    { slug: 'iran', label: 'Iran', category: 'GEOPOLITICS', description: 'Iran-related politics and conflicts' },
+    { slug: 'lebanon', label: 'Lebanon', category: 'GEOPOLITICS', description: 'Lebanon political situation' },
+    { slug: 'oil', label: 'Oil', category: 'GEOPOLITICS', description: 'Oil markets and energy geopolitics' },
+    { slug: 'ukraine', label: 'Ukraine', category: 'GEOPOLITICS', description: 'Ukraine-Russia conflict' },
+    { slug: 'ukraine-map', label: 'Ukraine Map', category: 'GEOPOLITICS', description: 'Ukraine territory control markets' },
+    { slug: 'cuba', label: 'Cuba', category: 'GEOPOLITICS', description: 'Cuba politics and relations' },
+    { slug: 'venezuela', label: 'Venezuela', category: 'GEOPOLITICS', description: 'Venezuela political situation' },
+    { slug: 'middle-east', label: 'Middle East', category: 'GEOPOLITICS', description: 'Middle East conflicts and relations' },
+    { slug: 'gaza', label: 'Gaza', category: 'GEOPOLITICS', description: 'Gaza conflict and situation' },
+    { slug: 'israel', label: 'Israel', category: 'GEOPOLITICS', description: 'Israel politics and conflicts' },
+    { slug: 'syria', label: 'Syria', category: 'GEOPOLITICS', description: 'Syria conflict and situation' },
+    { slug: 'yemen', label: 'Yemen', category: 'GEOPOLITICS', description: 'Yemen conflict and humanitarian crisis' },
+    { slug: 'turkey', label: 'Turkey', category: 'GEOPOLITICS', description: 'Turkey politics and regional influence' },
+    { slug: 'sudan', label: 'Sudan', category: 'GEOPOLITICS', description: 'Sudan conflict and situation' },
+    { slug: 'china', label: 'China', category: 'GEOPOLITICS', description: 'China geopolitics and relations' },
+    { slug: 'india-pakistan', label: 'India-Pakistan', category: 'GEOPOLITICS', description: 'India-Pakistan relations and conflicts' },
+  ],
+
+  CULTURE: [
+    { slug: 'art', label: 'Art', category: 'CULTURE', description: 'Art markets and developments' },
+    { slug: 'music', label: 'Music', category: 'CULTURE', description: 'Music industry and developments' },
+    { slug: 'celebrities', label: 'Celebrities', category: 'CULTURE', description: 'Celebrity news and developments' },
+    { slug: 'awards', label: 'Awards', category: 'CULTURE', description: 'Award shows and ceremonies' },
+    { slug: 'mrbeast', label: 'MrBeast', category: 'CULTURE', description: 'MrBeast-related markets' },
+    { slug: 'movies', label: 'Movies', category: 'CULTURE', description: 'Movie releases and box office' },
+    { slug: 'taylor-swift', label: 'Taylor Swift', category: 'CULTURE', description: 'Taylor Swift news and developments' },
+    { slug: 'gta-vi', label: 'GTA VI', category: 'CULTURE', description: 'Grand Theft Auto VI release and developments' },
+    { slug: 'twitter', label: 'Tweet Markets', category: 'CULTURE', description: 'Twitter/X-related markets' },
+    { slug: 'youtube', label: 'YouTube', category: 'CULTURE', description: 'YouTube trends and creators' },
+    { slug: 'reality-tv', label: 'Reality TV', category: 'CULTURE', description: 'Reality TV shows and developments' },
+    { slug: 'aliens', label: 'Aliens', category: 'CULTURE', description: 'UFO and alien-related markets' },
+    { slug: 'courts', label: 'Courts', category: 'CULTURE', description: 'Legal cases and judicial decisions' },
+    { slug: 'eurovision', label: 'Eurovision', category: 'CULTURE', description: 'Eurovision song contest' },
+  ],
+
+  WEATHER: [
+    { slug: 'temperature', label: 'Temperature', category: 'WEATHER', description: 'Temperature records and extremes' },
+    { slug: 'precipitation', label: 'Precipitation', category: 'WEATHER', description: 'Rainfall, snowfall, and precipitation patterns' },
+    { slug: 'global', label: 'Global', category: 'WEATHER', description: 'Global weather and climate patterns' },
+  ],
+
+  ELECTIONS: [
+    { slug: 'australia', label: 'Australia', category: 'ELECTIONS', description: 'Australian elections' },
+    { slug: 'brazil', label: 'Brazil', category: 'ELECTIONS', description: 'Brazilian elections' },
+    { slug: 'canada', label: 'Canada', category: 'ELECTIONS', description: 'Canadian elections' },
+    { slug: 'france', label: 'France', category: 'ELECTIONS', description: 'French elections' },
+    { slug: 'germany', label: 'Germany', category: 'ELECTIONS', description: 'German elections' },
+    { slug: 'india', label: 'India', category: 'ELECTIONS', description: 'Indian elections' },
+    { slug: 'israel', label: 'Israel', category: 'ELECTIONS', description: 'Israeli elections' },
+    { slug: 'mexico', label: 'Mexico', category: 'ELECTIONS', description: 'Mexican elections' },
+    { slug: 'new-zealand', label: 'New Zealand', category: 'ELECTIONS', description: 'New Zealand elections' },
+    { slug: 'philippines', label: 'Philippines', category: 'ELECTIONS', description: 'Philippine elections' },
+    { slug: 'south-africa', label: 'South Africa', category: 'ELECTIONS', description: 'South African elections' },
+    { slug: 'uk', label: 'United Kingdom', category: 'ELECTIONS', description: 'UK elections' },
+    { slug: 'us', label: 'United States', category: 'ELECTIONS', description: 'US elections' },
   ],
 
   OTHER: [
@@ -125,52 +231,69 @@ export function mapTagsToSubcategory(
   const tagLower = tags.map(t => t.toLowerCase());
 
   // IRAN mappings - aligned with curated list
+  // Now matches against tag slugs (e.g., 'negotiations', 'trump-iran', 'diplomacy-ceasefire')
+  // instead of labels (e.g., "Negotiation Topics", "U.S. x Iran", "Iran Ceasefire")
+  //
+  // IMPORTANT: Check order determines priority when events have multiple tags.
+  // More specific tags are checked first to ensure correct categorization.
   if (category === 'IRAN') {
-    if (tagLower.some(t => t.includes('ceasefire') || t.includes('cease-fire'))) return 'iran-ceasefire';
-    if (tagLower.some(t => t.includes('us-iran') || (t.includes('us') && t.includes('iran')))) return 'us-iran';
-    if (tagLower.some(t => t.includes('strait') && t.includes('hormuz'))) return 'strait-of-hormuz';
+    // Exact slug matches - ordered by specificity (most specific first)
+    if (tagLower.some(t => t === 'negotiations')) return 'negotiations';
+    if (tagLower.some(t => t === 'trump-iran' || t === 'us-iran')) return 'us-iran';
+    if (tagLower.some(t => t === 'peace-deal')) return 'peace-deal';
+    if (tagLower.some(t => t === 'strait-of-hormuz' || t === 'strait-of-hormuzs')) return 'strait-of-hormuz';
+    if (tagLower.some(t => t === 'diplomacy-ceasefire' || t === 'ceasefire')) return 'ceasefire';
+    if (tagLower.some(t => t === 'oil')) return 'oil';
+    if (tagLower.some(t => t === 'lebanon')) return 'lebanon';
+    if (tagLower.some(t => t === 'nuclear')) return 'nuclear';
+    if (tagLower.some(t => t === 'israel-x-iran' || t === 'israel-iran')) return 'israel-x-iran';
+    if (tagLower.some(t => t === 'iran')) return 'iran';
+
+    // Fallback to partial matches for backwards compatibility
+    if (tagLower.some(t => t.includes('negotiation'))) return 'negotiations';
     if (tagLower.some(t => t.includes('peace') && t.includes('deal'))) return 'peace-deal';
-    if (tagLower.some(t => t.includes('negotiation'))) return 'negotiation-topics';
-    if (tagLower.some(t => t.includes('oil') && !t.includes('israel'))) return 'oil';
-    if (tagLower.some(t => t.includes('israel-iran') || t.includes('israel') && t.includes('iran'))) return 'israel-iran';
-    if (tagLower.some(t => t.includes('lebanon'))) return 'lebanon';
-    if (tagLower.some(t => t.includes('regime') || t.includes('iranian'))) return 'iran-regime';
-    if (tagLower.some(t => t.includes('nuclear'))) return 'nuclear';
-    return 'iran-regime'; // default
+    if (tagLower.some(t => t.includes('strait') && t.includes('hormuz'))) return 'strait-of-hormuz';
+    if (tagLower.some(t => t.includes('ceasefire') || t.includes('cease-fire'))) return 'ceasefire';
+    return 'iran'; // default
   }
 
   // POLITICS mappings - aligned with curated list
+  // Priority order: more specific tags first to avoid misclassification
+  // Events can have multiple tags, so check order determines which subcategory wins
   if (category === 'POLITICS') {
-    if (tagLower.some(t => t.includes('trump') || t.includes('donald'))) return 'trump';
-    if (tagLower.some(t => t.includes('trump') && t.includes('daily'))) return 'trump-daily';
-    if (tagLower.some(t => t.includes('midterm'))) return 'midterms';
-    if (tagLower.some(t => t.includes('global') && t.includes('election'))) return 'global-elections';
-    if (tagLower.some(t => t.includes('primar'))) return 'primaries';
-    if (tagLower.some(t => t.includes('congress') || t.includes('senate') || t.includes('house'))) return 'congress';
-    if (tagLower.some(t => t.includes('cabinet'))) return 'trump-cabinet';
-    if (tagLower.some(t => t.includes('court') || t.includes('justice') || t.includes('scotus'))) return 'courts';
-    if (tagLower.some(t => t.includes('epstein'))) return 'epstein';
-    if (tagLower.some(t => t.includes('shutdown') || t.includes('funding'))) return 'gov-shutdown';
-    if (tagLower.some(t => t.includes('la') && t.includes('mayor'))) return 'la-mayor';
-    if (tagLower.some(t => t.includes('uk') && t.includes('election'))) return 'uk-elections';
-    if (tagLower.some(t => t.includes('german') && t.includes('election'))) return 'german-elections';
-    if (tagLower.some(t => t.includes('french') && t.includes('election'))) return 'french-elections';
-    if (tagLower.some(t => t.includes('us') && (t.includes('election') || t.includes('presidential')))) return 'us-presidential-election';
-    if (tagLower.some(t => t.includes('mayoral'))) return 'mayoral-elections';
-    if (tagLower.some(t => t.includes('south korea') || t.includes('korea'))) return 'south-korea';
-    if (tagLower.some(t => t.includes('japan'))) return 'japan';
-    if (tagLower.some(t => t.includes('china'))) return 'china';
-    if (tagLower.some(t => t.includes('brazil'))) return 'brazil';
-    if (tagLower.some(t => t.includes('canada'))) return 'canada';
-    if (tagLower.some(t => t.includes('venezuela'))) return 'venezuela';
-    if (tagLower.some(t => t.includes('turkey'))) return 'turkey';
+    // Most specific: exact slug matches (these take priority)
+    if (tagLower.some(t => t === 'trump-daily' || ((t.includes('trump') || t.includes('donald')) && t.includes('daily')))) return 'trump-daily';
+    if (tagLower.some(t => t === 'primaries' || t.includes('primar'))) return 'primaries';
+    if (tagLower.some(t => t === 'congress' || t === 'senate' || t === 'house')) return 'congress';
+    if (tagLower.some(t => t === 'courts' || t.includes('court') || t.includes('justice') || t.includes('scotus'))) return 'courts';
+    if (tagLower.some(t => t === 'cabinet')) return 'trump-cabinet';
+    if (tagLower.some(t => t === 'epstein')) return 'epstein';
+    if (tagLower.some(t => t === 'gov-shutdown' || t.includes('shutdown') || t.includes('funding'))) return 'gov-shutdown';
+    if (tagLower.some(t => t === 'la-mayor' || (t.includes('la') && t.includes('mayor')))) return 'la-mayor';
+    if (tagLower.some(t => t === 'german-elections' || (t.includes('german') && t.includes('election')))) return 'german-elections';
+    if (tagLower.some(t => t === 'uk-elections' || (t.includes('uk') && t.includes('election')))) return 'uk-elections';
+    if (tagLower.some(t => t === 'french-elections' || (t.includes('french') && t.includes('election')))) return 'french-elections';
+    if (tagLower.some(t => t === 'mayoral-elections' || t.includes('mayoral'))) return 'mayoral-elections';
+    if (tagLower.some(t => t === 'us-presidential-election' || (t.includes('us') && (t.includes('election') || t.includes('presidential'))))) return 'us-presidential-election';
+    if (tagLower.some(t => t === 'south-korea' || t.includes('korea'))) return 'south-korea';
+    if (tagLower.some(t => t === 'japan')) return 'japan';
+    if (tagLower.some(t => t === 'china')) return 'china';
+    if (tagLower.some(t => t === 'brazil')) return 'brazil';
+    if (tagLower.some(t => t === 'canada')) return 'canada';
+    if (tagLower.some(t => t === 'venezuela')) return 'venezuela';
+    if (tagLower.some(t => t === 'turkey')) return 'turkey';
+
+    // Broader tags (checked after specific ones)
+    if (tagLower.some(t => t === 'midterms' || t.includes('midterm'))) return 'midterms';
+    if (tagLower.some(t => t === 'global-elections' || (t.includes('global') && t.includes('election')))) return 'global-elections';
+    if (tagLower.some(t => t === 'trump' || t.includes('trump') || t.includes('donald'))) return 'trump';
   }
 
   // FINANCE mappings - aligned with curated list
   if (category === 'FINANCE') {
     if (tagLower.some(t => t.includes('stock') || t.includes('equity') || t.includes('s&p') || t.includes('nasdaq'))) return 'stocks';
     if (tagLower.some(t => t.includes('earning') || t.includes('revenue'))) return 'earnings';
-    if (tagLower.some(t => t.includes('indice') || t.includes('index'))) return 'indices';
+    if (tagLower.some(t => t.includes('quarterly') || t.includes('quarter'))) return 'quarterly';
     if (tagLower.some(t => t.includes('commodit'))) return 'commodities';
     if (tagLower.some(t => t.includes('forex') || t.includes('currenc'))) return 'forex';
     if (tagLower.some(t => t.includes('private'))) return 'privates';
@@ -194,26 +317,27 @@ export function mapTagsToSubcategory(
 
   // SPORTS mappings - aligned with curated list
   if (category === 'SPORTS') {
-    if (tagLower.some(t => t.includes('ufc') || t.includes('mma'))) return 'ufc';
-    if (tagLower.some(t => t.includes('soccer') || t.includes('football'))) return 'soccer';
-    if (tagLower.some(t => t.includes('tennis'))) return 'tennis';
-    if (tagLower.some(t => t.includes('cricket'))) return 'cricket';
-    if (tagLower.some(t => t.includes('basketball') || t.includes('nba') || t.includes('wnba'))) return 'basketball';
-    if (tagLower.some(t => t.includes('baseball') || t.includes('mlb') || t.includes('kbo') || t.includes('npb') || t.includes('cpbl'))) return 'baseball';
-    if (tagLower.some(t => t.includes('nfl') || t.includes('football'))) return 'football';
-    if (tagLower.some(t => t.includes('hockey') || t.includes('nhl'))) return 'hockey';
-    if (tagLower.some(t => t.includes('rugby'))) return 'rugby';
-    if (tagLower.some(t => t.includes('table tennis'))) return 'table-tennis';
-    if (tagLower.some(t => t.includes('volleyball'))) return 'volleyball';
-    if (tagLower.some(t => t.includes('golf'))) return 'golf';
-    if (tagLower.some(t => t.includes('combat') || t.includes('fight'))) return 'combat';
-    if (tagLower.some(t => t.includes('motor'))) return 'motorsports';
-    if (tagLower.some(t => t.includes('cycl'))) return 'cycling';
-    if (tagLower.some(t => t.includes('poker'))) return 'poker';
-    if (tagLower.some(t => t.includes('chess'))) return 'chess';
-    if (tagLower.some(t => t.includes('pickleball'))) return 'pickleball';
-    if (tagLower.some(t => t.includes('lacrosse'))) return 'lacrosse';
-    if (tagLower.some(t => t.includes('esports') || t.includes('esport'))) return 'esports';
+    // Exact slug matches first
+    if (tagLower.some(t => t === 'ufc' || t === 'mma')) return 'ufc';
+    if (tagLower.some(t => t === 'soccer' || t === 'football')) return 'soccer';
+    if (tagLower.some(t => t === 'tennis')) return 'tennis';
+    if (tagLower.some(t => t === 'cricket')) return 'cricket';
+    if (tagLower.some(t => t === 'basketball' || t === 'nba' || t === 'wnba')) return 'basketball';
+    if (tagLower.some(t => t === 'baseball' || t === 'mlb' || t === 'kbo' || t === 'npb' || t === 'cpbl')) return 'baseball';
+    if (tagLower.some(t => t === 'football' || t === 'nfl')) return 'football';
+    if (tagLower.some(t => t === 'hockey' || t === 'nhl')) return 'hockey';
+    if (tagLower.some(t => t === 'rugby')) return 'rugby';
+    if (tagLower.some(t => t === 'table-tennis' || t === 'table tennis')) return 'table-tennis';
+    if (tagLower.some(t => t === 'volleyball')) return 'volleyball';
+    if (tagLower.some(t => t === 'golf')) return 'golf';
+    if (tagLower.some(t => t === 'combat')) return 'combat';
+    if (tagLower.some(t => t === 'motorsports' || t.includes('motor'))) return 'motorsports';
+    if (tagLower.some(t => t === 'cycling' || t.includes('cycl'))) return 'cycling';
+    if (tagLower.some(t => t === 'poker')) return 'poker';
+    if (tagLower.some(t => t === 'chess')) return 'chess';
+    if (tagLower.some(t => t === 'pickleball')) return 'pickleball';
+    if (tagLower.some(t => t === 'lacrosse')) return 'lacrosse';
+    if (tagLower.some(t => t === 'esports' || t === 'esport')) return 'esports';
   }
 
   // SCIENCE mappings - aligned with curated list
@@ -241,6 +365,24 @@ export function mapTagsToSubcategory(
     if (tagLower.some(t => t.includes('prediction') && t.includes('market'))) return 'prediction-markets';
   }
 
+  // CULTURE mappings - aligned with curated list
+  if (category === 'CULTURE') {
+    if (tagLower.some(t => t.includes('art') && !t.includes('mart'))) return 'art';
+    if (tagLower.some(t => t.includes('music') || t.includes('song'))) return 'music';
+    if (tagLower.some(t => t.includes('celebrit') || t.includes('famous'))) return 'celebrities';
+    if (tagLower.some(t => t.includes('award'))) return 'awards';
+    if (tagLower.some(t => t.includes('mrbeast') || t.includes('mr beast'))) return 'mrbeast';
+    if (tagLower.some(t => t.includes('movie') || t.includes('film'))) return 'movies';
+    if (tagLower.some(t => t.includes('taylor') && t.includes('swift'))) return 'taylor-swift';
+    if (tagLower.some(t => t.includes('gta'))) return 'gta-vi';
+    if (tagLower.some(t => t.includes('twitter') || t.includes('tweet'))) return 'twitter';
+    if (tagLower.some(t => t.includes('youtube'))) return 'youtube';
+    if (tagLower.some(t => t.includes('reality') && t.includes('tv'))) return 'reality-tv';
+    if (tagLower.some(t => t.includes('alien') || t.includes('ufo'))) return 'aliens';
+    if (tagLower.some(t => t.includes('eurovision'))) return 'eurovision';
+    if (tagLower.some(t => t.includes('court') || t.includes('justice'))) return 'courts';
+  }
+
   // ECONOMY mappings - aligned with curated list
   if (category === 'ECONOMY') {
     if (tagLower.some(t => t.includes('trade') && t.includes('war'))) return 'trade-war';
@@ -254,6 +396,50 @@ export function mapTagsToSubcategory(
     if (tagLower.some(t => t.includes('consumer') || t.includes('spending'))) return 'consumer';
     if (tagLower.some(t => t.includes('housing') || t.includes('mortgage'))) return 'housing';
     if (tagLower.some(t => t.includes('labor') || t.includes('jobs') || t.includes('unemploy'))) return 'labor';
+  }
+
+  // GEOPOLITICS mappings - aligned with curated list
+  if (category === 'GEOPOLITICS') {
+    if (tagLower.some(t => t.includes('iran') || t.includes('iranian'))) return 'iran';
+    if (tagLower.some(t => t.includes('lebanon') || t.includes('lebanese'))) return 'lebanon';
+    if (tagLower.some(t => t.includes('oil') || t.includes('energy'))) return 'oil';
+    if (tagLower.some(t => t.includes('ukraine') || t.includes('ukrainian'))) return 'ukraine';
+    if (tagLower.some(t => t.includes('ukraine') && t.includes('map'))) return 'ukraine-map';
+    if (tagLower.some(t => t.includes('cuba') || t.includes('cuban'))) return 'cuba';
+    if (tagLower.some(t => t.includes('venezuela') || t.includes('venezuelan'))) return 'venezuela';
+    if (tagLower.some(t => (t.includes('middle') && t.includes('east')) || t.includes('mideast'))) return 'middle-east';
+    if (tagLower.some(t => t.includes('gaza') || t.includes('gazan'))) return 'gaza';
+    if (tagLower.some(t => t.includes('israel') || t.includes('israeli'))) return 'israel';
+    if (tagLower.some(t => t.includes('syria') || t.includes('syrian'))) return 'syria';
+    if (tagLower.some(t => t.includes('yemen') || t.includes('yemeni'))) return 'yemen';
+    if (tagLower.some(t => t.includes('turkey') || t.includes('turkish'))) return 'turkey';
+    if (tagLower.some(t => t.includes('sudan') || t.includes('sudanese'))) return 'sudan';
+    if (tagLower.some(t => t.includes('china') || t.includes('chinese'))) return 'china';
+    if (tagLower.some(t => t.includes('india') && t.includes('pakistan'))) return 'india-pakistan';
+  }
+
+  // WEATHER mappings - aligned with curated list
+  if (category === 'WEATHER') {
+    if (tagLower.some(t => t.includes('temperature') || t.includes('temp'))) return 'temperature';
+    if (tagLower.some(t => t.includes('precipitation') || t.includes('rain') || t.includes('snow') || t.includes('precip'))) return 'precipitation';
+    if (tagLower.some(t => t.includes('global') && t.includes('weather'))) return 'global';
+  }
+
+  // ELECTIONS mappings - aligned with curated list
+  if (category === 'ELECTIONS') {
+    if (tagLower.some(t => t.includes('australia') || t.includes('australian'))) return 'australia';
+    if (tagLower.some(t => t.includes('brazil') || t.includes('brazilian'))) return 'brazil';
+    if (tagLower.some(t => t.includes('canada') || t.includes('canadian'))) return 'canada';
+    if (tagLower.some(t => t.includes('france') || t.includes('french'))) return 'france';
+    if (tagLower.some(t => t.includes('germany') || t.includes('german'))) return 'germany';
+    if (tagLower.some(t => t.includes('india') || t.includes('indian'))) return 'india';
+    if (tagLower.some(t => t.includes('israel') || t.includes('israeli'))) return 'israel';
+    if (tagLower.some(t => t.includes('mexico') || t.includes('mexican'))) return 'mexico';
+    if (tagLower.some(t => t.includes('new zealand') || t.includes('nz') || t.includes('new-zealand'))) return 'new-zealand';
+    if (tagLower.some(t => t.includes('philippines') || t.includes('philippine'))) return 'philippines';
+    if (tagLower.some(t => t.includes('south africa') || t.includes('south african'))) return 'south-africa';
+    if (tagLower.some(t => t.includes('uk') || t.includes('united kingdom') || t.includes('british'))) return 'uk';
+    if (tagLower.some(t => t.includes('us') || t.includes('united states') || t.includes('america') || t.includes('american'))) return 'us';
   }
 
   return null; // No subcategory match

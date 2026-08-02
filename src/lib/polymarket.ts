@@ -46,6 +46,239 @@ interface PolymarketMarket {
 }
 
 /**
+ * Maps internal subcategory slugs to Polymarket API tag slugs
+ * Polymarket uses different slugs than our internal naming convention
+ */
+function mapInternalSlugToPolymarketSlug(internalSlug: string): string {
+  const slugMap: Record<string, string> = {
+    'ceasefire': 'diplomacy-ceasefire',
+    'us-iran': 'trump-iran',
+  }
+  return slugMap[internalSlug] || internalSlug
+}
+
+/**
+ * Finds ALL matching subcategories for an event based on its tags
+ * Returns an array of subcategory slugs (allows events to belong to multiple subcategories)
+ */
+function mapTagsToAllSubcategories(tagSlugs: string[], category: MarketCategory): string[] {
+  if (!tagSlugs || tagSlugs.length === 0) return []
+
+  const matchingSubcategories: string[] = []
+  const tagLower = tagSlugs.map(t => t.toLowerCase())
+
+  // IRAN mappings - check all possible matches
+  if (category === 'IRAN') {
+    if (tagLower.some(t => t === 'negotiations')) matchingSubcategories.push('negotiations')
+    if (tagLower.some(t => t === 'trump-iran' || t === 'us-iran')) matchingSubcategories.push('us-iran')
+    if (tagLower.some(t => t === 'peace-deal')) matchingSubcategories.push('peace-deal')
+    if (tagLower.some(t => t === 'strait-of-hormuz' || t === 'strait-of-hormuzs')) matchingSubcategories.push('strait-of-hormuz')
+    if (tagLower.some(t => t === 'diplomacy-ceasefire' || t === 'ceasefire')) matchingSubcategories.push('ceasefire')
+    if (tagLower.some(t => t === 'oil')) matchingSubcategories.push('oil')
+    if (tagLower.some(t => t === 'lebanon')) matchingSubcategories.push('lebanon')
+    if (tagLower.some(t => t === 'nuclear')) matchingSubcategories.push('nuclear')
+    if (tagLower.some(t => t === 'israel-x-iran' || t === 'israel-iran')) matchingSubcategories.push('israel-x-iran')
+    if (tagLower.some(t => t === 'iran')) matchingSubcategories.push('iran')
+
+    // Fallback to partial matches for backwards compatibility
+    if (matchingSubcategories.length === 0) {
+      if (tagLower.some(t => t.includes('negotiation'))) matchingSubcategories.push('negotiations')
+      if (tagLower.some(t => t.includes('peace') && t.includes('deal'))) matchingSubcategories.push('peace-deal')
+      if (tagLower.some(t => t.includes('strait') && t.includes('hormuz'))) matchingSubcategories.push('strait-of-hormuz')
+      if (tagLower.some(t => t.includes('ceasefire') || t.includes('cease-fire'))) matchingSubcategories.push('ceasefire')
+    }
+    if (matchingSubcategories.length === 0) matchingSubcategories.push('iran')
+  }
+
+  // POLITICS mappings - check all possible matches
+  if (category === 'POLITICS' && matchingSubcategories.length === 0) {
+    if (tagLower.some(t => t === 'trump-daily' || ((t.includes('trump') || t.includes('donald')) && t.includes('daily')))) matchingSubcategories.push('trump-daily')
+    if (tagLower.some(t => t === 'primaries' || t.includes('primar'))) matchingSubcategories.push('primaries')
+    if (tagLower.some(t => t === 'congress' || t === 'senate' || t === 'house')) matchingSubcategories.push('congress')
+    if (tagLower.some(t => t === 'courts' || t.includes('court') || t.includes('justice') || t.includes('scotus'))) matchingSubcategories.push('courts')
+    if (tagLower.some(t => t === 'cabinet')) matchingSubcategories.push('trump-cabinet')
+    if (tagLower.some(t => t === 'epstein')) matchingSubcategories.push('epstein')
+    if (tagLower.some(t => t === 'gov-shutdown' || t.includes('shutdown') || t.includes('funding'))) matchingSubcategories.push('gov-shutdown')
+    if (tagLower.some(t => t === 'la-mayor' || (t.includes('la') && t.includes('mayor')))) matchingSubcategories.push('la-mayor')
+    if (tagLower.some(t => t === 'german-elections' || (t.includes('german') && t.includes('election')))) matchingSubcategories.push('german-elections')
+    if (tagLower.some(t => t === 'uk-elections' || (t.includes('uk') && t.includes('election')))) matchingSubcategories.push('uk-elections')
+    if (tagLower.some(t => t === 'french-elections' || (t.includes('french') && t.includes('election')))) matchingSubcategories.push('french-elections')
+    if (tagLower.some(t => t === 'mayoral-elections' || t.includes('mayoral'))) matchingSubcategories.push('mayoral-elections')
+    if (tagLower.some(t => t === 'us-presidential-election' || (t.includes('us') && (t.includes('election') || t.includes('presidential'))))) matchingSubcategories.push('us-presidential-election')
+    if (tagLower.some(t => t === 'south-korea' || t.includes('korea'))) matchingSubcategories.push('south-korea')
+    if (tagLower.some(t => t === 'japan')) matchingSubcategories.push('japan')
+    if (tagLower.some(t => t === 'china')) matchingSubcategories.push('china')
+    if (tagLower.some(t => t === 'brazil')) matchingSubcategories.push('brazil')
+    if (tagLower.some(t => t === 'canada')) matchingSubcategories.push('canada')
+    if (tagLower.some(t => t === 'venezuela')) matchingSubcategories.push('venezuela')
+    if (tagLower.some(t => t === 'turkey')) matchingSubcategories.push('turkey')
+    if (tagLower.some(t => t === 'midterms' || t.includes('midterm'))) matchingSubcategories.push('midterms')
+    if (tagLower.some(t => t === 'global-elections' || (t.includes('global') && t.includes('election')))) matchingSubcategories.push('global-elections')
+    if (tagLower.some(t => t === 'trump' || t.includes('trump') || t.includes('donald'))) matchingSubcategories.push('trump')
+  }
+
+  // FINANCE mappings - check all possible matches
+  if (category === 'FINANCE' && matchingSubcategories.length === 0) {
+    if (tagLower.some(t => t.includes('stock') || t.includes('equity') || t.includes('s&p') || t.includes('nasdaq'))) matchingSubcategories.push('stocks')
+    if (tagLower.some(t => t.includes('earning') || t.includes('revenue'))) matchingSubcategories.push('earnings')
+    if (tagLower.some(t => t.includes('quarterly') || t.includes('quarter'))) matchingSubcategories.push('quarterly')
+    if (tagLower.some(t => t.includes('commodit'))) matchingSubcategories.push('commodities')
+    if (tagLower.some(t => t.includes('forex') || t.includes('currenc'))) matchingSubcategories.push('forex')
+    if (tagLower.some(t => t.includes('private'))) matchingSubcategories.push('privates')
+    if (tagLower.some(t => t.includes('acquisition') || t.includes('merger') || t.includes('m&a'))) matchingSubcategories.push('acquisitions')
+    if (tagLower.some(t => t.includes('fed') && t.includes('rate'))) matchingSubcategories.push('fed-rates')
+    if (tagLower.some(t => t.includes('prediction') && t.includes('market'))) matchingSubcategories.push('prediction-markets')
+    if (tagLower.some(t => t.includes('treasur'))) matchingSubcategories.push('treasuries')
+    if (tagLower.some(t => t.includes('kpi'))) matchingSubcategories.push('kpis')
+  }
+
+  // CRYPTO mappings - check all possible matches
+  if (category === 'CRYPTO' && matchingSubcategories.length === 0) {
+    if (tagLower.some(t => t.includes('bitcoin') || t.includes('btc'))) matchingSubcategories.push('bitcoin')
+    if (tagLower.some(t => t.includes('ethereum') || t.includes('eth'))) matchingSubcategories.push('ethereum')
+    if (tagLower.some(t => t.includes('solana') || t.includes('sol'))) matchingSubcategories.push('solana')
+    if (tagLower.some(t => t.includes('xrp') || t.includes('ripple'))) matchingSubcategories.push('xrp')
+    if (tagLower.some(t => t.includes('dogecoin') || t.includes('doge'))) matchingSubcategories.push('dogecoin')
+    if (tagLower.some(t => t.includes('bnb') || t.includes('binance'))) matchingSubcategories.push('bnb')
+    if (tagLower.some(t => t.includes('microstrategy') || t.includes('mstr'))) matchingSubcategories.push('microstrategy')
+  }
+
+  // SPORTS mappings - check all possible matches
+  if (category === 'SPORTS' && matchingSubcategories.length === 0) {
+    if (tagLower.some(t => t.includes('ufc') || t.includes('mma'))) matchingSubcategories.push('ufc')
+    if (tagLower.some(t => t.includes('soccer') || t.includes('football'))) matchingSubcategories.push('soccer')
+    if (tagLower.some(t => t.includes('tennis'))) matchingSubcategories.push('tennis')
+    if (tagLower.some(t => t.includes('cricket'))) matchingSubcategories.push('cricket')
+    if (tagLower.some(t => t.includes('basketball') || t.includes('nba') || t.includes('wnba'))) matchingSubcategories.push('basketball')
+    if (tagLower.some(t => t.includes('baseball') || t.includes('mlb') || t.includes('kbo') || t.includes('npb') || t.includes('cpbl'))) matchingSubcategories.push('baseball')
+    if (tagLower.some(t => t.includes('nfl') || t === 'football')) matchingSubcategories.push('football')
+    if (tagLower.some(t => t.includes('hockey') || t.includes('nhl'))) matchingSubcategories.push('hockey')
+    if (tagLower.some(t => t.includes('rugby'))) matchingSubcategories.push('rugby')
+    if (tagLower.some(t => t.includes('table tennis'))) matchingSubcategories.push('table-tennis')
+    if (tagLower.some(t => t.includes('volleyball'))) matchingSubcategories.push('volleyball')
+    if (tagLower.some(t => t.includes('golf'))) matchingSubcategories.push('golf')
+    if (tagLower.some(t => t.includes('combat') || t.includes('fight'))) matchingSubcategories.push('combat')
+    if (tagLower.some(t => t.includes('motor'))) matchingSubcategories.push('motorsports')
+    if (tagLower.some(t => t.includes('cycl'))) matchingSubcategories.push('cycling')
+    if (tagLower.some(t => t.includes('poker'))) matchingSubcategories.push('poker')
+    if (tagLower.some(t => t.includes('chess'))) matchingSubcategories.push('chess')
+    if (tagLower.some(t => t.includes('pickleball'))) matchingSubcategories.push('pickleball')
+    if (tagLower.some(t => t.includes('lacrosse'))) matchingSubcategories.push('lacrosse')
+    if (tagLower.some(t => t.includes('esports') || t.includes('esport'))) matchingSubcategories.push('esports')
+  }
+
+  // SCIENCE mappings - check all possible matches
+  if (category === 'SCIENCE' && matchingSubcategories.length === 0) {
+    if (tagLower.some(t => t.includes('hurricane') || t.includes('tornado') || t.includes('storm'))) matchingSubcategories.push('hurricanes')
+    if (tagLower.some(t => t.includes('global') && t.includes('temp'))) matchingSubcategories.push('global-temp')
+    if (tagLower.some(t => t.includes('weather') || t.includes('temperature'))) matchingSubcategories.push('weather')
+    if (tagLower.some(t => t.includes('ai') || t.includes('artificial intelligence'))) matchingSubcategories.push('ai')
+    if (tagLower.some(t => t.includes('space') || t.includes('nasa') || t.includes('spacex'))) matchingSubcategories.push('spacex')
+    if (tagLower.some(t => t.includes('pandemic') || t.includes('covid') || t.includes('virus'))) matchingSubcategories.push('pandemics')
+  }
+
+  // TECH mappings - check all possible matches
+  if (category === 'TECH' && matchingSubcategories.length === 0) {
+    if (tagLower.some(t => t.includes('ai') || t.includes('llm') || t.includes('artificial intelligence'))) matchingSubcategories.push('ai')
+    if (tagLower.some(t => t.includes('elon') && t.includes('musk'))) matchingSubcategories.push('elon-musk')
+    if (tagLower.some(t => t.includes('app') && t.includes('store'))) matchingSubcategories.push('app-store')
+    if (tagLower.some(t => t.includes('spacex'))) matchingSubcategories.push('spacex')
+    if (tagLower.some(t => t.includes('apple'))) matchingSubcategories.push('apple')
+    if (tagLower.some(t => t.includes('science') && !t.includes('tech'))) matchingSubcategories.push('science')
+    if (tagLower.some(t => t.includes('openai') || t.includes('chatgpt'))) matchingSubcategories.push('openai')
+    if (tagLower.some(t => t.includes('microstrategy') || t.includes('mstr'))) matchingSubcategories.push('microstrategy')
+    if (tagLower.some(t => t.includes('big tech') || t.includes('big-tech'))) matchingSubcategories.push('big-tech')
+    if (tagLower.some(t => t.includes('tiktok') || t.includes('tik tok'))) matchingSubcategories.push('tiktok')
+    if (tagLower.some(t => t.includes('prediction') && t.includes('market'))) matchingSubcategories.push('prediction-markets')
+  }
+
+  // ECONOMY mappings - check all possible matches
+  if (category === 'ECONOMY' && matchingSubcategories.length === 0) {
+    if (tagLower.some(t => t.includes('trade') && t.includes('war'))) matchingSubcategories.push('trade-war')
+    if (tagLower.some(t => t.includes('fed') && t.includes('rate'))) matchingSubcategories.push('fed-rates')
+    if (tagLower.some(t => t.includes('inflation') || t.includes('cpi') || t.includes('pce'))) matchingSubcategories.push('inflation')
+    if (tagLower.some(t => t.includes('macro') || t.includes('indicator'))) matchingSubcategories.push('macro-indicators')
+    if (tagLower.some(t => t.includes('gdp'))) matchingSubcategories.push('gdp')
+    if (tagLower.some(t => t.includes('global') && t.includes('rate'))) matchingSubcategories.push('global-rates')
+    if (tagLower.some(t => t.includes('tax'))) matchingSubcategories.push('taxes')
+    if (tagLower.some(t => t.includes('treasur'))) matchingSubcategories.push('treasuries')
+    if (tagLower.some(t => t.includes('consumer') || t.includes('spending'))) matchingSubcategories.push('consumer')
+    if (tagLower.some(t => t.includes('housing') || t.includes('mortgage'))) matchingSubcategories.push('housing')
+    if (tagLower.some(t => t.includes('labor') || t.includes('jobs') || t.includes('unemploy'))) matchingSubcategories.push('labor')
+  }
+
+  // CULTURE mappings - check all possible matches
+  if (category === 'CULTURE' && matchingSubcategories.length === 0) {
+    if (tagLower.some(t => t.includes('art') && !t.includes('mart'))) matchingSubcategories.push('art')
+    if (tagLower.some(t => t.includes('music') || t.includes('song'))) matchingSubcategories.push('music')
+    if (tagLower.some(t => t.includes('celebrit') || t.includes('famous'))) matchingSubcategories.push('celebrities')
+    if (tagLower.some(t => t.includes('award'))) matchingSubcategories.push('awards')
+    if (tagLower.some(t => t.includes('mrbeast') || t.includes('mr beast'))) matchingSubcategories.push('mrbeast')
+    if (tagLower.some(t => t.includes('movie') || t.includes('film'))) matchingSubcategories.push('movies')
+    if (tagLower.some(t => t.includes('taylor') && t.includes('swift'))) matchingSubcategories.push('taylor-swift')
+    if (tagLower.some(t => t.includes('gta'))) matchingSubcategories.push('gta-vi')
+    if (tagLower.some(t => t.includes('twitter') || t.includes('tweet'))) matchingSubcategories.push('twitter')
+    if (tagLower.some(t => t.includes('youtube'))) matchingSubcategories.push('youtube')
+    if (tagLower.some(t => t.includes('reality') && t.includes('tv'))) matchingSubcategories.push('reality-tv')
+    if (tagLower.some(t => t.includes('alien') || t.includes('ufo'))) matchingSubcategories.push('aliens')
+    if (tagLower.some(t => t.includes('eurovision'))) matchingSubcategories.push('eurovision')
+    if (tagLower.some(t => t.includes('court') || t.includes('justice'))) matchingSubcategories.push('courts')
+  }
+
+  // GEOPOLITICS mappings - check all possible matches
+  if (category === 'GEOPOLITICS' && matchingSubcategories.length === 0) {
+    if (tagLower.some(t => t.includes('iran'))) matchingSubcategories.push('iran')
+    if (tagLower.some(t => t.includes('lebanon'))) matchingSubcategories.push('lebanon')
+    if (tagLower.some(t => t.includes('oil'))) matchingSubcategories.push('oil')
+    if (tagLower.some(t => t.includes('ukraine'))) matchingSubcategories.push('ukraine')
+    if (tagLower.some(t => t.includes('ukraine') && t.includes('map'))) matchingSubcategories.push('ukraine-map')
+    if (tagLower.some(t => t.includes('cuba'))) matchingSubcategories.push('cuba')
+    if (tagLower.some(t => t.includes('venezuela'))) matchingSubcategories.push('venezuela')
+    if (tagLower.some(t => t.includes('middle') && t.includes('east'))) matchingSubcategories.push('middle-east')
+    if (tagLower.some(t => t.includes('gaza'))) matchingSubcategories.push('gaza')
+    if (tagLower.some(t => t.includes('israel'))) matchingSubcategories.push('israel')
+    if (tagLower.some(t => t.includes('syria'))) matchingSubcategories.push('syria')
+    if (tagLower.some(t => t.includes('yemen'))) matchingSubcategories.push('yemen')
+    if (tagLower.some(t => t.includes('turkey'))) matchingSubcategories.push('turkey')
+    if (tagLower.some(t => t.includes('sudan'))) matchingSubcategories.push('sudan')
+    if (tagLower.some(t => t.includes('china'))) matchingSubcategories.push('china')
+    if (tagLower.some(t => t.includes('india') && t.includes('pakistan'))) matchingSubcategories.push('india-pakistan')
+  }
+
+  // WEATHER mappings - check all possible matches
+  if (category === 'WEATHER' && matchingSubcategories.length === 0) {
+    if (tagLower.some(t => t.includes('temperature') || t.includes('temp'))) matchingSubcategories.push('temperature')
+    if (tagLower.some(t => t.includes('precipitation') || t.includes('rain') || t.includes('snow'))) matchingSubcategories.push('precipitation')
+    if (tagLower.some(t => t.includes('global'))) matchingSubcategories.push('global')
+  }
+
+  // ELECTIONS mappings - check all possible matches
+  if (category === 'ELECTIONS' && matchingSubcategories.length === 0) {
+    if (tagLower.some(t => t.includes('australia') || t.includes('australian'))) matchingSubcategories.push('australia')
+    if (tagLower.some(t => t.includes('brazil') || t.includes('brazilian'))) matchingSubcategories.push('brazil')
+    if (tagLower.some(t => t.includes('canada') || t.includes('canadian'))) matchingSubcategories.push('canada')
+    if (tagLower.some(t => t.includes('france') || t.includes('french'))) matchingSubcategories.push('france')
+    if (tagLower.some(t => t.includes('germany') || t.includes('german'))) matchingSubcategories.push('germany')
+    if (tagLower.some(t => t.includes('india') || t.includes('indian'))) matchingSubcategories.push('india')
+    if (tagLower.some(t => t.includes('israel') || t.includes('israeli'))) matchingSubcategories.push('israel')
+    if (tagLower.some(t => t.includes('mexico') || t.includes('mexican'))) matchingSubcategories.push('mexico')
+    if (tagLower.some(t => t.includes('new zealand') || t.includes('nz'))) matchingSubcategories.push('new-zealand')
+    if (tagLower.some(t => t.includes('philippines') || t.includes('philippine'))) matchingSubcategories.push('philippines')
+    if (tagLower.some(t => t.includes('south africa') || t.includes('south african'))) matchingSubcategories.push('south-africa')
+    if (tagLower.some(t => t.includes('uk') || t.includes('united kingdom') || t.includes('british'))) matchingSubcategories.push('uk')
+    if (tagLower.some(t => t.includes('us') || t.includes('united states') || t.includes('america'))) matchingSubcategories.push('us')
+  }
+
+  // For categories not covered above, use single-match logic
+  if (matchingSubcategories.length === 0) {
+    const singleMatch = mapTagsToSubcategory(tagSlugs, category)
+    if (singleMatch) matchingSubcategories.push(singleMatch)
+  }
+
+  return matchingSubcategories
+}
+
+/**
  * Fetch active markets from Polymarket API with pagination
  * The API has a hard limit of 100 per request, so we paginate to fetch all events
  * Includes retry logic with exponential backoff for resilience
@@ -203,17 +436,16 @@ const POLYMARKET_CURATED_SUBCATEGORIES: Record<string, Array<{ slug: string; lab
   FINANCE: [
     { slug: 'stocks', label: 'Stocks', order: 1 },
     { slug: 'earnings', label: 'Earnings', order: 2 },
-    { slug: 'indices', label: 'Indices', order: 3 },
+    { slug: 'quarterly', label: 'Quarterly', order: 3 },
     { slug: 'commodities', label: 'Commodities', order: 4 },
     { slug: 'forex', label: 'Forex', order: 5 },
     { slug: 'privates', label: 'Privates', order: 6 },
     { slug: 'acquisitions', label: 'Acquisitions', order: 7 },
-    { slug: 'earnings-calendar', label: 'Earnings Calendar', order: 8 },
-    { slug: 'ipos', label: 'IPOs', order: 9 },
-    { slug: 'fed-rates', label: 'Fed Rates', order: 10 },
-    { slug: 'prediction-markets', label: 'Prediction Markets', order: 11 },
-    { slug: 'treasuries', label: 'Treasuries', order: 12 },
-    { slug: 'kpis', label: 'KPIs', order: 13 },
+    { slug: 'ipos', label: 'IPOs', order: 8 },
+    { slug: 'fed-rates', label: 'Fed Rates', order: 9 },
+    { slug: 'prediction-markets', label: 'Prediction Markets', order: 10 },
+    { slug: 'treasuries', label: 'Treasuries', order: 11 },
+    { slug: 'kpis', label: 'KPIs', order: 12 },
   ],
   CRYPTO: [
     { slug: 'bitcoin', label: 'Bitcoin', order: 1 },
@@ -282,15 +514,15 @@ const POLYMARKET_CURATED_SUBCATEGORIES: Record<string, Array<{ slug: string; lab
     { slug: 'labor', label: 'Labor', order: 11 },
   ],
   IRAN: [
-    { slug: 'iran-ceasefire', label: 'Iran Ceasefire', order: 1 },
+    { slug: 'ceasefire', label: 'Iran Ceasefire', order: 1 },
     { slug: 'us-iran', label: 'U.S. x Iran', order: 2 },
     { slug: 'strait-of-hormuz', label: 'Strait of Hormuz', order: 3 },
     { slug: 'peace-deal', label: 'Peace Deal', order: 4 },
-    { slug: 'negotiation-topics', label: 'Negotiation Topics', order: 5 },
+    { slug: 'negotiations', label: 'Negotiation Topics', order: 5 },
     { slug: 'oil', label: 'Oil', order: 6 },
-    { slug: 'israel-iran', label: 'Israel x Iran', order: 7 },
+    { slug: 'israel-x-iran', label: 'Israel x Iran', order: 7 },
     { slug: 'lebanon', label: 'Lebanon', order: 8 },
-    { slug: 'iran-regime', label: 'Iran Regime', order: 9 },
+    { slug: 'iran', label: 'Iran Regime', order: 9 },
     { slug: 'nuclear', label: 'Nuclear', order: 10 },
   ],
   GEOPOLITICS: [
@@ -320,7 +552,7 @@ const POLYMARKET_CURATED_SUBCATEGORIES: Record<string, Array<{ slug: string; lab
     { slug: 'movies', label: 'Movies', order: 6 },
     { slug: 'taylor-swift', label: 'Taylor Swift', order: 7 },
     { slug: 'gta-vi', label: 'GTA VI', order: 8 },
-    { slug: 'tweet-markets', label: 'Tweet Markets', order: 9 },
+    { slug: 'twitter', label: 'Tweet Markets', order: 9 },
     { slug: 'youtube', label: 'YouTube', order: 10 },
     { slug: 'reality-tv', label: 'Reality TV', order: 11 },
     { slug: 'aliens', label: 'Aliens', order: 12 },
@@ -483,30 +715,79 @@ function mapCategory(tags: { label: string }[]): MarketCategory {
  *
  * Now includes tag-filtered fetch for IRAN to get all Iran markets,
  * not just those in the top 5000 by volume globally.
+ *
+ * @param categoryFilter - Optional category filter (e.g., 'POLITICS', 'FINANCE')
+ *                          to sync only subcategories for that category
  */
-export async function syncPolymarketMarkets(): Promise<{ synced: number; errors: number; iranSynced?: number }> {
-  // First, fetch global events (top 5000 by volume)
-  const events = await fetchPolymarketEvents(5000)
+export async function syncPolymarketMarkets(categoryFilter: string | null = null): Promise<{
+  synced: number
+  errors: number
+  subcategoryCounts: Record<string, number>
+  totalFetched: number
+}> {
   let synced = 0
   let errors = 0
 
-  // Then, fetch Iran-specific events using tag filter
-  // This ensures we get all Iran markets, not just high-volume ones
-  console.log('[Polymarket] Fetching Iran-specific events...')
-  const iranEvents = await fetchPolymarketEventsByTag('iran', 5000)
-  console.log(`[Polymarket] Fetched ${iranEvents.length} Iran-specific events`)
+  // Collect tag slugs from curated subcategories (filtered by category if specified)
+  const tagSlugs = new Set<string>()
+  for (const [category, subcategories] of Object.entries(POLYMARKET_CURATED_SUBCATEGORIES)) {
+    // Skip this category if we're filtering and it doesn't match
+    if (categoryFilter && category !== categoryFilter) {
+      continue
+    }
+    for (const subcat of subcategories) {
+      tagSlugs.add(subcat.slug)
+    }
+  }
 
-  // Merge events, deduplicating by ID (Iran events take precedence)
+  console.log(`[Polymarket] Found ${tagSlugs.size} curated subcategories${categoryFilter ? ` for ${categoryFilter}` : ' total'} to sync`)
+
+  // First, fetch global events (top 5000 by volume) as baseline
+  console.log('[Polymarket] Fetching global top 5000 events by volume...')
+  const globalEvents = await fetchPolymarketEvents(5000)
+  console.log(`[Polymarket] Fetched ${globalEvents.length} global events`)
+
+  // Merge events, deduplicating by ID
   const allEventsMap = new Map<string, PolymarketEvent>()
-  for (const event of events) {
+  for (const event of globalEvents) {
     allEventsMap.set(event.id, event)
   }
-  for (const event of iranEvents) {
-    allEventsMap.set(event.id, event)
-  }
-  const allEvents = Array.from(allEventsMap.values())
 
-  let iranSynced = 0
+  // Fetch events for each curated subcategory tag
+  // This ensures we get ALL events for each subcategory, not just high-volume ones
+  let totalFetched = globalEvents.length
+  const fetchErrors: string[] = []
+
+  for (const tagSlug of Array.from(tagSlugs)) {
+    try {
+      // Map internal slug to Polymarket API slug if needed
+      const polymarketSlug = mapInternalSlugToPolymarketSlug(tagSlug)
+      console.log(`[Polymarket] Fetching events for tag: ${tagSlug} (API slug: ${polymarketSlug})...`)
+      const tagEvents = await fetchPolymarketEventsByTag(polymarketSlug, 5000)
+      console.log(`[Polymarket] Fetched ${tagEvents.length} events for tag: ${tagSlug}`)
+
+      totalFetched += tagEvents.length
+
+      // Merge into main map (tag-specific events take precedence over global)
+      for (const event of tagEvents) {
+        allEventsMap.set(event.id, event)
+      }
+    } catch (err) {
+      const errorMsg = `Failed to fetch events for tag "${tagSlug}": ${err}`
+      console.error(`[Polymarket] ${errorMsg}`)
+      fetchErrors.push(errorMsg)
+    }
+  }
+
+  const allEvents = Array.from(allEventsMap.values())
+  console.log(`[Polymarket] Total unique events after deduplication: ${allEvents.length}`)
+
+  if (fetchErrors.length > 0) {
+    console.log(`[Polymarket] ${fetchErrors.length} tag fetches failed (continuing with available data)`)
+  }
+
+  // Track sync counts per subcategory slug
+  const subcategoryCounts: Record<string, number> = {}
 
   for (const event of allEvents) {
     try {
@@ -520,84 +801,149 @@ export async function syncPolymarketMarkets(): Promise<{ synced: number; errors:
         probability = parseFloat(prices[0]) // "Yes" price = probability
       } catch { /* ignore parse errors */ }
 
-      const category = mapCategory(event.tags || [])
+      // Determine category based on event tags
+      // When syncing for a specific category, only assign that category if the event
+      // has tags matching it (events can have multiple tags like "Iran" + "Politics")
+      let category = mapCategory(event.tags || [])
 
-      // Track if this is an Iran market
-      const isIranMarket = category === 'IRAN'
+      // If syncing for a specific category, check if event has tags for it
+      if (categoryFilter) {
+        const tagSlugs = event.tags?.map(t => t.slug?.toLowerCase()).filter((s): s is string => !!s) || []
+        const hasCategoryTag = tagSlugs.some(t =>
+          t.includes(categoryFilter.toLowerCase()) ||
+          (categoryFilter === 'IRAN' && (t.includes('iran') || t.includes('iranian'))) ||
+          (categoryFilter === 'POLITICS' && t.includes('politics')) ||
+          (categoryFilter === 'CRYPTO' && (t.includes('crypto') || t.includes('bitcoin') || t.includes('ethereum'))) ||
+          (categoryFilter === 'SPORTS' && t.includes('sport')) ||
+          (categoryFilter === 'FINANCE' && t.includes('finance')) ||
+          (categoryFilter === 'TECH' && (t.includes('tech') || t.includes('technology'))) ||
+          (categoryFilter === 'SCIENCE' && t.includes('science')) ||
+          (categoryFilter === 'ECONOMY' && (t.includes('economy') || t.includes('macro'))) ||
+          (categoryFilter === 'GEOPOLITICS' && (t.includes('geopol') || t.includes('war') || t.includes('conflict'))) ||
+          (categoryFilter === 'CULTURE' && (t.includes('celebr') || t.includes('culture'))) ||
+          (categoryFilter === 'WEATHER' && t.includes('weather')) ||
+          (categoryFilter === 'ELECTIONS' && (t.includes('election') || t.includes('vote')))
+        )
+        // Only assign the filtered category if the event actually has matching tags
+        if (hasCategoryTag) {
+          category = categoryFilter as MarketCategory
+        }
+        // Otherwise skip this event when syncing for a specific category
+        else {
+          continue
+        }
+      }
 
-      // Map Polymarket tags to subcategory
-      const tagLabels = event.tags?.map(t => t.label) || []
-      const subcategorySlug = mapTagsToSubcategory(tagLabels, category)
+      // Map Polymarket tags to ALL matching subcategories
+      // An event can belong to multiple subcategories (e.g., negotiations + ceasefire)
+      const tagSlugs = event.tags?.map(t => t.slug).filter((s): s is string => !!s) || []
+      const matchingSubcategories = mapTagsToAllSubcategories(tagSlugs, category)
 
-      // Find subcategory in database if a match was found
-      let subcategoryId: string | null = null
-      if (subcategorySlug) {
+      // Create a market entry for EACH matching subcategory
+      // This allows the same event to appear in multiple subcategory feeds
+      for (const subcategorySlug of matchingSubcategories) {
+        // Find subcategory in database
         const subcategory = await prisma.subcategory.findUnique({
           where: { slug_category: { slug: subcategorySlug, category } },
           select: { id: true },
         })
-        subcategoryId = subcategory?.id || null
-      }
 
-      await prisma.market.upsert({
-        where: { externalId: event.id },
-        update: {
-          title: event.title || market.question,
-          marketProbability: probability,
-          status: event.closed || event.archived ? MarketStatus.CLOSED : MarketStatus.OPEN,
-          subcategoryId, // Update subcategory on sync
-          category, // Update category in case it changed
-          updatedAt: new Date(),
-        },
-        create: {
-          externalId: event.id,
-          source: 'POLYMARKET',
-          category,
-          title: event.title || market.question,
-          description: event.description || market.description,
-          marketProbability: probability,
-          imageUrl: event.image,
-          closesAt: event.endDate ? new Date(event.endDate) : null,
-          resolvesAt: event.endDate ? new Date(event.endDate) : null,
-          status: MarketStatus.OPEN,
-          externalUrl: `https://polymarket.com/event/${event.id}`,
-          tags: event.tags?.map(t => t.label) || [],
-          subcategoryId, // Assign subcategory on create
-        },
-      })
-      synced++
-      if (isIranMarket) iranSynced++
+        if (!subcategory) {
+          console.warn(`[Polymarket] Subcategory not found: ${subcategorySlug}/${category}, skipping`)
+          continue
+        }
+
+        // Use composite externalId for duplicate entries: {eventId}-{subcategorySlug}
+        // The primary entry uses just the eventId, duplicates use the composite format
+        const isPrimary = subcategorySlug === matchingSubcategories[0]
+        const externalId = isPrimary ? event.id : `${event.id}-${subcategorySlug}`
+
+        try {
+          await prisma.market.upsert({
+            where: { externalId },
+            update: {
+              title: event.title || market.question,
+              marketProbability: probability,
+              status: event.closed || event.archived ? MarketStatus.CLOSED : MarketStatus.OPEN,
+              subcategoryId: subcategory.id,
+              category,
+              updatedAt: new Date(),
+            },
+            create: {
+              externalId,
+              source: 'POLYMARKET',
+              category,
+              title: event.title || market.question,
+              description: event.description || market.description,
+              marketProbability: probability,
+              imageUrl: event.image,
+              closesAt: event.endDate ? new Date(event.endDate) : null,
+              resolvesAt: event.endDate ? new Date(event.endDate) : null,
+              status: MarketStatus.OPEN,
+              externalUrl: `https://polymarket.com/event/${event.id}`,
+              tags: event.tags?.map(t => t.label) || [],
+              subcategoryId: subcategory.id,
+            },
+          })
+          synced++
+          // Track sync count per subcategory
+          subcategoryCounts[subcategorySlug] = (subcategoryCounts[subcategorySlug] || 0) + 1
+        } catch (err) {
+          console.error(`Failed to sync market ${externalId} for subcategory ${subcategorySlug}:`, err)
+          errors++
+        }
+      }
     } catch (err) {
       console.error(`Failed to sync market ${event.id}:`, err)
       errors++
     }
   }
 
-  console.log(`Polymarket sync: ${synced} synced (${iranSynced} Iran markets), ${errors} errors`)
+  // Log sync summary with top subcategories
+  const topSubcategories = Object.entries(subcategoryCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+  console.log(`Polymarket sync complete:`)
+  console.log(`  - Total synced: ${synced}`)
+  console.log(`  - Total fetched (pre-dedup): ${totalFetched}`)
+  console.log(`  - Errors: ${errors}`)
+  console.log(`  - Top subcategories:`)
+  for (const [slug, count] of topSubcategories) {
+    console.log(`    - ${slug}: ${count}`)
+  }
 
   // Clean up: Close any Polymarket markets that are no longer in the API response
   // These are markets that were closed/archived on Polymarket but not yet marked in our DB
   const activePolymarketIds = new Set(allEvents.map(e => e.id))
-  const stalePolymarketMarkets = await prisma.market.findMany({
+
+  // Fetch all Polymarket OPEN markets and check if their base event ID is still active
+  const allOpenMarkets = await prisma.market.findMany({
     where: {
       source: 'POLYMARKET',
       status: MarketStatus.OPEN,
-      externalId: { notIn: Array.from(activePolymarketIds) },
     },
-    select: { id: true, title: true },
+    select: { id: true, externalId: true, title: true },
   })
 
-  if (stalePolymarketMarkets.length > 0) {
+  // Extract base event ID from composite externalIds (format: eventId or eventId-subcategorySlug)
+  const staleMarketIds = allOpenMarkets
+    .filter(market => {
+      const baseEventId = market.externalId?.split('-')[0]
+      return !activePolymarketIds.has(baseEventId)
+    })
+    .map(m => m.id)
+
+  if (staleMarketIds.length > 0) {
     await prisma.market.updateMany({
       where: {
-        id: { in: stalePolymarketMarkets.map(m => m.id) },
+        id: { in: staleMarketIds },
       },
       data: { status: MarketStatus.CLOSED },
     })
-    console.log(`[Sync] Closed ${stalePolymarketMarkets.length} stale Polymarket markets:`, stalePolymarketMarkets.map(m => m.title))
+    console.log(`[Sync] Closed ${staleMarketIds.length} stale Polymarket markets`)
   }
 
-  return { synced, errors, iranSynced }
+  return { synced, errors, subcategoryCounts, totalFetched }
 }
 
 /**

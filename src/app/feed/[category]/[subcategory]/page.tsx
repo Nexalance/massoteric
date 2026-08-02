@@ -29,9 +29,9 @@ function normalizeCategory(slug: string): MarketCategory | null {
 export async function generateMetadata({ params }: SubcategoryPageProps) {
   const category = normalizeCategory(params.category)
 
-  // Fetch subcategory from database
+  // Fetch subcategory from database using composite key
   const subcategory = category ? await prisma.subcategory.findUnique({
-    where: { slug: params.subcategory },
+    where: { slug_category: { slug: params.subcategory, category } },
     select: { id: true, label: true, slug: true, category: true },
   }) : null
 
@@ -54,7 +54,7 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
 
   // Fetch subcategory from DB to get its ID and validate it belongs to this category
   const subcategoryRecord = await prisma.subcategory.findUnique({
-    where: { slug: params.subcategory },
+    where: { slug_category: { slug: params.subcategory, category } },
     select: { id: true, label: true, slug: true, category: true },
   })
 

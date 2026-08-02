@@ -182,34 +182,44 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   return (
     <main>
-      {/* Filter bar: sort tabs */}
+      {/* Filter bar: category tabs + sort tabs */}
       <div style={{ borderBottom: '1px solid var(--border)', padding: '0 var(--page-pad)' }}>
         <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto' }}>
-          {/* Scrollable sort tabs row */}
+          {/* Scrollable category tabs row */}
           <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', padding: '12px 0', alignItems: 'center' }}>
-            {/* Back to All */}
-            <Link
-              href="/feed/all"
-              style={{
-                padding: '7px 16px',
-                fontFamily: 'var(--font-mono)',
-                fontSize: '11px',
-                letterSpacing: '1px',
-                textTransform: 'uppercase',
-                color: 'var(--mist)',
-                border: '1px solid transparent',
-                borderRadius: '2px',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.15s',
-              }}
-            >
-              ← All
-            </Link>
+            {/* Category tabs */}
+            {CATEGORIES.map(cat => {
+              const isActive = category === cat.value
+              const catHref = cat.value === 'ALL' ? '/feed/all' : `/feed/${cat.value.toLowerCase()}`
+              return (
+                <Link
+                  key={cat.value}
+                  href={catHref}
+                  style={{
+                    padding: '7px 16px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '11px',
+                    letterSpacing: '1px',
+                    textTransform: 'uppercase',
+                    color: isActive ? 'var(--cream)' : 'var(--mist)',
+                    background: isActive ? 'rgba(201,168,76,0.15)' : 'transparent',
+                    border: isActive ? '1px solid var(--gold)' : '1px solid transparent',
+                    borderRadius: '2px',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {cat.label}
+                </Link>
+              )
+            })}
+          </div>
 
-            {/* Divider */}
-            <div style={{ width: '1px', height: '20px', background: 'var(--border)', margin: '0 8px', flexShrink: 0 }} />
-
-            {/* Sort tabs */}
+          {/* Second row: sort tabs */}
+          <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', padding: '8px 0 12px 0', alignItems: 'center', borderTop: '1px solid rgba(58,64,85,0.3)' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--fog)', letterSpacing: '1px', marginRight: '8px' }}>
+              SORT:
+            </span>
             {SORTS.map(s => {
               const isActive = sort === s.value
               return (
@@ -217,9 +227,9 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                   key={s.value}
                   href={feedHref({ sort: s.value, search })}
                   style={{
-                    padding: '7px 16px',
+                    padding: '6px 14px',
                     fontFamily: 'var(--font-mono)',
-                    fontSize: '11px',
+                    fontSize: '10px',
                     letterSpacing: '1px',
                     textTransform: 'uppercase',
                     color: isActive ? 'var(--cream)' : 'var(--mist)',
@@ -236,9 +246,9 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             })}
           </div>
 
-          {/* "+ New Topic" button - separate row, always visible */}
+          {/* "+ New Topic" button - at end of sort row */}
           {canCreateTopic && (
-            <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '12px' }}>
+            <div style={{ marginLeft: 'auto', paddingLeft: '12px' }}>
               <Link
                 href="/market/new"
                 style={{

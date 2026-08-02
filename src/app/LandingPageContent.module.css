@@ -731,6 +731,8 @@
   color: var(--mist);
   line-height: 1.75;
   margin-bottom: 20px;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .whoList {
@@ -1028,5 +1030,12 @@
     flex-direction: column !important;
     gap: 20px !important;
     text-align: center !important;
+  }
+
+  .whoBody {
+    font-size: 15px !important;
+    line-height: 1.6 !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
   }
 }

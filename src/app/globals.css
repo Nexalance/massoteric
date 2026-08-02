@@ -113,7 +113,7 @@ code, pre {
   align-items: center;
   gap: 4px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   padding: 3px 10px;
@@ -124,11 +124,13 @@ code, pre {
 .badge-paid { background: rgba(201,168,76,0.12); color: var(--gold); }
 .badge-category { background: rgba(255,255,255,0.06); color: var(--mist); }
 
+
 /* ── Subcategory Menu Pills (Polymarket-style) ── */
 .subcategory-menu {
   border-bottom: 1px solid var(--border);
   padding: 0 var(--page-pad);
   background: rgba(0, 0, 0, 0.2);
+  overflow-x: auto;
 }
 
 .subcategory-menu-inner {
@@ -142,6 +144,7 @@ code, pre {
   /* Hide scrollbar but allow scrolling */
   scrollbar-width: none;
   -ms-overflow-style: none;
+  flex-shrink: 0;
 }
 .subcategory-menu-inner::-webkit-scrollbar {
   display: none;
@@ -158,20 +161,18 @@ code, pre {
   border: 1px solid var(--fog);
   border-radius: 4px;
   white-space: nowrap;
+  min-width: 50px;
+  flex-shrink: 0;
   transition: all 0.15s ease;
   text-decoration: none;
   display: inline-flex;
   align-items: center;
 }
 
-.subcategory-pill:hover {
-  transform: translateY(-1px);
-}
-
 .subcategory-pill-count {
   color: var(--fog);
   margin-left: 4px;
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .subcategory-pill.active {
@@ -240,6 +241,7 @@ code, pre {
   color: var(--mist);
   text-decoration: none;
   white-space: nowrap;
+			min-width: 50px;
   transition: color 0.15s ease;
 }
 .nav-link:hover { color: var(--cream); }
@@ -249,11 +251,11 @@ code, pre {
 	/* Polymarket external link */
 	.polymarket-link {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: 11px;
 		color: var(--mist);
 		letter-spacing: 0.5px;
 		text-decoration: none;
-		padding: 3px 8px;
+		padding: 4px 10px;
 		border: 1px solid var(--fog);
 		border-radius: 3px;
 		transition: all 0.15s ease;
@@ -261,6 +263,7 @@ code, pre {
 		align-items: center;
 		gap: 4px;
 		white-space: nowrap;
+			min-width: 50px;
 	}
 	.polymarket-link:hover {
 		border-color: var(--gold);
@@ -355,7 +358,7 @@ input[type="datetime-local"] {
 /* Label */
 .label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
   color: var(--mist);
@@ -420,7 +423,7 @@ input[type="datetime-local"] {
 /* Section label */
 .section-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 3px;
   text-transform: uppercase;
   color: var(--gold);
