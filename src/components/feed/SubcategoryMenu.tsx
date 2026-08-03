@@ -13,6 +13,7 @@ interface SubcategoryMenuProps {
   subcategories: SubcategoryDef[]
   counts: Record<string, number> // subcategoryId -> count
   activeSubcategory: string | null
+  totalCount?: number // Total unique events for the category (optional)
 }
 
 export default function SubcategoryMenu({
@@ -20,8 +21,15 @@ export default function SubcategoryMenu({
   subcategories,
   counts,
   activeSubcategory,
+  totalCount,
 }: SubcategoryMenuProps) {
-  if (subcategories.length === 0) return null
+  // Filter out subcategories with 0 count (fetch-only tags)
+  const visibleSubcategories = subcategories.filter(sub => {
+    const count = counts[sub.slug] || 0
+    return count > 0
+  })
+
+  if (visibleSubcategories.length === 0) return null
 
   // Format count for display
   function formatCount(count: number): string {
@@ -38,12 +46,12 @@ export default function SubcategoryMenu({
           className={`subcategory-pill${!activeSubcategory ? ' active' : ''}`}
         >
           All <span className="subcategory-pill-count">({formatCount(
-            Object.values(counts).reduce((sum, c) => sum + c, 0)
+            totalCount || Object.values(counts).reduce((sum, c) => sum + c, 0)
           )})</span>
         </Link>
 
-        {/* Subcategory pills */}
-        {subcategories.map((sub) => {
+        {/* Subcategory pills - only show those with count > 0 */}
+        {visibleSubcategories.map((sub) => {
           const isActive = activeSubcategory === sub.slug
           const count = counts[sub.slug] || 0
 

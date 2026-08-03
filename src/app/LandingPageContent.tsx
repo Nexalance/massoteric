@@ -140,6 +140,10 @@ export default function LandingPageContent(props: LandingPageContentProps) {
         <p className={styles.heroNote}>
           No spam. No noise. Early members shape the platform.
         </p>
+
+        <Link href="/feed" className={styles.heroBrowseBtn}>
+          Browse Markets →
+        </Link>
       </section>
 
       {/* Live market ticker */}

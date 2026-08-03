@@ -10,9 +10,7 @@
   --fog: #3A4055;
   --signal: #4FC3A1;
   --danger: #E05C5C;
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-body: 'Libre Baskerville', Georgia, serif;
-  --font-mono: 'DM Mono', 'Courier New', monospace;
+  /* Font variables are now inherited from layout.tsx via next/font */
 
   background: var(--ink);
   color: var(--cream);
@@ -269,6 +267,29 @@
   letter-spacing: 1px;
   opacity: 0;
   animation: fadeUp 0.9s ease 1.1s forwards;
+}
+
+.heroBrowseBtn {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 24px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  background: transparent;
+  border-radius: 2px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  opacity: 0;
+  animation: fadeUp 0.9s ease 1.2s forwards;
+}
+
+.heroBrowseBtn:hover {
+  background: rgba(201, 168, 76, 0.1);
+  transform: translateY(-1px);
 }
 
 /* Ticker */

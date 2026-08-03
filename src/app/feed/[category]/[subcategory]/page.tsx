@@ -99,27 +99,43 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
   })
 
   // Fetch market counts per subcategory - slug-keyed for SubcategoryMenu
+  // Use Set-based deduplication to count unique events, not duplicate rows
   let subcategoryCounts: Record<string, number> = {}
+
+  // Fetch all OPEN Polymarket markets for this category
+  const allMarkets = await prisma.market.findMany({
+    where: {
+      category,
+      source: 'POLYMARKET' as const,
+      status: 'OPEN' as const,
+      subcategoryId: { not: null },
+    },
+    select: { polymarketEventId: true, externalId: true, subcategoryId: true },
+  })
+
+  // Build slug -> Set of event IDs
+  // Use polymarketEventId when available, fallback to parsing externalId
+  const subcategoryToEvents = new Map<number, Set<string>>()
+  for (const market of allMarkets) {
+    if (!market.subcategoryId) continue
+    // Use polymarketEventId if available, otherwise extract from externalId
+    const baseEventId = market.polymarketEventId || market.externalId?.split('-')[0]
+    if (!baseEventId) continue
+    if (!subcategoryToEvents.has(market.subcategoryId)) {
+      subcategoryToEvents.set(market.subcategoryId, new Set())
+    }
+    subcategoryToEvents.get(market.subcategoryId)!.add(baseEventId)
+  }
+
+  // Build slug -> count map
   const dbSubcategories = await prisma.subcategory.findMany({
     where: { category },
     select: { id: true, slug: true },
   })
-
-  const counts = await prisma.market.groupBy({
-    by: ['subcategoryId'],
-    where: {
-      category,
-      subcategoryId: { not: null },
-      source: 'POLYMARKET' as const, // Only count Polymarket markets to match their counts
-    },
-    _count: { id: true },
-  })
-
-  // Build slug -> count map
   const idToSlug = Object.fromEntries(dbSubcategories.map(s => [s.id, s.slug]))
-  for (const c of counts) {
-    const slug = idToSlug[c.subcategoryId!]
-    if (slug) subcategoryCounts[slug] = c._count.id
+  for (const [subcategoryId, eventIds] of subcategoryToEvents) {
+    const slug = idToSlug[subcategoryId]
+    if (slug) subcategoryCounts[slug] = eventIds.size
   }
 
   // Fetch markets - filtered by subcategory
@@ -155,7 +171,18 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
       ? [{ featured: 'desc' as const }, { createdAt: 'desc' as const }]
       : [{ featured: 'desc' as const }, { viewCount: 'desc' as const }, { createdAt: 'desc' as const }]
 
-  const [markets, total, topUsers] = await Promise.all([
+  // Count unique event IDs, not duplicate rows
+  // Use polymarketEventId when available, fallback to parsing externalId
+  const allSubcategoryMarkets = await prisma.market.findMany({
+    where,
+    select: { polymarketEventId: true, externalId: true },
+  })
+  const uniqueEvents = new Set(
+    allSubcategoryMarkets.map(m => m.polymarketEventId || m.externalId?.split('-')[0]).filter(Boolean)
+  )
+  const total = uniqueEvents.size
+
+  const [markets, topUsers] = await Promise.all([
     prisma.market.findMany({
       where,
       skip: (page - 1) * limit,
@@ -163,7 +190,6 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
       orderBy,
       include: { _count: { select: { predictions: true, comments: true } } },
     }),
-    prisma.market.count({ where }),
     prisma.accuracyScore.findMany({
       where: { category: null, scoredPredictions: { gte: 1 } },
       orderBy: { avgBrierScore: 'asc' },
@@ -424,7 +450,7 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
           </div>
 
           {/* Sidebar */}
-          <aside style={{ position: 'sticky', top: '80px' }}>
+          <aside style={{ position: 'sticky', top: '80px', borderLeft: '1px solid var(--border)', paddingLeft: '24px' }}>
             <div className="section-label">Top Predictors</div>
             <div className="card">
               {topUsers.map((score, i) => (

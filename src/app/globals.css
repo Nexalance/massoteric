@@ -471,15 +471,29 @@ table tbody tr:hover {
     flex-shrink: 0;
   }
 
-  /* Feed grid layout - single column on mobile */
+  /* Feed grid layout - keep 2 columns on tablets, single column on mobile */
   .feed-grid {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
+    grid-template-columns: 1fr 280px !important;
+    gap: 24px !important;
   }
 
   .feed-grid aside {
-    position: static !important;
-    max-height: none !important;
+    position: sticky !important;
+    max-height: calc(100vh - 120px) !important;
+    top: 80px !important;
+  }
+
+  /* Collapse to single column on very small screens */
+  @media (max-width: 640px) {
+    .feed-grid {
+      grid-template-columns: 1fr !important;
+      gap: 16px !important;
+    }
+
+    .feed-grid aside {
+      position: static !important;
+      max-height: none !important;
+    }
   }
 
   .page-container {

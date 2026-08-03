@@ -21,14 +21,14 @@ interface CategoryPageProps {
 // Normalize category slug to enum value
 function normalizeCategory(slug: string): MarketCategory | 'ALL' {
   const upper = slug.toUpperCase()
+  // Handle 'all' as a special case FIRST (before other checks)
+  if (slug === 'all') return 'ALL'
   // Check if it's a valid category
   if (CATEGORIES.some(c => c.value === upper)) {
     return upper as MarketCategory
   }
-  // Handle 'all' as a special case
-  if (slug === 'all') return 'ALL'
   // If not found, 404
-  return notFound()
+  notFound()
 }
 
 export async function generateMetadata({ params }: CategoryPageProps) {
@@ -104,11 +104,40 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         _count: { id: true },
       })
 
-      // Build slug -> count map
+      // Build slug -> count map (counting unique events, not duplicate entries)
       const idToSlug = Object.fromEntries(dbSubcategories.map(s => [s.id, s.slug]))
-      for (const c of counts) {
-        const slug = idToSlug[c.subcategoryId!]
-        if (slug) subcategoryCounts[slug] = c._count.id
+
+      // Fetch all Polymarket markets for this category to count unique events
+      const allMarkets = await prisma.market.findMany({
+        where: {
+          category: categoryEnum,
+          subcategoryId: { not: null },
+          source: 'POLYMARKET' as const,
+          status: 'OPEN' as const,
+        },
+        select: { polymarketEventId: true, externalId: true, subcategoryId: true },
+      })
+
+      // Group by subcategory and count unique event IDs
+      // Use polymarketEventId when available, fallback to parsing externalId
+      const subcategoryToEvents = new Map<string, Set<string>>()
+      for (const market of allMarkets) {
+        // Use polymarketEventId if available, otherwise extract from externalId
+        const baseEventId = market.polymarketEventId || market.externalId?.split('-')[0]
+        if (baseEventId && market.subcategoryId) {
+          if (!subcategoryToEvents.has(market.subcategoryId)) {
+            subcategoryToEvents.set(market.subcategoryId, new Set())
+          }
+          subcategoryToEvents.get(market.subcategoryId)!.add(baseEventId)
+        }
+      }
+
+      // Build the count map
+      for (const [subcategoryId, eventIds] of subcategoryToEvents) {
+        const slug = idToSlug[subcategoryId]
+        if (slug) {
+          subcategoryCounts[slug] = eventIds.size
+        }
       }
     }
   }
@@ -153,7 +182,26 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
       orderBy,
       include: { _count: { select: { predictions: true, comments: true } } },
     }),
-    prisma.market.count({ where }),
+    // Count unique events (not duplicate entries) for accurate display
+    (async () => {
+      if (!categoryEnum) {
+        return await prisma.market.count({ where })
+      }
+      // For categories, count unique event IDs
+      // Use polymarketEventId when available, fallback to parsing externalId
+      const allMarkets = await prisma.market.findMany({
+        where: {
+          status: 'OPEN' as const,
+          category: categoryEnum,
+          source: 'POLYMARKET' as const,
+        },
+        select: { polymarketEventId: true, externalId: true },
+      })
+      const uniqueEvents = new Set(
+        allMarkets.map(m => m.polymarketEventId || m.externalId?.split('-')[0]).filter(Boolean)
+      )
+      return uniqueEvents.size
+    })(),
     prisma.accuracyScore.findMany({
       where: { category: null, scoredPredictions: { gte: 1 } },
       orderBy: { avgBrierScore: 'asc' },
@@ -277,6 +325,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           subcategories={subcategories}
           counts={subcategoryCounts}
           activeSubcategory={null}
+          totalCount={total}
         />
       )}
 
@@ -427,7 +476,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           </div>
 
           {/* Sidebar */}
-          <aside style={{ position: 'sticky', top: '80px' }}>
+          <aside style={{ position: 'sticky', top: '80px', borderLeft: '1px solid var(--border)', paddingLeft: '24px' }}>
             <div className="section-label">Top Predictors</div>
             <div className="card">
               {topUsers.map((score, i) => (

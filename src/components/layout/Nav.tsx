@@ -110,7 +110,7 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
           </button>
 
           {/* Quick links — desktop only */}
-          {isSignedIn && userId && (
+          {isSignedIn && userId ? (
             <>
               <span className="nav-divider hide-mobile" />
               <div className="hide-mobile" style={{ display: 'flex', gap: '22px', alignItems: 'center' }}>
@@ -128,6 +128,16 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
                 {currentUser?.isAdmin && (
                   <Link href="/admin" className="nav-link nav-link-admin">Admin</Link>
                 )}
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Non-signed-in quick links */}
+              <span className="nav-divider hide-mobile" />
+              <div className="hide-mobile" style={{ display: 'flex', gap: '22px', alignItems: 'center' }}>
+                <Link href="/feed" className="nav-link">Browse Markets</Link>
+                <Link href="/about" className="nav-link">About</Link>
+                <Link href="/" className="nav-link" style={{ color: 'var(--gold)' }}>Home</Link>
               </div>
             </>
           )}
@@ -387,6 +397,16 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
                     }}
                   >
                     Home
+                  </Link>
+                  <Link
+                    href="/feed"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{
+                      padding: '12px 16px', fontSize: '15px', color: 'var(--cream)',
+                      textDecoration: 'none', borderBottom: '1px solid var(--border)',
+                    }}
+                  >
+                    Browse Markets
                   </Link>
                   <Link
                     href="/about"

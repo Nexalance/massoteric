@@ -41,27 +41,27 @@ export const SUBCATEGORIES: Record<MarketCategory, SubcategoryDef[]> = {
   ],
 
   IRAN: [
-    { slug: 'ceasefire', label: 'Iran Ceasefire', category: 'IRAN', description: 'Iran ceasefire and negotiations' },
-    { slug: 'us-iran', label: 'U.S. x Iran', category: 'IRAN', description: 'US-Iran relations and conflicts' },
+    { slug: 'diplomacy-ceasefire', label: 'Iran Ceasefire', category: 'IRAN', description: 'Iran ceasefire and negotiations' },
+    { slug: 'trump-iran', label: 'U.S. x Iran', category: 'IRAN', description: 'US-Iran relations and conflicts' },
     { slug: 'strait-of-hormuz', label: 'Strait of Hormuz', category: 'IRAN', description: 'Strait of Hormuz shipping and tensions' },
     { slug: 'peace-deal', label: 'Peace Deal', category: 'IRAN', description: 'Iran peace deal markets' },
     { slug: 'negotiations', label: 'Negotiation Topics', category: 'IRAN', description: 'Iran nuclear negotiations' },
     { slug: 'oil', label: 'Oil', category: 'IRAN', description: 'Iran oil exports and production' },
     { slug: 'israel-x-iran', label: 'Israel x Iran', category: 'IRAN', description: 'Israel-Iran conflict and tensions' },
     { slug: 'lebanon', label: 'Lebanon', category: 'IRAN', description: 'Lebanon-Iran relations' },
-    { slug: 'iran', label: 'Iran Regime', category: 'IRAN', description: 'Iran internal politics and regime' },
+    { slug: 'iranian-leadership-regime', label: 'Iran Regime', category: 'IRAN', description: 'Iran internal politics and regime' },
     { slug: 'nuclear', label: 'Nuclear', category: 'IRAN', description: 'Iran nuclear program' },
   ],
 
   FINANCE: [
     { slug: 'stocks', label: 'Stocks', category: 'FINANCE', description: 'Equity markets and company performance' },
     { slug: 'earnings', label: 'Earnings', category: 'FINANCE', description: 'Quarterly earnings and company results' },
-    { slug: 'quarterly', label: 'Quarterly', category: 'FINANCE', description: 'Quarterly financial results' },
+    { slug: 'indicies', label: 'Indices', category: 'FINANCE', description: 'Market indices and index funds' },
     { slug: 'commodities', label: 'Commodities', category: 'FINANCE', description: 'Commodity markets and prices' },
     { slug: 'forex', label: 'Forex', category: 'FINANCE', description: 'Foreign exchange and currency markets' },
     { slug: 'privates', label: 'Privates', category: 'FINANCE', description: 'Private company markets' },
     { slug: 'acquisitions', label: 'Acquisitions', category: 'FINANCE', description: 'M&A and acquisition markets' },
-    { slug: 'ipos', label: 'IPOs', category: 'FINANCE', description: 'Initial public offering markets' },
+    { slug: 'ipo', label: 'IPO', category: 'FINANCE', description: 'Initial public offering markets' },
     { slug: 'fed-rates', label: 'Fed Rates', category: 'FINANCE', description: 'Federal Reserve policy and rates' },
     { slug: 'prediction-markets', label: 'Prediction Markets', category: 'FINANCE', description: 'Prediction market platforms' },
     { slug: 'treasuries', label: 'Treasuries', category: 'FINANCE', description: 'Treasury bond markets' },
@@ -177,24 +177,49 @@ export const SUBCATEGORIES: Record<MarketCategory, SubcategoryDef[]> = {
 
   WEATHER: [
     { slug: 'temperature', label: 'Temperature', category: 'WEATHER', description: 'Temperature records and extremes' },
+    { slug: 'high-temperature', label: 'High Temp', category: 'WEATHER', description: 'High temperature records and heat waves' },
+    { slug: 'low-temperature', label: 'Low Temp', category: 'WEATHER', description: 'Low temperature records and cold snaps' },
     { slug: 'precipitation', label: 'Precipitation', category: 'WEATHER', description: 'Rainfall, snowfall, and precipitation patterns' },
     { slug: 'global', label: 'Global', category: 'WEATHER', description: 'Global weather and climate patterns' },
+    { slug: 'tornadoes', label: 'Tornadoes', category: 'WEATHER', description: 'Tornado activity and forecasts' },
+    { slug: 'hurricanes', label: 'Hurricanes', category: 'WEATHER', description: 'Hurricane activity and storm tracking' },
+    { slug: 'earthquakes', label: 'Earthquakes', category: 'WEATHER', description: 'Earthquake activity and seismic events' },
+    { slug: 'volcanoes', label: 'Volcanoes', category: 'WEATHER', description: 'Volcanic activity and eruptions' },
+    { slug: 'pandemics', label: 'Pandemics', category: 'WEATHER', description: 'Pandemic and disease outbreak tracking' },
   ],
 
   ELECTIONS: [
     { slug: 'australia', label: 'Australia', category: 'ELECTIONS', description: 'Australian elections' },
     { slug: 'brazil', label: 'Brazil', category: 'ELECTIONS', description: 'Brazilian elections' },
+    { slug: 'bulgaria', label: 'Bulgaria', category: 'ELECTIONS', description: 'Bulgarian elections' },
     { slug: 'canada', label: 'Canada', category: 'ELECTIONS', description: 'Canadian elections' },
+    { slug: 'estonia', label: 'Estonia', category: 'ELECTIONS', description: 'Estonian elections' },
     { slug: 'france', label: 'France', category: 'ELECTIONS', description: 'French elections' },
     { slug: 'germany', label: 'Germany', category: 'ELECTIONS', description: 'German elections' },
+    { slug: 'greece', label: 'Greece', category: 'ELECTIONS', description: 'Greek elections' },
+    { slug: 'guinea-bissau', label: 'Guinea-Bissau', category: 'ELECTIONS', description: 'Guinea-Bissau elections' },
+    { slug: 'haiti', label: 'Haiti', category: 'ELECTIONS', description: 'Haitian elections' },
+    { slug: 'hungary', label: 'Hungary', category: 'ELECTIONS', description: 'Hungarian elections' },
     { slug: 'india', label: 'India', category: 'ELECTIONS', description: 'Indian elections' },
     { slug: 'israel', label: 'Israel', category: 'ELECTIONS', description: 'Israeli elections' },
+    { slug: 'kazakhstan', label: 'Kazakhstan', category: 'ELECTIONS', description: 'Kazakhstan elections' },
+    { slug: 'latvia', label: 'Latvia', category: 'ELECTIONS', description: 'Latvian elections' },
     { slug: 'mexico', label: 'Mexico', category: 'ELECTIONS', description: 'Mexican elections' },
+    { slug: 'morocco', label: 'Morocco', category: 'ELECTIONS', description: 'Moroccan elections' },
     { slug: 'new-zealand', label: 'New Zealand', category: 'ELECTIONS', description: 'New Zealand elections' },
+    { slug: 'nigeria', label: 'Nigeria', category: 'ELECTIONS', description: 'Nigerian elections' },
+    { slug: 'peru', label: 'Peru', category: 'ELECTIONS', description: 'Peruvian elections' },
     { slug: 'philippines', label: 'Philippines', category: 'ELECTIONS', description: 'Philippine elections' },
+    { slug: 'romania', label: 'Romania', category: 'ELECTIONS', description: 'Romanian elections' },
+    { slug: 'russia', label: 'Russia', category: 'ELECTIONS', description: 'Russian elections' },
+    { slug: 'serbia', label: 'Serbia', category: 'ELECTIONS', description: 'Serbian elections' },
     { slug: 'south-africa', label: 'South Africa', category: 'ELECTIONS', description: 'South African elections' },
+    { slug: 'sweden', label: 'Sweden', category: 'ELECTIONS', description: 'Swedish elections' },
+    { slug: 'switzerland', label: 'Switzerland', category: 'ELECTIONS', description: 'Swiss elections' },
+    { slug: 'taiwan', label: 'Taiwan', category: 'ELECTIONS', description: 'Taiwanese elections' },
     { slug: 'uk', label: 'United Kingdom', category: 'ELECTIONS', description: 'UK elections' },
     { slug: 'us', label: 'United States', category: 'ELECTIONS', description: 'US elections' },
+    { slug: 'zambia', label: 'Zambia', category: 'ELECTIONS', description: 'Zambian elections' },
   ],
 
   OTHER: [
@@ -231,30 +256,30 @@ export function mapTagsToSubcategory(
   const tagLower = tags.map(t => t.toLowerCase());
 
   // IRAN mappings - aligned with curated list
-  // Now matches against tag slugs (e.g., 'negotiations', 'trump-iran', 'diplomacy-ceasefire')
-  // instead of labels (e.g., "Negotiation Topics", "U.S. x Iran", "Iran Ceasefire")
+  // Now matches against Polymarket tag slugs directly (e.g., 'diplomacy-ceasefire', 'trump-iran', 'iranian-leadership-regime')
+  // since internal slugs now match Polymarket's URL structure exactly.
   //
   // IMPORTANT: Check order determines priority when events have multiple tags.
   // More specific tags are checked first to ensure correct categorization.
   if (category === 'IRAN') {
     // Exact slug matches - ordered by specificity (most specific first)
     if (tagLower.some(t => t === 'negotiations')) return 'negotiations';
-    if (tagLower.some(t => t === 'trump-iran' || t === 'us-iran')) return 'us-iran';
+    if (tagLower.some(t => t === 'trump-iran')) return 'trump-iran';
     if (tagLower.some(t => t === 'peace-deal')) return 'peace-deal';
     if (tagLower.some(t => t === 'strait-of-hormuz' || t === 'strait-of-hormuzs')) return 'strait-of-hormuz';
-    if (tagLower.some(t => t === 'diplomacy-ceasefire' || t === 'ceasefire')) return 'ceasefire';
+    if (tagLower.some(t => t === 'diplomacy-ceasefire')) return 'diplomacy-ceasefire';
     if (tagLower.some(t => t === 'oil')) return 'oil';
     if (tagLower.some(t => t === 'lebanon')) return 'lebanon';
     if (tagLower.some(t => t === 'nuclear')) return 'nuclear';
     if (tagLower.some(t => t === 'israel-x-iran' || t === 'israel-iran')) return 'israel-x-iran';
-    if (tagLower.some(t => t === 'iran')) return 'iran';
+    if (tagLower.some(t => t === 'iranian-leadership-regime')) return 'iranian-leadership-regime';
 
     // Fallback to partial matches for backwards compatibility
     if (tagLower.some(t => t.includes('negotiation'))) return 'negotiations';
     if (tagLower.some(t => t.includes('peace') && t.includes('deal'))) return 'peace-deal';
     if (tagLower.some(t => t.includes('strait') && t.includes('hormuz'))) return 'strait-of-hormuz';
-    if (tagLower.some(t => t.includes('ceasefire') || t.includes('cease-fire'))) return 'ceasefire';
-    return 'iran'; // default
+    if (tagLower.some(t => t.includes('ceasefire') || t.includes('cease-fire'))) return 'diplomacy-ceasefire';
+    return 'iranian-leadership-regime'; // default
   }
 
   // POLITICS mappings - aligned with curated list
@@ -292,12 +317,13 @@ export function mapTagsToSubcategory(
   // FINANCE mappings - aligned with curated list
   if (category === 'FINANCE') {
     if (tagLower.some(t => t.includes('stock') || t.includes('equity') || t.includes('s&p') || t.includes('nasdaq'))) return 'stocks';
+    if (tagLower.some(t => t === 'indicies' || t.includes('index'))) return 'indicies';
     if (tagLower.some(t => t.includes('earning') || t.includes('revenue'))) return 'earnings';
-    if (tagLower.some(t => t.includes('quarterly') || t.includes('quarter'))) return 'quarterly';
     if (tagLower.some(t => t.includes('commodit'))) return 'commodities';
     if (tagLower.some(t => t.includes('forex') || t.includes('currenc'))) return 'forex';
     if (tagLower.some(t => t.includes('private'))) return 'privates';
     if (tagLower.some(t => t.includes('acquisition') || t.includes('merger') || t.includes('m&a'))) return 'acquisitions';
+    if (tagLower.some(t => t === 'ipo' || t.includes('ipo'))) return 'ipo';
     if (tagLower.some(t => t.includes('fed') && t.includes('rate'))) return 'fed-rates';
     if (tagLower.some(t => t.includes('prediction') && t.includes('market'))) return 'prediction-markets';
     if (tagLower.some(t => t.includes('treasur'))) return 'treasuries';
@@ -421,25 +447,50 @@ export function mapTagsToSubcategory(
   // WEATHER mappings - aligned with curated list
   if (category === 'WEATHER') {
     if (tagLower.some(t => t.includes('temperature') || t.includes('temp'))) return 'temperature';
+    if (tagLower.some(t => t === 'high-temperature' || t.includes('high') && t.includes('temp'))) return 'high-temperature';
+    if (tagLower.some(t => t === 'low-temperature' || t.includes('low') && t.includes('temp'))) return 'low-temperature';
     if (tagLower.some(t => t.includes('precipitation') || t.includes('rain') || t.includes('snow') || t.includes('precip'))) return 'precipitation';
     if (tagLower.some(t => t.includes('global') && t.includes('weather'))) return 'global';
+    if (tagLower.some(t => t === 'tornadoes' || t.includes('tornado'))) return 'tornadoes';
+    if (tagLower.some(t => t === 'hurricanes' || t.includes('hurricane') || t.includes('typhoon'))) return 'hurricanes';
+    if (tagLower.some(t => t === 'earthquakes' || t.includes('earthquake') || t.includes('seismic'))) return 'earthquakes';
+    if (tagLower.some(t => t === 'volcanoes' || t.includes('volcano') || t.includes('eruption'))) return 'volcanoes';
+    if (tagLower.some(t => t === 'pandemics' || t.includes('pandemic') || t.includes('virus'))) return 'pandemics';
   }
 
   // ELECTIONS mappings - aligned with curated list
   if (category === 'ELECTIONS') {
     if (tagLower.some(t => t.includes('australia') || t.includes('australian'))) return 'australia';
     if (tagLower.some(t => t.includes('brazil') || t.includes('brazilian'))) return 'brazil';
+    if (tagLower.some(t => t.includes('bulgaria') || t.includes('bulgarian'))) return 'bulgaria';
     if (tagLower.some(t => t.includes('canada') || t.includes('canadian'))) return 'canada';
+    if (tagLower.some(t => t.includes('estonia') || t.includes('estonian'))) return 'estonia';
     if (tagLower.some(t => t.includes('france') || t.includes('french'))) return 'france';
     if (tagLower.some(t => t.includes('germany') || t.includes('german'))) return 'germany';
+    if (tagLower.some(t => t.includes('greece') || t.includes('greek'))) return 'greece';
+    if (tagLower.some(t => t.includes('guinea') && t.includes('bissau'))) return 'guinea-bissau';
+    if (tagLower.some(t => t.includes('haiti') || t.includes('haitian'))) return 'haiti';
+    if (tagLower.some(t => t.includes('hungary') || t.includes('hungarian'))) return 'hungary';
     if (tagLower.some(t => t.includes('india') || t.includes('indian'))) return 'india';
     if (tagLower.some(t => t.includes('israel') || t.includes('israeli'))) return 'israel';
+    if (tagLower.some(t => t.includes('kazakhstan') || t.includes('kazakh'))) return 'kazakhstan';
+    if (tagLower.some(t => t.includes('latvia') || t.includes('latvian'))) return 'latvia';
     if (tagLower.some(t => t.includes('mexico') || t.includes('mexican'))) return 'mexico';
+    if (tagLower.some(t => t.includes('morocco') || t.includes('moroccan'))) return 'morocco';
     if (tagLower.some(t => t.includes('new zealand') || t.includes('nz') || t.includes('new-zealand'))) return 'new-zealand';
+    if (tagLower.some(t => t.includes('nigeria') || t.includes('nigerian'))) return 'nigeria';
+    if (tagLower.some(t => t.includes('peru') || t.includes('peruvian'))) return 'peru';
     if (tagLower.some(t => t.includes('philippines') || t.includes('philippine'))) return 'philippines';
+    if (tagLower.some(t => t.includes('romania') || t.includes('romanian'))) return 'romania';
+    if (tagLower.some(t => t.includes('russia') || t.includes('russian'))) return 'russia';
+    if (tagLower.some(t => t.includes('serbia') || t.includes('serbian'))) return 'serbia';
     if (tagLower.some(t => t.includes('south africa') || t.includes('south african'))) return 'south-africa';
+    if (tagLower.some(t => t.includes('sweden') || t.includes('swedish'))) return 'sweden';
+    if (tagLower.some(t => t.includes('switzerland') || t.includes('swiss'))) return 'switzerland';
+    if (tagLower.some(t => t.includes('taiwan') || t.includes('taiwanese'))) return 'taiwan';
     if (tagLower.some(t => t.includes('uk') || t.includes('united kingdom') || t.includes('british'))) return 'uk';
     if (tagLower.some(t => t.includes('us') || t.includes('united states') || t.includes('america') || t.includes('american'))) return 'us';
+    if (tagLower.some(t => t.includes('zambia') || t.includes('zambian'))) return 'zambia';
   }
 
   return null; // No subcategory match

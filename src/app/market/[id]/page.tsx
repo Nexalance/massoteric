@@ -413,12 +413,28 @@ export default async function MarketPage({ params }: MarketPageProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  display: 'block', marginTop: '12px', textAlign: 'center',
+                  display: 'inline-flex', alignItems: 'center', gap: '4px',
+                  marginTop: '12px', textAlign: 'center',
                   fontFamily: 'var(--font-mono)', fontSize: '10px',
                   color: 'var(--mist)', letterSpacing: '1px',
                 }}
               >
-                VIEW ON {market.source} ↗
+                VIEW ON {market.source}
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M1 11L11 1M11 1H3M11 1V9"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </a>
             )}
           </aside>

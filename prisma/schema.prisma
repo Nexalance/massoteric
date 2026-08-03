@@ -166,7 +166,11 @@ model User {
 
 model Market {
   id                String        @id @default(cuid())
-  externalId        String?       @unique  // ID from Polymarket / Kalshi
+  externalId        String?       @unique  // ID from Polymarket / Kalshi (composite for multi-subcategory events)
+  polymarketEventId String?       // True Polymarket event ID from API (event.id)
+                                  // Used for: resolution API calls, external URL generation, counting unique events
+                                  // Distinct from externalId which is composite (eventId or eventId-subcategorySlug)
+                                  // NOT unique: one event can have multiple Market rows (one per subcategory)
   source            MarketSource
   category          MarketCategory
   title             String
@@ -176,7 +180,7 @@ model Market {
 
   // Probabilities
   marketProbability Float?        // from external source (0–1)
-  
+
   // Dates
   closesAt          DateTime?     // when predictions lock
   resolvesAt        DateTime?     // expected resolution
@@ -216,6 +220,7 @@ model Market {
   @@index([closesAt])
   @@index([featured])
   @@index([subcategoryId])
+  @@index([polymarketEventId])
 }
 
 // ─── PREDICTION ───────────────────────────────────────────

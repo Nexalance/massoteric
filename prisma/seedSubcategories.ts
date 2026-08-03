@@ -35,10 +35,9 @@ async function seedSubcategories() {
 
       try {
         await prisma.subcategory.upsert({
-          where: { slug: sub.slug },
+          where: { slug_category: { slug: sub.slug, category: sub.category as any } },
           update: {
             label: sub.label,
-            category: sub.category as any,
             description: sub.description,
             order: i,
           },
