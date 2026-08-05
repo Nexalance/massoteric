@@ -41,7 +41,7 @@ async function ensureDevUser() {
       })
       console.log('✅ Dev user created')
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Error ensuring dev user exists:', error)
     // Don't throw - allow the app to continue and handle auth failure in the route handler
   }
@@ -161,36 +161,29 @@ async function syncClerkUserToDb(clerkId: string, clerkUser?: any) {
 
 export async function auth() {
   if (hasValidClerkKey) {
-    try {
-      // Use real Clerk auth
-      const { auth: clerkAuth, currentUser } = require('@clerk/nextjs/server')
-      const result = await clerkAuth()
+    // Use real Clerk auth
+    const { auth: clerkAuth, currentUser } = require('@clerk/nextjs/server')
+    const result = await clerkAuth()
 
-      // Auto-sync user to database if they exist in Clerk but not in DB
-      if (result?.userId) {
-        // Try to get full user data from Clerk API
-        let clerkUser = result.user
+    // Auto-sync user to database if they exist in Clerk but not in DB
+    if (result?.userId) {
+      // Try to get full user data from Clerk API
+      let clerkUser = result.user
 
-        // If user data is incomplete, fetch from currentUser
-        if (!clerkUser?.emailAddresses && !clerkUser?.fullName) {
-          try {
-            const userResult = await currentUser()
-            clerkUser = userResult
-          } catch (e) {
-            console.log('Could not fetch full user from Clerk:', e.message)
-          }
+      // If user data is incomplete, fetch from currentUser
+      if (!clerkUser?.emailAddresses && !clerkUser?.fullName) {
+        try {
+          const userResult = await currentUser()
+          clerkUser = userResult
+        } catch (e: any) {
+          console.log('Could not fetch full user from Clerk:', e.message)
         }
-
-        await syncClerkUserToDb(result.userId, clerkUser)
       }
 
-      return result
-    } catch (clerkError) {
-      // Clerk auth failed (middleware disabled or other issue)
-      // Return null to indicate no auth - caller handles gracefully
-      console.log('Clerk auth unavailable:', clerkError.message?.substring(0, 80))
-      return { userId: null, user: null }
+      await syncClerkUserToDb(result.userId, clerkUser)
     }
+
+    return result
   }
 
   // Mock auth for development - ensure user exists first
