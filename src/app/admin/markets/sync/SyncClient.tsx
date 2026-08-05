@@ -4,17 +4,17 @@ import { useState } from 'react'
 
 const CATEGORIES = [
   { value: '', label: 'All Categories' },
-  { value: 'iran', label: 'Iran' },
   { value: 'politics', label: 'Politics' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'crypto', label: 'Crypto' },
   { value: 'sports', label: 'Sports' },
-  { value: 'tech', label: 'Tech' },
-  { value: 'science', label: 'Science' },
-  { value: 'economy', label: 'Economy' },
+  { value: 'crypto', label: 'Crypto' },
+  { value: 'iran', label: 'Iran' },
+  { value: 'finance', label: 'Finance' },
   { value: 'geopolitics', label: 'Geopolitics' },
+  { value: 'tech', label: 'Tech' },
   { value: 'culture', label: 'Culture' },
+  { value: 'economy', label: 'Economy' },
   { value: 'weather', label: 'Weather' },
+  { value: 'science', label: 'Science' },
   { value: 'elections', label: 'Elections' },
 ]
 
