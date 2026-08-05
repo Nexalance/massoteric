@@ -30,18 +30,16 @@ enum MarketSource {
 
 enum MarketCategory {
   POLITICS
-  FINANCE
-  CRYPTO
   SPORTS
-  SCIENCE
-  TECH
-  ECONOMY
-  GEOPOLITICS
+  CRYPTO
   IRAN
+  FINANCE
+  GEOPOLITICS
+  TECH
   CULTURE
+  ECONOMY
   WEATHER
   ELECTIONS
-  OTHER
 }
 
 enum TopicStatus {

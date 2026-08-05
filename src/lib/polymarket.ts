@@ -630,21 +630,60 @@ const POLYMARKET_CURATED_SUBCATEGORIES: Record<string, Array<{ slug: string; lab
     { slug: 'us', label: 'United States', order: 30 },
     { slug: 'zambia', label: 'Zambia', order: 31 },
   ],
+  ELECTIONS: [
+    { slug: 'australia', label: 'Australia', order: 1 },
+    { slug: 'brazil', label: 'Brazil', order: 2 },
+    { slug: 'bulgaria', label: 'Bulgaria', order: 3 },
+    { slug: 'canada', label: 'Canada', order: 4 },
+    { slug: 'estonia', label: 'Estonia', order: 5 },
+    { slug: 'france', label: 'France', order: 6 },
+    { slug: 'germany', label: 'Germany', order: 7 },
+    { slug: 'greece', label: 'Greece', order: 8 },
+    { slug: 'guinea-bissau', label: 'Guinea-Bissau', order: 9 },
+    { slug: 'haiti', label: 'Haiti', order: 10 },
+    { slug: 'hungary', label: 'Hungary', order: 11 },
+    { slug: 'india', label: 'India', order: 12 },
+    { slug: 'israel', label: 'Israel', order: 13 },
+    { slug: 'kazakhstan', label: 'Kazakhstan', order: 14 },
+    { slug: 'latvia', label: 'Latvia', order: 15 },
+    { slug: 'mexico', label: 'Mexico', order: 16 },
+    { slug: 'morocco', label: 'Morocco', order: 17 },
+    { slug: 'new-zealand', label: 'New Zealand', order: 18 },
+    { slug: 'nigeria', label: 'Nigeria', order: 19 },
+    { slug: 'peru', label: 'Peru', order: 20 },
+    { slug: 'philippines', label: 'Philippines', order: 21 },
+    { slug: 'romania', label: 'Romania', order: 22 },
+    { slug: 'russia', label: 'Russia', order: 23 },
+    { slug: 'serbia', label: 'Serbia', order: 24 },
+    { slug: 'south-africa', label: 'South Africa', order: 25 },
+    { slug: 'sweden', label: 'Sweden', order: 26 },
+    { slug: 'switzerland', label: 'Switzerland', order: 27 },
+    { slug: 'taiwan', label: 'Taiwan', order: 28 },
+    { slug: 'uk', label: 'United Kingdom', order: 29 },
+    { slug: 'us', label: 'United States', order: 30 },
+    { slug: 'zambia', label: 'Zambia', order: 31 },
+  ],
 }
 
 /**
  * Sync Polymarket's curated subcategories into our Subcategory table
  * Only syncs the subcategories that Polymarket shows in their navigation
  * Removes any subcategories that are not in the curated list
+ * @param categoryFilter - If provided, only sync subcategories for this category
  */
-export async function syncPolymarketSubcategories(): Promise<{ created: number; updated: number; deleted: number }> {
+export async function syncPolymarketSubcategories(categoryFilter: string | null = null): Promise<{ created: number; updated: number; deleted: number }> {
   let created = 0
   let updated = 0
   let deleted = 0
 
   // Collect all curated (slug, category) pairs - using composite key
+  // If categoryFilter is provided, only include pairs from that category
   const curatedPairs = new Set<string>()
   for (const [category, subcategories] of Object.entries(POLYMARKET_CURATED_SUBCATEGORIES)) {
+    // Skip this category if we're filtering and it doesn't match
+    if (categoryFilter && category !== categoryFilter) {
+      continue
+    }
     for (const subcat of subcategories) {
       curatedPairs.add(`${subcat.slug}:${category}`)
     }
@@ -812,22 +851,27 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
 
   console.log(`[Polymarket] Found ${tagSlugs.size} curated subcategories${categoryFilter ? ` for ${categoryFilter}` : ' total'} to sync`)
 
-  // First, fetch global events (top 5000 by volume) as baseline
-  console.log('[Polymarket] Fetching global top 5000 events by volume...')
-  const globalEvents = await fetchPolymarketEvents(5000)
-  console.log(`[Polymarket] Fetched ${globalEvents.length} global events`)
-
   // Merge events, deduplicating by ID
   const allEventsMap = new Map<string, PolymarketEvent>()
-  for (const event of globalEvents) {
-    allEventsMap.set(event.id, event)
+  let totalFetched = 0
+  const fetchErrors: string[] = []
+
+  // Only fetch global events when syncing all categories (no filter)
+  // Skip for category-specific syncs to save time
+  if (!categoryFilter) {
+    console.log('[Polymarket] Fetching global top 5000 events by volume...')
+    const globalEvents = await fetchPolymarketEvents(5000)
+    console.log(`[Polymarket] Fetched ${globalEvents.length} global events`)
+    for (const event of globalEvents) {
+      allEventsMap.set(event.id, event)
+    }
+    totalFetched = globalEvents.length
+  } else {
+    console.log(`[Polymarket] Skipping global events fetch for category-specific sync (${categoryFilter})`)
   }
 
   // Fetch events for each curated subcategory tag
   // This ensures we get ALL events for each subcategory, not just high-volume ones
-  let totalFetched = globalEvents.length
-  const fetchErrors: string[] = []
-
   for (const tagSlug of Array.from(tagSlugs)) {
     try {
       // Map internal slug to Polymarket API slug if needed

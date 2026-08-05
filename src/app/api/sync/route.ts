@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
     console.log(`[Sync] Starting sync${selectedCategory ? ` for category: ${selectedCategory}` : ' (all categories)'}`)
 
     // Sync subcategories first (creates new ones if needed)
-    const subcatResult = await syncPolymarketSubcategories();
+    // Pass category filter to only sync subcategories for that category
+    const subcatResult = await syncPolymarketSubcategories(selectedCategory);
 
     // Then sync markets (now can use new subcategories)
     const result = await syncPolymarketMarkets(selectedCategory);

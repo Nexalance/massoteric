@@ -20,18 +20,16 @@ export interface SortDef {
 export const CATEGORIES: CategoryDef[] = [
   { value: 'ALL', label: 'All Topics' },
   { value: 'POLITICS', label: 'Politics' },
-  { value: 'FINANCE', label: 'Finance' },
-  { value: 'CRYPTO', label: 'Crypto' },
   { value: 'SPORTS', label: 'Sports' },
-  { value: 'SCIENCE', label: 'Science' },
-  { value: 'TECH', label: 'Tech' },
-  { value: 'ECONOMY', label: 'Economy' },
+  { value: 'CRYPTO', label: 'Crypto' },
   { value: 'IRAN', label: 'Iran' },
+  { value: 'FINANCE', label: 'Finance' },
   { value: 'GEOPOLITICS', label: 'Geopolitics' },
+  { value: 'TECH', label: 'Tech' },
   { value: 'CULTURE', label: 'Culture' },
+  { value: 'ECONOMY', label: 'Economy' },
   { value: 'WEATHER', label: 'Weather' },
   { value: 'ELECTIONS', label: 'Elections' },
-  { value: 'OTHER', label: 'Other' },
 ]
 
 // Polymarket-style sort tabs.
