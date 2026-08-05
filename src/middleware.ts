@@ -5,12 +5,13 @@
 const DEV_MODE = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.includes('placeholder')
 
 // Only import Clerk if not in dev mode without keys
-let clerkMiddleware: any, createRouteMatcher: any
+let clerkMiddleware: any, createRouteMatcher: any, NextResponse: any
 
 if (!DEV_MODE) {
   const clerk = require('@clerk/nextjs/server')
   clerkMiddleware = clerk.clerkMiddleware
   createRouteMatcher = clerk.createRouteMatcher
+  NextResponse = require('next/server').NextResponse
 }
 
 const isPublicRoute = createRouteMatcher ? createRouteMatcher([
@@ -37,9 +38,30 @@ export default function middleware(request: any) {
     return
   }
 
-  return clerkMiddleware((auth: any, req: any) => {
-    if (!isPublicRoute || !isPublicRoute(req)) auth().protect()
-  })(request)
+  try {
+    return clerkMiddleware((auth: any, req: any) => {
+      if (!isPublicRoute || !isPublicRoute(req)) auth().protect()
+    })(request)
+  } catch (error: any) {
+    // Handle Clerk errors (key rotation, invalid tokens, etc.)
+    // Redirect to sign-in with a fresh start instead of crashing
+    console.log('Clerk middleware error, redirecting to sign-in:', error.message?.substring(0, 100))
+
+    // Clear session cookies and redirect to sign-in
+    const url = request.nextUrl || new URL(request.url, 'http://localhost:3000')
+    const signInUrl = new URL('/sign-in', url)
+
+    // Add Clerk's redirect URL to return after sign-in
+    signInUrl.searchParams.set('redirect_url', url.pathname + url.search)
+
+    const response = NextResponse.redirect(signInUrl)
+
+    // Clear Clerk session cookies to force fresh login
+    response.cookies.delete('__session')
+    response.cookies.delete('__clerk_session_jwt')
+
+    return response
+  }
 }
 
 export const config = {
