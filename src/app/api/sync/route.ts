@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 import { syncPolymarketMarkets, syncPolymarketSubcategories, checkMarketResolutions } from '@/lib/polymarket';
 import { ensureMigrated } from '@/lib/migrations';
 import { NextRequest } from 'next/server';
+import { isCategorySupported } from '@/lib/category-compat';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,6 +12,14 @@ export async function GET(req: NextRequest) {
     // e.g., /api/sync?category=POLITICS will only sync POLITICS subcategories
     const categoryParam = req.nextUrl.searchParams.get('category');
     const selectedCategory = categoryParam ? categoryParam.toUpperCase() : null;
+
+    // Check if category is supported in this environment (handles enum mismatches)
+    if (selectedCategory && !isCategorySupported(selectedCategory)) {
+      return Response.json({
+        success: false,
+        error: `Category '${selectedCategory}' is not supported in this environment yet. Available categories: ${Object.values(require('@prisma/client').MarketCategory).join(', ')}`,
+      }, { status: 400 });
+    }
 
     console.log(`[Sync] Starting sync${selectedCategory ? ` for category: ${selectedCategory}` : ' (all categories)'}`)
 
