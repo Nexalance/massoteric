@@ -1,8 +1,3 @@
-// ─────────────────────────────────────────────────────────
-// MASSOTERIC — Database Schema
-// Provider: PostgreSQL via Prisma ORM
-// ─────────────────────────────────────────────────────────
-
 generator client {
   provider      = "prisma-client-js"
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
@@ -13,7 +8,316 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── ENUMS ───────────────────────────────────────────────
+model Subcategory {
+  id          String         @id @default(cuid())
+  slug        String
+  label       String
+  category    MarketCategory
+  description String?
+  order       Int            @default(0)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  markets     Market[]
+
+  @@unique([slug, category])
+  @@index([category])
+  @@index([category, order])
+}
+
+model User {
+  id                       String              @id @default(cuid())
+  clerkId                  String              @unique
+  username                 String              @unique
+  displayName              String
+  email                    String              @unique
+  phoneVerified            Boolean             @default(false)
+  avatarUrl                String?
+  bio                      String?
+  occupation               String?
+  employer                 String?
+  educationLevel           String?
+  educationField           String?
+  institution              String?
+  certifications           String[]
+  yearsExperience          Int?
+  linkedinUrl              String?
+  websiteUrl               String?
+  stripeCustomerId         String?             @unique
+  subscriptionTier         SubscriptionTier    @default(FREE)
+  subscriptionStatus       SubscriptionStatus?
+  isAdmin                  Boolean             @default(false)
+  isSuspended              Boolean             @default(false)
+  onboardingComplete       Boolean             @default(false)
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
+  hasSeenLanding           Boolean             @default(false)
+  stripeAccountId          String?             @unique
+  stripeOnboardingComplete Boolean             @default(false)
+  accuracyScores           AccuracyScore[]
+  comments                 Comment[]
+  commentVotes             CommentVote[]
+  competitions             Competition[]
+  competitionsWon          Competition[]       @relation("CompetitionWinner")
+  competitionMembers       CompetitionMember[]
+  creatorSettings          CreatorSettings?
+  topicsCreated            Market[]            @relation("topicCreator")
+  payouts                  Payout[]
+  predictions              Prediction[]
+  predictionEdits          PredictionEdit[]
+  subscribers              UserSubscription[]  @relation("expert")
+  subscriptions            UserSubscription[]  @relation("subscriber")
+
+  @@index([clerkId])
+  @@index([username])
+  @@index([subscriptionTier])
+}
+
+model Market {
+  id                 String         @id @default(cuid())
+  externalId         String?        @unique
+  source             MarketSource
+  category           MarketCategory
+  title              String
+  description        String?
+  resolutionCriteria String?
+  imageUrl           String?
+  marketProbability  Float?
+  closesAt           DateTime?
+  resolvesAt         DateTime?
+  resolvedAt         DateTime?
+  status             MarketStatus   @default(OPEN)
+  resolvedValue      Boolean?
+  externalUrl        String?
+  createdByUserId    String?
+  topicStatus        TopicStatus?
+  tags               String[]
+  featured           Boolean        @default(false)
+  viewCount          Int            @default(0)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  subcategoryId      String?
+  polymarketEventId  String?
+  comments           Comment[]
+  createdBy          User?          @relation("topicCreator", fields: [createdByUserId], references: [id])
+  subcategory        Subcategory?   @relation(fields: [subcategoryId], references: [id], map: "Market_subcategoryId_Subcategory_id_fk")
+  predictions        Prediction[]
+
+  @@index([status])
+  @@index([category])
+  @@index([source])
+  @@index([closesAt])
+  @@index([featured])
+  @@index([subcategoryId])
+  @@index([polymarketEventId])
+}
+
+model Prediction {
+  id               String           @id @default(cuid())
+  userId           String
+  marketId         String
+  probability      Float
+  reasoning        String
+  reasoningSnippet String?
+  status           PredictionStatus @default(ACTIVE)
+  brierScore       Float?
+  isCorrect        Boolean?
+  lockedAt         DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  market           Market           @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  edits            PredictionEdit[]
+
+  @@unique([userId, marketId])
+  @@index([userId])
+  @@index([marketId])
+  @@index([status])
+  @@index([brierScore])
+}
+
+model PredictionEdit {
+  id                  String     @id @default(cuid())
+  predictionId        String
+  userId              String
+  previousProbability Float
+  previousReasoning   String
+  editReason          String?
+  createdAt           DateTime   @default(now())
+  prediction          Prediction @relation(fields: [predictionId], references: [id], onDelete: Cascade)
+  user                User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([predictionId])
+}
+
+model Comment {
+  id        String        @id @default(cuid())
+  userId    String
+  marketId  String
+  parentId  String?
+  body      String
+  isDeleted Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  market    Market        @relation(fields: [marketId], references: [id], onDelete: Cascade)
+  parent    Comment?      @relation("replies", fields: [parentId], references: [id])
+  replies   Comment[]     @relation("replies")
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  votes     CommentVote[]
+
+  @@index([marketId])
+  @@index([userId])
+  @@index([parentId])
+}
+
+model CommentVote {
+  id        String  @id @default(cuid())
+  userId    String
+  commentId String
+  value     Int
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, commentId])
+}
+
+model AccuracyScore {
+  id                String          @id @default(cuid())
+  userId            String
+  category          MarketCategory?
+  totalPredictions  Int             @default(0)
+  scoredPredictions Int             @default(0)
+  totalBrierScore   Float           @default(0)
+  avgBrierScore     Float?
+  accuracyPct       Float?
+  updatedAt         DateTime        @updatedAt
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category])
+  @@index([userId])
+  @@index([category, avgBrierScore])
+}
+
+model CreatorSettings {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  monthlyPriceCents Int      @default(999)
+  platformFeeBps    Int      @default(1500)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payout {
+  id               String       @id @default(cuid())
+  userId           String
+  amountCents      Int
+  stripeTransferId String?      @unique
+  status           PayoutStatus @default(PENDING)
+  requestedAt      DateTime     @default(now())
+  processedAt      DateTime?
+  notes            String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+model UserSubscription {
+  id                   String             @id @default(cuid())
+  subscriberId         String
+  expertId             String
+  stripeSubscriptionId String?            @unique
+  stripePriceId        String?
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodEnd     DateTime?
+  monthlyPriceCents    Int
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  platformFeeBps       Int                @default(1500)
+  expert               User               @relation("expert", fields: [expertId], references: [id], onDelete: Cascade)
+  subscriber           User               @relation("subscriber", fields: [subscriberId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriberId, expertId])
+  @@index([expertId])
+  @@index([subscriberId])
+}
+
+model PlatformSubscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  stripeSubscriptionId String             @unique
+  stripePriceId        String
+  tier                 SubscriptionTier
+  status               SubscriptionStatus
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+}
+
+model FeatureFlag {
+  id          String     @id @default(cuid())
+  key         FeatureKey @unique
+  label       String
+  description String
+  isFree      Boolean    @default(false)
+  isEnabled   Boolean    @default(true)
+  updatedAt   DateTime   @updatedAt
+  updatedBy   String?
+}
+
+model Competition {
+  id               String              @id @default(cuid())
+  name             String
+  description      String?
+  startsAt         DateTime
+  endsAt           DateTime
+  isPublic         Boolean             @default(true)
+  entryCode        String?
+  prizeDescription String?
+  prizeImageUrl    String?
+  maxParticipants  Int?
+  participantCount Int                 @default(0)
+  createdBy        String
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  winnerId         String?
+  creator          User                @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  winner           User?               @relation("CompetitionWinner", fields: [winnerId], references: [id])
+  members          CompetitionMember[]
+
+  @@index([isPublic])
+  @@index([startsAt])
+  @@index([endsAt])
+}
+
+model CompetitionMember {
+  id                String      @id @default(cuid())
+  competitionId     String
+  userId            String
+  totalPredictions  Int         @default(0)
+  scoredPredictions Int         @default(0)
+  totalBrierScore   Float       @default(0)
+  avgBrierScore     Float?
+  joinedAt          DateTime    @default(now())
+  competition       Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([competitionId, userId])
+  @@index([competitionId])
+  @@index([userId])
+  @@index([avgBrierScore])
+}
+
+model WaitlistEntry {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String?
+  createdAt DateTime @default(now())
+}
 
 enum MarketStatus {
   OPEN
@@ -30,29 +334,29 @@ enum MarketSource {
 
 enum MarketCategory {
   POLITICS
-  SPORTS
-  CRYPTO
-  IRAN
   FINANCE
-  GEOPOLITICS
-  TECH
-  CULTURE
-  ECONOMY
-  WEATHER
+  CRYPTO
+  SPORTS
   SCIENCE
-  ELECTIONS
+  TECH
+  ECONOMY
   OTHER
+  GEOPOLITICS
+  IRAN
+  CULTURE
+  WEATHER
+  ELECTIONS
 }
 
 enum TopicStatus {
-  PENDING   // awaiting admin approval
+  PENDING
   APPROVED
   REJECTED
 }
 
 enum PredictionStatus {
   ACTIVE
-  LOCKED    // within 48hrs of resolution
+  LOCKED
   SCORED
 }
 
@@ -78,446 +382,9 @@ enum FeatureKey {
   TOPIC_CREATE
 }
 
-// ─── SUBCATEGORY ───────────────────────────────────────────
-// Curated subcategories within each market category
-// e.g., Politics → Trump, Elections, Geopolitics
-
-model Subcategory {
-  id          String        @id @default(cuid())
-  slug        String                 // URL-friendly identifier
-  label       String                 // Display name
-  category    MarketCategory         // Parent category
-  description String?       @db.Text
-  order       Int           @default(0)  // For ordering within category
-
-  // Relations
-  markets     Market[]
-
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-
-  @@unique([slug, category])  // Allow same slug in different categories
-  @@index([category])
-  @@index([category, order])
-}
-
-// ─── USER ────────────────────────────────────────────────
-
-model User {
-  id                String    @id @default(cuid())
-  clerkId           String    @unique  // Clerk's user ID
-  username          String    @unique
-  displayName       String
-  email             String    @unique
-  phoneVerified     Boolean   @default(false)
-  avatarUrl         String?
-
-  // Background / profile info
-  bio               String?
-  occupation        String?
-  employer          String?
-  educationLevel    String?   // e.g. "Bachelor's", "PhD"
-  educationField    String?   // e.g. "Economics"
-  institution       String?   // university / school
-  certifications    String[]  // e.g. ["CFA", "CPA"]
-  yearsExperience   Int?
-  linkedinUrl       String?
-  websiteUrl        String?
-
-  // Subscription
-  stripeCustomerId     String?   @unique
-  subscriptionTier      SubscriptionTier @default(FREE)
-  subscriptionStatus    SubscriptionStatus?
-
-  // Creator monetization (Stripe Connect)
-  stripeAccountId       String?   @unique  // Stripe Connect Express account ID
-  stripeOnboardingComplete Boolean @default(false)
-  creatorSettings       CreatorSettings?
-  payouts               Payout[]
-
-  // Flags
-  isAdmin           Boolean   @default(false)
-  isSuspended       Boolean   @default(false)
-  onboardingComplete Boolean  @default(false)
-  hasSeenLanding    Boolean   @default(false)  // track if user has seen landing page
-
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  // Relations
-  predictions       Prediction[]
-  predictionEdits   PredictionEdit[]
-  comments          Comment[]
-  commentVotes      CommentVote[]
-  subscriptions     UserSubscription[]  @relation("subscriber")
-  subscribers       UserSubscription[]  @relation("expert")
-  accuracyScores    AccuracyScore[]
-  topicsCreated     Market[]            @relation("topicCreator")
-  competitions      Competition[]
-  competitionsWon   Competition[]       @relation("CompetitionWinner")
-  competitionMembers CompetitionMember[]
-
-  @@index([clerkId])
-  @@index([username])
-  @@index([subscriptionTier])
-}
-
-// ─── MARKET (Prediction Question) ────────────────────────
-
-model Market {
-  id                String        @id @default(cuid())
-  externalId        String?       @unique  // ID from Polymarket / Kalshi (composite for multi-subcategory events)
-  polymarketEventId String?       // True Polymarket event ID from API (event.id)
-                                  // Used for: resolution API calls, external URL generation, counting unique events
-                                  // Distinct from externalId which is composite (eventId or eventId-subcategorySlug)
-                                  // NOT unique: one event can have multiple Market rows (one per subcategory)
-  source            MarketSource
-  category          MarketCategory
-  title             String
-  description       String?       @db.Text
-  resolutionCriteria String?      @db.Text
-  imageUrl          String?
-
-  // Probabilities
-  marketProbability Float?        // from external source (0–1)
-
-  // Dates
-  closesAt          DateTime?     // when predictions lock
-  resolvesAt        DateTime?     // expected resolution
-  resolvedAt        DateTime?     // actual resolution date
-
-  // Resolution
-  status            MarketStatus  @default(OPEN)
-  resolvedValue     Boolean?      // true = YES, false = NO
-
-  // External links
-  externalUrl       String?
-
-  // User-created topic
-  createdByUserId   String?
-  createdBy         User?         @relation("topicCreator", fields: [createdByUserId], references: [id])
-  topicStatus       TopicStatus?  // only for USER_CREATED
-
-  // Metadata
-  tags              String[]
-  featured          Boolean       @default(false)
-  viewCount         Int           @default(0)
-
-  // Subcategory (optional, for structured navigation)
-  subcategoryId     String?
-  subcategory       Subcategory?  @relation(fields: [subcategoryId], references: [id])
-
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  // Relations
-  predictions       Prediction[]
-  comments          Comment[]
-
-  @@index([status])
-  @@index([category])
-  @@index([source])
-  @@index([closesAt])
-  @@index([featured])
-  @@index([subcategoryId])
-  @@index([polymarketEventId])
-}
-
-// ─── PREDICTION ───────────────────────────────────────────
-
-model Prediction {
-  id                String          @id @default(cuid())
-  userId            String
-  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  marketId          String
-  market            Market          @relation(fields: [marketId], references: [id], onDelete: Cascade)
-
-  // The prediction
-  probability       Float           // 0.0 – 1.0 (user's estimate)
-  reasoning         String          @db.Text
-  reasoningSnippet  String?         // first ~200 chars, always public
-
-  // Status
-  status            PredictionStatus @default(ACTIVE)
-
-  // Scoring — populated when market resolves
-  brierScore        Float?          // lower is better (0.0 = perfect, 2.0 = worst)
-  isCorrect         Boolean?        // simple yes/no accuracy
-
-  // Timestamps
-  lockedAt          DateTime?       // when editing was disabled
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-
-  // Relations
-  edits             PredictionEdit[]
-
-  @@unique([userId, marketId])  // one prediction per user per market
-  @@index([userId])
-  @@index([marketId])
-  @@index([status])
-  @@index([brierScore])
-}
-
-// ─── PREDICTION EDIT HISTORY ─────────────────────────────
-
-model PredictionEdit {
-  id                String      @id @default(cuid())
-  predictionId      String
-  prediction        Prediction  @relation(fields: [predictionId], references: [id], onDelete: Cascade)
-  userId            String
-  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // What it was BEFORE this edit
-  previousProbability Float
-  previousReasoning   String    @db.Text
-
-  // Why they edited
-  editReason        String?
-
-  createdAt         DateTime    @default(now())
-
-  @@index([predictionId])
-}
-
-// ─── COMMENT ─────────────────────────────────────────────
-
-model Comment {
-  id                String    @id @default(cuid())
-  userId            String
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  marketId          String
-  market            Market    @relation(fields: [marketId], references: [id], onDelete: Cascade)
-
-  parentId          String?   // for threaded replies
-  parent            Comment?  @relation("replies", fields: [parentId], references: [id])
-  replies           Comment[] @relation("replies")
-
-  body              String    @db.Text
-  isDeleted         Boolean   @default(false)
-
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  votes             CommentVote[]
-
-  @@index([marketId])
-  @@index([userId])
-  @@index([parentId])
-}
-
-model CommentVote {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  commentId   String
-  comment     Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
-  value       Int      // +1 or -1
-
-  @@unique([userId, commentId])
-}
-
-// ─── ACCURACY SCORE (denormalized for performance) ────────
-
-model AccuracyScore {
-  id              String          @id @default(cuid())
-  userId          String
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  category        MarketCategory?  // null = overall score
-
-  totalPredictions  Int           @default(0)
-  scoredPredictions Int           @default(0)
-  totalBrierScore   Float         @default(0)  // sum of all brier scores
-  avgBrierScore     Float?        // totalBrierScore / scoredPredictions
-  accuracyPct       Float?        // simple % correct (0–100)
-
-  updatedAt       DateTime        @updatedAt
-
-  @@unique([userId, category])
-  @@index([userId])
-  @@index([category, avgBrierScore])
-}
-
-// ─── CREATOR SETTINGS (subscription pricing & revenue share) ─
-
-model CreatorSettings {
-  id              String   @id @default(cuid())
-  userId          String   @unique
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Pricing
-  monthlyPriceCents Int    @default(999)  // e.g., 999 = $9.99
-
-  // Revenue share (platform fee percentage)
-  // 1500 = 15% platform fee, 85% to creator
-  platformFeeBps   Int     @default(1500)
-
-  createdAt       DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-}
-
-// ─── PAYOUT (creator withdrawal requests) ─────────────────────
-
-model Payout {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Amount
-  amountCents     Int      // amount to be paid to creator (after platform fee)
-
-  // Stripe
-  stripeTransferId String? @unique  // Stripe Connect transfer ID
-
-  // Status
-  status          PayoutStatus @default(PENDING)
-  requestedAt     DateTime @default(now())
-  processedAt     DateTime?
-
-  // Notes
-  notes           String?
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([userId])
-  @@index([status])
-}
-
 enum PayoutStatus {
   PENDING
   PROCESSING
   COMPLETED
   FAILED
-}
-
-// ─── USER SUBSCRIPTION (expert → subscriber) ─────────────
-
-model UserSubscription {
-  id            String    @id @default(cuid())
-  subscriberId  String
-  subscriber    User      @relation("subscriber", fields: [subscriberId], references: [id], onDelete: Cascade)
-  expertId      String
-  expert        User      @relation("expert", fields: [expertId], references: [id], onDelete: Cascade)
-
-  // Stripe
-  stripeSubscriptionId  String?   @unique
-  stripePriceId         String?
-  status                SubscriptionStatus @default(ACTIVE)
-  currentPeriodEnd      DateTime?
-
-  // Expert's pricing
-  monthlyPriceCents     Int       // e.g. 999 = $9.99
-
-  // Revenue share (snapshot of platform fee at subscription time)
-  platformFeeBps        Int       @default(1500)  // 1500 = 15%
-
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@unique([subscriberId, expertId])
-  @@index([expertId])
-  @@index([subscriberId])
-}
-
-// ─── PLATFORM SUBSCRIPTION (Massoteric tiers) ────────────
-
-model PlatformSubscription {
-  id                    String              @id @default(cuid())
-  userId                String              @unique
-  stripeSubscriptionId  String              @unique
-  stripePriceId         String
-  tier                  SubscriptionTier
-  status                SubscriptionStatus
-  currentPeriodStart    DateTime
-  currentPeriodEnd      DateTime
-  cancelAtPeriodEnd     Boolean             @default(false)
-
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-}
-
-// ─── FEATURE FLAGS (admin-controlled) ────────────────────
-
-model FeatureFlag {
-  id          String      @id @default(cuid())
-  key         FeatureKey  @unique
-  label       String
-  description String
-  isFree      Boolean     @default(false)  // if true, available to free tier
-  isEnabled   Boolean     @default(true)   // global kill switch
-
-  updatedAt   DateTime    @updatedAt
-  updatedBy   String?     // admin user ID
-}
-
-// ─── SEED DATA: default feature flags ────────────────────
-// (populated via prisma/seed.ts)
-
-// ─── FANTASY LEAGUE: COMPETITION ─────────────────────────────
-
-model Competition {
-  id              String   @id @default(cuid())
-  name            String
-  description     String?  @db.Text
-
-  // Time period
-  startsAt        DateTime
-  endsAt          DateTime
-
-  // Access control
-  isPublic        Boolean  @default(true)
-  entryCode       String?  // for private competitions
-
-  // Prize info
-  prizeDescription String? @db.Text
-  prizeImageUrl   String?
-
-  // Metadata
-  maxParticipants Int?     // null = unlimited
-  participantCount Int     @default(0)
-
-  // Relations
-  createdBy       String
-  creator         User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  winnerId        String?
-  winner          User?    @relation("CompetitionWinner", fields: [winnerId], references: [id])
-  members         CompetitionMember[]
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@index([isPublic])
-  @@index([startsAt])
-  @@index([endsAt])
-}
-
-model CompetitionMember {
-  id              String   @id @default(cuid())
-  competitionId   String
-  competition     Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Stats (computed from predictions within competition period)
-  totalPredictions Int     @default(0)
-  scoredPredictions Int    @default(0)
-  totalBrierScore  Float   @default(0)
-  avgBrierScore    Float?
-
-  joinedAt        DateTime @default(now())
-
-  @@unique([competitionId, userId])
-  @@index([competitionId])
-  @@index([userId])
-  @@index([avgBrierScore])
-}
-
-// ─── EMAIL WAITLIST ───────────────────────────────────────
-
-model WaitlistEntry {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  source    String?  // "hero", "cta", etc.
-  createdAt DateTime @default(now())
 }
