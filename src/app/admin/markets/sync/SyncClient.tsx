@@ -14,7 +14,6 @@ const CATEGORIES = [
   { value: 'culture', label: 'Culture' },
   { value: 'economy', label: 'Economy' },
   { value: 'weather', label: 'Weather' },
-  { value: 'science', label: 'Science' },
   { value: 'elections', label: 'Elections' },
 ]
 
