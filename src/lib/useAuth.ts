@@ -6,9 +6,7 @@ import { useMockAuth } from './useMockAuth'
 import { useEffect, useState } from 'react'
 import { useContext } from 'react'
 
-const hasValidClerkKey = typeof window !== 'undefined'
-  ? !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.includes('placeholder')
-  : false
+const hasValidClerkKey = !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.includes('placeholder')
 
 export function useAuth() {
   // Try to use Clerk auth first - will throw if not within ClerkProvider
