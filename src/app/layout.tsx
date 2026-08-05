@@ -8,6 +8,7 @@ import { ClerkAuthProvider } from '@/components/providers/ClerkAuthProvider'
 import { MockAuthProvider } from '@/lib/useMockAuth'
 import { ClientBoundary } from '@/components/providers/ClientBoundary'
 import ConditionalNav from '@/components/layout/ConditionalNav'
+import ClearStaleCookies from '@/components/ClearStaleCookies'
 
 const cormorant = Cormorant_Garamond({
   subsets: ['latin'],
@@ -60,8 +61,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <ClientBoundary>
           <AuthProvider>
-            <ConditionalNav />
-            {children}
+            <ClearStaleCookies>
+              <ConditionalNav />
+              {children}
+            </ClearStaleCookies>
           </AuthProvider>
         </ClientBoundary>
       </body>
