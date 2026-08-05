@@ -14,6 +14,13 @@ export async function GET(req: NextRequest) {
     // Check if user is admin via env var (single source of truth)
     const userIsAdmin = isAdmin(clerkId)
 
+    // DEBUG: Log admin check
+    console.log('🔍 Admin check:', {
+      clerkId,
+      adminEnvVar: process.env.ADMIN_USER_IDS,
+      userIsAdmin,
+    })
+
     // auth() already syncs/creates the user, so we can just fetch
     const user = await prisma.user.findUnique({
       where: { clerkId },
