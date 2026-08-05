@@ -46,9 +46,28 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
     return () => document.removeEventListener('keydown', handleKey)
   }, [])
 
-  // Don't render nav while loading to avoid flash
+  // Show loading skeleton while auth loads to avoid layout shift
   if (!isLoaded || userLoading) {
-    return null
+    return (
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 900,
+        background: 'rgba(13,15,20,0.97)',
+        borderBottom: '1px solid var(--border)',
+        backdropFilter: 'blur(8px)',
+        height: 60,
+        display: 'flex', alignItems: 'center',
+        padding: '0 var(--page-pad)',
+      }}>
+        <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+          {/* Logo skeleton */}
+          <div style={{ width: 140, height: 24, background: 'var(--border)', borderRadius: 4 }} />
+          {/* Right side skeleton */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 100, height: 36, background: 'var(--border)', borderRadius: 4 }} />
+          </div>
+        </div>
+      </nav>
+    )
   }
 
   // Combine Clerk user and database user info

@@ -10,13 +10,10 @@ export function ClientBoundary({ children }: { children: ReactNode }) {
     setIsClient(true)
   }, [])
 
-  // Render a minimal placeholder during hydration
+  // During SSR/hydration, render children with hydration warning suppressed
+  // This allows the nav to show immediately while avoiding hydration mismatch errors
   if (!isClient) {
-    return (
-      <div style={{ minHeight: '100vh', background: 'var(--ink)' }} suppressHydrationWarning>
-        <div style={{ height: 60, background: 'rgba(13,15,20,0.97)', borderBottom: '1px solid var(--border)' }} />
-      </div>
-    )
+    return <div suppressHydrationWarning>{children}</div>
   }
 
   return <>{children}</>
