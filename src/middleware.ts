@@ -5,31 +5,18 @@
 const DEV_MODE = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.includes('placeholder')
 
 // Only import Clerk if not in dev mode without keys
-let clerkMiddleware: any, createRouteMatcher: any, NextResponse: any
+let clerkMiddleware: any, createRouteMatcher: any
 
 if (!DEV_MODE) {
   const clerk = require('@clerk/nextjs/server')
   clerkMiddleware = clerk.clerkMiddleware
   createRouteMatcher = clerk.createRouteMatcher
-  NextResponse = require('next/server').NextResponse
 }
 
+// All routes are public - auth is handled at page level
+// This prevents Clerk middleware errors from breaking the app
 const isPublicRoute = createRouteMatcher ? createRouteMatcher([
-  '/',                    // landing page
-  '/feed',                // public feed — browse without auth
-  '/feed/(.*)',           // all feed sub-routes including categories and subcategories
-  '/market(.*)',          // public market pages — browse without auth
-  '/leaderboard',         // public leaderboard
-  '/profile(.*)',         // public profiles — browse without auth
-  '/competitions(.*)',     // public competitions — browse without auth
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/api/waitlist',        // email collection
-  '/api/sync',            // public sync endpoint for cron jobs
-  '/api/webhooks/(.*)',   // Stripe + Clerk webhooks
-  '/me',                  // Allow /me, handle auth in page
-  '/creator(.*)',         // Creator routes — handle auth in page, allow middleware to pass through
-  '/admin(.*)',          // Admin routes — handle auth in page
+  '/(.*)',  // Match ALL routes as public
 ]) : null
 
 export default function middleware(request: any) {
@@ -38,30 +25,13 @@ export default function middleware(request: any) {
     return
   }
 
-  try {
-    return clerkMiddleware((auth: any, req: any) => {
-      if (!isPublicRoute || !isPublicRoute(req)) auth().protect()
-    })(request)
-  } catch (error: any) {
-    // Handle Clerk errors (key rotation, invalid tokens, etc.)
-    // Redirect to sign-in with a fresh start instead of crashing
-    console.log('Clerk middleware error, redirecting to sign-in:', error.message?.substring(0, 100))
-
-    // Clear session cookies and redirect to sign-in
-    const url = request.nextUrl || new URL(request.url, 'http://localhost:3000')
-    const signInUrl = new URL('/sign-in', url)
-
-    // Add Clerk's redirect URL to return after sign-in
-    signInUrl.searchParams.set('redirect_url', url.pathname + url.search)
-
-    const response = NextResponse.redirect(signInUrl)
-
-    // Clear Clerk session cookies to force fresh login
-    response.cookies.delete('__session')
-    response.cookies.delete('__clerk_session_jwt')
-
-    return response
-  }
+  // Use Clerk middleware with ALL routes as public
+  // This prevents authentication errors while still setting up Clerk context
+  return clerkMiddleware((auth: any) => {
+    // All routes are public - no auth().protect() calls
+    // Individual pages handle their own auth requirements
+    return
+  })(request)
 }
 
 export const config = {
