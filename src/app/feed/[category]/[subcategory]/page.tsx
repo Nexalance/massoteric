@@ -452,7 +452,7 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
           {/* Sidebar */}
           <aside style={{ position: 'sticky', top: '80px', borderLeft: '1px solid var(--border)', paddingLeft: '24px' }}>
             <div className="section-label">Top Predictors</div>
-            <div className="card">
+            <div className="card" style={{ overflowX: 'auto' }}>
               {topUsers.map((score, i) => (
                 <Link key={score.userId} href={`/profile/${score.user.username}`} style={{ textDecoration: 'none' }}>
                   <div style={{
@@ -472,12 +472,12 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
                     }}>
                       {score.user.displayName.slice(0, 2).toUpperCase()}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--cream)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ flex: '1 0 auto', minWidth: 0 }}>
+                      <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--cream)', whiteSpace: 'nowrap' }}>
                         {score.user.displayName}
                       </div>
                       {score.user.occupation && (
-                        <div style={{ fontSize: '11px', color: 'var(--mist)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--mist)', whiteSpace: 'nowrap' }}>
                           {score.user.occupation}
                         </div>
                       )}
