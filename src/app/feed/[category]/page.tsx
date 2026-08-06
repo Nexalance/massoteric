@@ -335,7 +335,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           {/* Market list */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', letterSpacing: '1px' }}>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--mist)', letterSpacing: '1px', whiteSpace: 'nowrap', overflowX: 'auto' }}>
                 {search ? (
                   <>
                     RESULTS FOR <span style={{ color: 'var(--cream)' }}>“{search}”</span> · {total}
@@ -511,6 +511,9 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ fontFamily: 'var(--font-display)', fontSize: '20px', color: 'var(--signal)', fontWeight: 300 }}>
                         {score.accuracyPct}%
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--mist)' }}>
+                        {score.scoredPredictions} pred
                       </div>
                     </div>
                   </div>

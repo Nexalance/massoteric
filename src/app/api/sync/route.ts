@@ -8,20 +8,30 @@ export async function GET(req: NextRequest) {
   try {
     await ensureMigrated();
 
-    // Get optional category parameter for selective syncing
+    // Get required category parameter for selective syncing
     // e.g., /api/sync?category=POLITICS will only sync POLITICS subcategories
     const categoryParam = req.nextUrl.searchParams.get('category');
-    const selectedCategory = categoryParam ? categoryParam.toUpperCase() : null;
+
+    // Category is now MANDATORY to prevent server overload from syncing all categories
+    if (!categoryParam) {
+      return Response.json({
+        success: false,
+        error: '?category parameter is mandatory. Usage: /api/sync?category=POLITICS',
+        availableCategories: Object.values(require('@prisma/client').MarketCategory).join(', '),
+      }, { status: 400 });
+    }
+
+    const selectedCategory = categoryParam.toUpperCase();
 
     // Check if category is supported in this environment (handles enum mismatches)
-    if (selectedCategory && !isCategorySupported(selectedCategory)) {
+    if (!isCategorySupported(selectedCategory)) {
       return Response.json({
         success: false,
         error: `Category '${selectedCategory}' is not supported in this environment yet. Available categories: ${Object.values(require('@prisma/client').MarketCategory).join(', ')}`,
       }, { status: 400 });
     }
 
-    console.log(`[Sync] Starting sync${selectedCategory ? ` for category: ${selectedCategory}` : ' (all categories)'}`)
+    console.log(`[Sync] Starting sync for category: ${selectedCategory}`)
 
     // Sync subcategories first (creates new ones if needed)
     // Pass category filter to only sync subcategories for that category
@@ -35,7 +45,7 @@ export async function GET(req: NextRequest) {
 
     return Response.json({
       success: true,
-      category: selectedCategory || 'ALL',
+      category: selectedCategory,
       subcategories: {
         created: subcatResult.created,
         updated: subcatResult.updated,

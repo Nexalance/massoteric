@@ -718,7 +718,9 @@ export async function syncPolymarketSubcategories(categoryFilter: string | null 
 
   // Delete subcategories that are not in the curated list
   // We need to check both slug AND category since same slug can exist in different categories
+  // When categoryFilter is provided, only check subcategories from that category
   const allSubcategories = await prisma.subcategory.findMany({
+    where: categoryFilter ? { category: categoryFilter as MarketCategory } : undefined,
     select: { id: true, slug: true, category: true, label: true },
   })
 
@@ -740,7 +742,7 @@ export async function syncPolymarketSubcategories(categoryFilter: string | null 
       },
     })
     deleted = deleteResult.count
-    console.log(`[Polymarket] Deleted ${deleted} non-curated subcategories:`, toDelete.map(s => `${s.slug}/${s.category}`).slice(0, 10))
+    console.log(`[Polymarket] Deleted ${deleted} non-curated subcategories${categoryFilter ? ` for category ${categoryFilter}` : ''}:`, toDelete.map(s => `${s.slug}/${s.category}`).slice(0, 10))
   }
 
   console.log(`[Polymarket] Synced ${created} curated subcategories, deleted ${deleted} non-curated`)
@@ -1046,13 +1048,23 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
   // These are markets that were closed/archived on Polymarket but not yet marked in our DB
   const activePolymarketIds = new Set(allEvents.map(e => e.id))
 
-  // Fetch all Polymarket OPEN markets and check if their base event ID is still active
+  // Build the where clause for fetching markets to check
+  // When syncing a specific category, only check markets from that category
+  const marketWhereClause = categoryFilter
+    ? {
+        source: 'POLYMARKET' as const,
+        status: MarketStatus.OPEN,
+        category: categoryFilter as MarketCategory,
+      }
+    : {
+        source: 'POLYMARKET' as const,
+        status: MarketStatus.OPEN,
+      }
+
+  // Fetch Polymarket OPEN markets (filtered by category if specified)
   const allOpenMarkets = await prisma.market.findMany({
-    where: {
-      source: 'POLYMARKET',
-      status: MarketStatus.OPEN,
-    },
-    select: { id: true, externalId: true, polymarketEventId: true, title: true },
+    where: marketWhereClause,
+    select: { id: true, externalId: true, polymarketEventId: true, title: true, category: true },
   })
 
   // Extract base event ID from polymarketEventId (preferred) or composite externalIds (fallback)
@@ -1071,7 +1083,7 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
       },
       data: { status: MarketStatus.CLOSED },
     })
-    console.log(`[Sync] Closed ${staleMarketIds.length} stale Polymarket markets`)
+    console.log(`[Sync] Closed ${staleMarketIds.length} stale Polymarket markets${categoryFilter ? ` for category ${categoryFilter}` : ''}`)
   }
 
   return { synced, errors, subcategoryCounts, totalFetched }

@@ -483,16 +483,65 @@ table tbody tr:hover {
     top: 80px !important;
   }
 
-  /* Collapse to single column on very small screens */
+  /* Keep 2 columns on small screens - right sidebar stays on right */
   @media (max-width: 640px) {
     .feed-grid {
-      grid-template-columns: 1fr !important;
-      gap: 16px !important;
+      grid-template-columns: 1fr 180px !important;
+      gap: 12px !important;
+      overflow-x: hidden;
     }
 
     .feed-grid aside {
-      position: static !important;
-      max-height: none !important;
+      position: sticky !important;
+      top: 70px !important;
+      max-height: calc(100vh - 90px) !important;
+      overflow-y: auto !important;
+      border-left: none !important;
+      padding-left: 0 !important;
+    }
+
+    /* Make sidebar text smaller on mobile */
+    .feed-grid aside .section-label {
+      font-size: 10px !important;
+      letter-spacing: 1.5px !important;
+      margin-bottom: 10px !important;
+    }
+
+    .feed-grid aside .card {
+      padding: 10px !important;
+    }
+
+    .feed-grid aside a {
+      font-size: 11px !important;
+      padding: 6px 0 !important;
+    }
+
+    .feed-grid aside .card p {
+      font-size: 10px !important;
+      line-height: 1.3 !important;
+    }
+  }
+
+  /* On very small screens, keep 2 columns with narrower sidebar */
+  @media (max-width: 380px) {
+    .feed-grid {
+      grid-template-columns: 1fr 150px !important;
+      gap: 8px !important;
+    }
+
+    .feed-grid aside {
+      position: sticky !important;
+      top: 70px !important;
+      max-height: calc(100vh - 90px) !important;
+      overflow-y: auto !important;
+    }
+
+    .feed-grid aside .card {
+      padding: 8px !important;
+    }
+
+    .feed-grid aside a {
+      padding: 4px 0 !important;
     }
   }
 

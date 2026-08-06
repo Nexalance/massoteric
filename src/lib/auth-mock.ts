@@ -109,7 +109,7 @@ async function syncClerkUserToDb(clerkId: string, clerkUser?: any) {
             console.log('✅ Auto-synced subscription for user:', existing.username, 'tier:', syncResult.subscriptionTier)
           }
         } catch (error) {
-          console.log('⚠️ Could not sync subscription from Stripe:', error.message)
+          console.log('⚠️ Could not sync subscription from Stripe:', error instanceof Error ? error.message : String(error))
         }
       }
 

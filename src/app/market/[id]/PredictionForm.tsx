@@ -137,6 +137,8 @@ export function PredictionForm({ marketId, marketStatus, closesAt, existingPredi
           className={isValid ? 'btn btn-primary' : 'btn-disabled'}
           style={{
             width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box',
             justifyContent: 'center',
             opacity: isValid ? 1 : 0.5,
             cursor: isValid ? 'pointer' : 'not-allowed'
