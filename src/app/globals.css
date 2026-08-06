@@ -488,7 +488,7 @@ table tbody tr:hover {
     .feed-grid {
       grid-template-columns: 1fr 180px !important;
       gap: 12px !important;
-      overflow-x: hidden;
+      overflow-x: auto;
     }
 
     .feed-grid aside {
