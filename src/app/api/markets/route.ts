@@ -40,22 +40,19 @@ export async function GET(req: NextRequest) {
     ...(status ? { status } : { status: MarketStatus.OPEN }),
     ...(featured !== undefined && { featured }),
     // Only show markets that haven't closed yet (no closesAt, or closesAt is in the future)
+    // NOTE: Prisma can't mix null with gte in one OR array — split into two branches.
     AND: [
       {
-        closesAt: {
-          OR: [
-            null,
-            { gte: now }
-          ]
-        }
+        OR: [
+          { closesAt: null },
+          { closesAt: { gte: now } },
+        ]
       },
       {
-        resolvesAt: {
-          OR: [
-            null,
-            { gte: now }
-          ]
-        }
+        OR: [
+          { resolvesAt: null },
+          { resolvesAt: { gte: now } },
+        ]
       },
       // Only show approved user topics
       {

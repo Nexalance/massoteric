@@ -98,7 +98,7 @@ export function AutoSyncSubscription({ onSyncComplete, paymentCanceled }: AutoSy
             border: '2px solid var(--gold)',
             borderTopColor: 'transparent',
             borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
+            animation: 'spinClean 1s linear infinite',
           }} />
         )}
         {status === 'success' && (
@@ -124,11 +124,6 @@ export function AutoSyncSubscription({ onSyncComplete, paymentCanceled }: AutoSy
           </div>
         </div>
       </div>
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }

@@ -123,14 +123,7 @@ export default async function CreatorDashboardPage() {
         )}
 
         {/* Stats Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '32px' }}>
-          <style>{`
-            @media (max-width: 600px) {
-              div[style*="gridTemplateColumns: repeat(3, 1fr)"] {
-                grid-template-columns: 1fr !important;
-              }
-            }
-          `}</style>
+        <div className="profile-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', marginBottom: '32px' }}>
           {[
             { label: 'Active Subscribers', value: activeSubscribers.toLocaleString(), sub: 'paid subscribers' },
             { label: 'Monthly Revenue', value: `$${stats.monthlyRevenue.toFixed(0)}`, sub: `${activeSubscribers} subscribers × $${stats.monthlyPrice}/mo` },

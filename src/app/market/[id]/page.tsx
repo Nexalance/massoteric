@@ -160,52 +160,9 @@ export default async function MarketPage({ params }: MarketPageProps) {
         </div>
 
         <div className="market-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '24px', alignItems: 'start' }}>
-          <style>{`
-            .market-grid {
-              display: grid;
-              grid-template-columns: 1fr 360px;
-              gap: 24px;
-              align-items: start;
-              overflow-x: hidden;
-            }
-            /* Desktop: right sidebar */
-            @media (min-width: 769px) {
-              .market-grid aside {
-                position: sticky !important;
-                top: 80px;
-                max-height: calc(100vh - 100px);
-                overflow-y: auto;
-              }
-            }
-            /* Mobile: prediction form above content, full width */
-            @media (max-width: 768px) {
-              .market-grid {
-                display: flex !important;
-                flex-direction: column !important;
-                gap: 16px !important;
-              }
-              /* The STYLE element is child 0, DIV is child 1, ASIDE is child 2 */
-              /* We want ASIDE (child 2) to appear before DIV (child 1) */
-              .market-grid > div:not([style]) {
-                order: 2 !important;
-              }
-              .market-grid > aside {
-                order: 1 !important;
-                position: static !important;
-                max-height: none !important;
-                width: 100% !important;
-              }
-              .market-grid input,
-              .market-grid textarea,
-              .market-grid button {
-                max-width: 100% !important;
-                box-sizing: border-box !important;
-              }
-            }
-          `}</style>
 
           {/* Predictions list */}
-          <div>
+          <div className="market-grid-main">
             <div className="section-label" style={{ marginBottom: '16px' }}>
               {market._count.predictions} Predictions
               {isAuthenticated && !canFilterAccuracy && (
