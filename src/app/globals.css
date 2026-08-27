@@ -681,3 +681,55 @@ table tbody tr:hover {
   color: var(--mist) !important;
   border-top: 1px solid var(--border) !important;
 }
+
+/* Profile stat pills — stack on small phones (replaces inline <style> that broke hydration) */
+@media (max-width: 600px) {
+  .profile-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ── Market detail grid (moved from inline <style> in market/[id]/page.tsx — fixes hydration mismatch) ── */
+.market-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 24px;
+  align-items: start;
+  overflow-x: hidden;
+}
+/* Desktop: right sidebar */
+@media (min-width: 769px) {
+  .market-grid aside {
+    position: sticky !important;
+    top: 80px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+}
+/* Mobile: prediction form above content, full width */
+@media (max-width: 768px) {
+  .market-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  .market-grid > div:not(.market-grid-main) {
+    order: 2 !important;
+  }
+  .market-grid > aside {
+    order: 1 !important;
+    position: static !important;
+    max-height: none !important;
+    width: 100% !important;
+  }
+  .market-grid input,
+  .market-grid textarea,
+  .market-grid button {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Plain spin for loader icons (AutoSyncSubscription) — keyframes at top of file
+   include translateY(-50%) which misaligns non-absolute elements, so add a clean one */
+@keyframes spinClean { to { transform: rotate(360deg); } }

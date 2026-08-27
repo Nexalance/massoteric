@@ -54,8 +54,15 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
       where: { userId: profileUser.id },
       orderBy: { createdAt: 'desc' },
       take: 10,
-      include: {
-        market: { select: { id: true, title: true, category: true, status: true, resolvedValue: true } },
+      select: {
+        id: true,
+        probability: true,
+        isCorrect: true,
+        brierScore: true,
+        reasoning: true,
+        reasoningSnippet: true,
+        createdAt: true,
+        market: { select: { id: true, title: true, category: true, status: true, resolvedValue: true, resolvedAt: true } },
       },
     }),
   ])
@@ -133,14 +140,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               )}
 
               {/* Stat pills */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '20px' }}>
-                <style>{`
-                  @media (max-width: 600px) {
-                    div[style*="gridTemplateColumns: repeat(3, 1fr)"] {
-                      grid-template-columns: 1fr !important;
-                    }
-                  }
-                `}</style>
+              <div className="profile-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginTop: '20px' }}>
                 {[
                   { label: 'Overall Accuracy', value: accuracySummary.overall ? `${accuracySummary.overall.accuracyPct}%` : '—', color: 'var(--signal)' },
                   { label: 'Predictions Made', value: profileUser._count.predictions.toString(), color: 'var(--cream)' },
@@ -165,34 +165,74 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               {recentPredictions.map(pred => {
                 const resolved = pred.market.status === 'RESOLVED'
                 const correct = resolved && pred.isCorrect
+                const outcome = resolved
+                  ? (pred.market.resolvedValue === true ? 'YES' : pred.market.resolvedValue === false ? 'NO' : null)
+                  : null
+                const reasoningText = (pred.reasoning || pred.reasoningSnippet || '').trim()
 
                 return (
                   <Link key={pred.id} href={`/market/${pred.market.id}`} style={{ textDecoration: 'none' }}>
-                    <div className="card" style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <span className="badge badge-category" style={{ marginBottom: '6px', display: 'inline-block' }}>
-                          {pred.market.category}
-                        </span>
-                        <div style={{ fontSize: '14px', color: 'var(--cream)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {pred.market.title}
+                    <div className="card" style={{ padding: '16px 18px' }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px' }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <span className="badge badge-category" style={{ marginBottom: '6px', display: 'inline-block' }}>
+                            {pred.market.category}
+                          </span>
+                          <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--cream)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {pred.market.title}
+                          </div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--fog)', marginTop: '4px' }}>
+                            {formatDistanceToNow(pred.createdAt, { addSuffix: true })}
+                          </div>
                         </div>
-                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--fog)', marginTop: '4px' }}>
-                          {formatDistanceToNow(pred.createdAt, { addSuffix: true })}
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 300, color: 'var(--gold)' }}>
+                            {Math.round(pred.probability * 100)}%
+                          </div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--fog)', letterSpacing: '1px' }}>
+                            THEIR CALL
+                          </div>
                         </div>
                       </div>
-                      <div style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 300, color: 'var(--gold)', flexShrink: 0 }}>
-                        {Math.round(pred.probability * 100)}%
-                      </div>
-                      {resolved ? (
-                        <span className={`badge ${correct ? 'badge-free' : ''}`} style={{
-                          flexShrink: 0,
-                          background: correct ? 'rgba(79,195,161,0.12)' : 'rgba(224,92,92,0.12)',
-                          color: correct ? 'var(--signal)' : 'var(--danger)',
+
+                      {/* Creator's reasoning / comment */}
+                      {reasoningText && (
+                        <div style={{
+                          marginTop: '10px', padding: '10px 12px',
+                          background: 'var(--ink3)', borderLeft: '2px solid var(--fog)', borderRadius: '2px',
+                          fontSize: '13px', color: 'var(--mist)', lineHeight: '1.6',
                         }}>
-                          {correct ? 'Correct ✓' : 'Incorrect ✗'}
-                        </span>
+                          “{reasoningText.length > 220 ? reasoningText.slice(0, 220) + '…' : reasoningText}”
+                        </div>
+                      )}
+
+                      {/* Result row: final outcome + correctness verdict */}
+                      {resolved ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--fog)', letterSpacing: '1px' }}>
+                            FINAL OUTCOME:
+                          </span>
+                          {outcome && (
+                            <span className="badge" style={{
+                              background: 'rgba(201,168,76,0.12)', color: 'var(--gold)',
+                            }}>
+                              {outcome}
+                            </span>
+                          )}
+                          <span className="badge" style={{
+                            background: correct ? 'rgba(79,195,161,0.12)' : 'rgba(224,92,92,0.12)',
+                            color: correct ? 'var(--signal)' : 'var(--danger)',
+                          }}>
+                            {correct ? 'Correct ✓' : 'Incorrect ✗'}
+                          </span>
+                        </div>
                       ) : (
-                        <span className="badge badge-category" style={{ flexShrink: 0 }}>Pending</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--fog)', letterSpacing: '1px' }}>
+                            RESULT:
+                          </span>
+                          <span className="badge badge-category">Pending</span>
+                        </div>
                       )}
                     </div>
                   </Link>
