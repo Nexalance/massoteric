@@ -637,3 +637,47 @@ table tbody tr:hover {
   z-index: 1000;
   padding: 14px;
 }
+
+/* ── Clerk UserButton popover — force dark theme (white-on-white fix) ── */
+.cl-userButtonPopoverCard,
+.cl-userButtonPopoverMainArea {
+  background: #1a1a2e !important;
+  color: #f0ead6 !important;
+}
+
+.cl-userButtonPopoverActionButton,
+.cl-userButtonPopoverActionButton__manageAccount,
+.cl-userButtonPopoverActionButton__signOut {
+  color: #f0ead6 !important;
+}
+
+.cl-userButtonPopoverActionButton:hover {
+  background: rgba(201, 168, 76, 0.1) !important;
+  color: #c9a84c !important;
+}
+
+.cl-userButtonPopoverActionIconBox,
+.cl-userButtonPopoverActionIconBox svg {
+  background: transparent !important;
+  color: #f0ead6 !important;
+}
+
+/* Inner popover main area (the actual white layer inside the card) */
+.cl-userButtonPopoverMain,
+.cl-userButtonPopoverActions,
+.cl-userButtonPopoverHeader {
+  background: #1a1a2e !important;
+  color: #f0ead6 !important;
+}
+
+.cl-userButtonPopoverActionButton,
+.cl-button.cl-userButtonPopoverActionButton {
+  color: #f0ead6 !important;
+}
+
+/* Popover footer ("Secured by Clerk") — also dark for consistency */
+.cl-userButtonPopoverFooter {
+  background: #1a1a2e !important;
+  color: var(--mist) !important;
+  border-top: 1px solid var(--border) !important;
+}

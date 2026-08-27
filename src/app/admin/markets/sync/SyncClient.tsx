@@ -30,12 +30,20 @@ export default function SyncClient() {
   } | null>(null)
 
   const handleSync = async () => {
+    // No category picked → guide the user instead of hitting the API
+    if (!category) {
+      setResult({
+        success: false,
+        error: 'Please select a category from the dropdown above first. Choose one category (e.g., Politics or Sports) — you can run each category separately.',
+      })
+      return
+    }
+
     setLoading(true)
     setResult(null)
 
     try {
-      const url = category ? `/api/sync?category=${category}` : '/api/sync'
-      const response = await fetch(url)
+      const response = await fetch(`/api/sync?category=${category}`)
       const data = await response.json()
       setResult(data)
     } catch (error) {
@@ -83,7 +91,7 @@ export default function SyncClient() {
         className="btn btn-primary"
         style={{ width: '100%', justifyContent: 'center' }}
       >
-        {loading ? 'Syncing...' : category ? `Sync ${CATEGORIES.find(c => c.value === category)?.label}` : 'Start Sync Now'}
+        {loading ? 'Syncing...' : category ? `Sync ${CATEGORIES.find(c => c.value === category)?.label}` : 'Select a Category to Start Sync'}
       </button>
 
       {result && (

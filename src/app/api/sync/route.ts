@@ -1,4 +1,9 @@
 export const dynamic = 'force-dynamic'
+
+// Allow up to 5 minutes on Vercel Pro (Hobby plan caps at 60s) — big categories
+// like SPORTS sync thousands of markets and can exceed 90s.
+export const maxDuration = 300
+
 import { syncPolymarketMarkets, syncPolymarketSubcategories, checkMarketResolutions } from '@/lib/polymarket';
 import { ensureMigrated } from '@/lib/migrations';
 import { NextRequest } from 'next/server';
@@ -12,11 +17,11 @@ export async function GET(req: NextRequest) {
     // e.g., /api/sync?category=POLITICS will only sync POLITICS subcategories
     const categoryParam = req.nextUrl.searchParams.get('category');
 
-    // Category is now MANDATORY to prevent server overload from syncing all categories
+    // Category is MANDATORY — sync never runs without an explicit category
     if (!categoryParam) {
       return Response.json({
         success: false,
-        error: '?category parameter is mandatory. Usage: /api/sync?category=POLITICS',
+        error: 'No category selected. Sync runs one category at a time — pick a category (e.g., /api/sync?category=POLITICS).',
         availableCategories: Object.values(require('@prisma/client').MarketCategory).join(', '),
       }, { status: 400 });
     }

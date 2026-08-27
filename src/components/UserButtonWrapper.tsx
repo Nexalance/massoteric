@@ -26,11 +26,27 @@ export default function UserButtonWrapper({ afterSignOutUrl }: { afterSignOutUrl
             padding: '8px 16px',
           },
           userButtonPopoverCard: {
-            background: 'var(--ink2)',
+            background: '#1a1a2e',
             border: '1px solid var(--border)',
+            color: '#f0ead6',
+          },
+          userButtonPopoverMainArea: {
+            background: '#1a1a2e',
+            color: '#f0ead6',
           },
           userButtonPopoverActionButton: {
-            color: 'var(--cream)',
+            color: '#f0ead6',
+            '&:hover': {
+              color: '#c9a84c',
+              background: 'rgba(201, 168, 76, 0.1)',
+            },
+          },
+          userButtonPopoverActionIconBox: {
+            background: 'transparent',
+            color: '#f0ead6',
+            '& svg': {
+              stroke: '#f0ead6',
+            },
           },
         },
       }}
