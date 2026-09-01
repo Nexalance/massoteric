@@ -5,7 +5,9 @@ export const dynamic = 'force-dynamic'
 import { auth } from '@/lib/auth-mock'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { MarketCategory } from '@prisma/client'
+import { MarketCategory, FeatureKey } from '@prisma/client'
+import { canAccess } from '@/lib/access'
+import { isAdmin } from '@/lib/admin'
 import Link from 'next/link'
 import PolymarketLink from '@/components/PolymarketLink'
 import { formatDistanceToNow } from 'date-fns'
@@ -72,7 +74,8 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
     })
     if (user) {
       userTier = user.subscriptionTier
-      canCreateTopic = userTier === 'PRO' || userTier === 'STANDARD'
+      // Respect the admin-controlled TOPIC_CREATE feature flag (matches feed + API behavior)
+      canCreateTopic = await canAccess(userTier, FeatureKey.TOPIC_CREATE, isAdmin(clerkId))
     }
   }
 

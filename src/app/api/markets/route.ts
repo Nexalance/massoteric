@@ -9,6 +9,7 @@ import { prisma } from '@/lib/prisma'
 import { MarketCategory, MarketStatus, MarketSource, FeatureKey } from '@prisma/client'
 import { z } from 'zod'
 import { canAccess } from '@/lib/access'
+import { isAdmin } from '@/lib/admin'
 import { ensureFeatureFlags } from '@/lib/init-feature-flags'
 
 const ListSchema = z.object({
@@ -152,7 +153,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Check if user has permission to create topics
-  const canCreate = await canAccess(user.subscriptionTier, FeatureKey.TOPIC_CREATE)
+  // Pass the admin flag so admins bypass tier checks (matches canAccess contract)
+  const canCreate = await canAccess(user.subscriptionTier, FeatureKey.TOPIC_CREATE, isAdmin(clerkId))
   if (!canCreate) {
     return NextResponse.json({
       error: 'Upgrade required',
