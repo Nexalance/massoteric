@@ -250,7 +250,7 @@ export default function SearchBar({ variant = 'inline' }: { variant?: 'inline' |
             style={{
               position: 'absolute', top: '100%', right: 0,
               marginTop: 0, paddingTop: 10,
-              width: 'min(420px, 86vw)',
+              width: 'min(320px, 80vw)',
               background: 'transparent',
             }}
           >
