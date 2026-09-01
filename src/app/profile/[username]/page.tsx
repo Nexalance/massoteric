@@ -22,14 +22,26 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const { userId: clerkId, user: authUser } = await auth()
   if (!clerkId) redirect('/sign-in')
 
-  const [profileUser, viewer] = await Promise.all([
-    prisma.user.findUnique({
-      where: { username: params.username },
+  // Older accounts may have usernames created from full names (e.g. "anas free").
+  // Try the exact slug first, then the de-spaced form, then a contains match.
+  const usernameParam = decodeURIComponent(params.username)
+  const findProfileUser = () =>
+    prisma.user.findFirst({
+      where: {
+        OR: [
+          { username: usernameParam },
+          { username: usernameParam.replace(/[\s-]+/g, '') },
+          { username: { contains: usernameParam.replace(/[\s-]+/g, '') } },
+        ],
+      },
       include: {
         _count: { select: { predictions: true, subscribers: true, subscriptions: true } },
         creatorSettings: true,
       },
-    }),
+    })
+
+  const [profileUser, viewer] = await Promise.all([
+    findProfileUser(),
     prisma.user.findUnique({ where: { clerkId } }),
   ])
 

@@ -5,12 +5,14 @@ export const dynamic = 'force-dynamic'
 import { auth } from '@/lib/auth-mock'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
+import { isAdmin } from '@/lib/admin'
 import Link from 'next/link'
 import UserMenu from '@/components/UserMenu'
 
 export default async function MePage() {
   const { userId: clerkId, user: clerkUser } = await auth()
   if (!clerkId) redirect('/sign-in')
+  const viewerIsAdmin = isAdmin(clerkId)
 
   const user = await prisma.user.findUnique({
     where: { clerkId },
@@ -36,17 +38,37 @@ export default async function MePage() {
   const displayEmail = user.email || clerkUser?.emailAddresses?.[0]?.emailAddress || clerkUser?.email || 'No email'
 
   return (
-    <main style={{ minHeight: '100vh', padding: '40px 20px', background: '#0D0F14' }}>
+    <main style={{ minHeight: '100vh', paddingTop: '80px', padding: '80px 20px 40px', background: '#0D0F14' }}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '32px', fontWeight: 700, color: '#F5F0E8', marginBottom: '8px' }}>
-            My Profile Info
-          </h1>
-          <p style={{ color: '#8A909E', fontSize: '14px' }}>
-            Your account information and username
-          </p>
+        <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+          <div>
+            <h1 style={{ fontSize: '32px', fontWeight: 700, color: '#F5F0E8', marginBottom: '8px' }}>
+              My Profile Info
+            </h1>
+            <p style={{ color: '#8A909E', fontSize: '14px' }}>
+              Your account information and username
+            </p>
+          </div>
+          {viewerIsAdmin && (
+            <Link
+              href="/admin"
+              style={{
+                flexShrink: 0,
+                padding: '10px 22px',
+                background: '#151820',
+                border: '1px solid #C9A84C',
+                borderRadius: '6px',
+                color: '#C9A84C',
+                textDecoration: 'none',
+                fontSize: '13px',
+                fontWeight: 600,
+              }}
+            >
+              Admin
+            </Link>
+          )}
         </div>
 
         {/* Info Card */}
