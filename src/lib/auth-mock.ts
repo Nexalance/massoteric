@@ -56,9 +56,11 @@ async function syncClerkUserToDb(clerkId: string, clerkUser?: any) {
     })
 
     // Extract data from Clerk user
-    const clerkUsername = clerkUser?.username ||
+    // Strip whitespace and keep URL-safe chars — spaces in username break /profile/[username] routing
+    const clerkUsername = (clerkUser?.username ||
       clerkUser?.firstName?.toLowerCase() + (clerkUser?.lastName?.toLowerCase() || '') ||
-      `user_${Date.now().toString(36)}`
+      `user_${Date.now().toString(36)}`)
+      .replace(/\s+/g, '')
 
     const clerkDisplayName = clerkUser?.fullName ||
       clerkUser?.firstName + ' ' + (clerkUser?.lastName || '') ||
