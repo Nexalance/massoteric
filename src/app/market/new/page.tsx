@@ -35,6 +35,17 @@ const selectStyle = {
 export default function NewMarketPage() {
   const router = useRouter()
   const { currentUser, loading } = useCurrentUser()
+  // Ask the server whether THIS user can create topics (respects the admin
+  // TOPIC_CREATE feature flag instead of hard-coding PRO/STANDARD).
+  const [canCreateTopic, setCanCreateTopic] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    if (loading || !currentUser?.subscriptionTier) return
+    fetch('/api/feature-access?feature=TOPIC_CREATE')
+      .then(res => res.json())
+      .then(data => setCanCreateTopic(!!data.canAccess))
+      .catch(() => setCanCreateTopic(false))
+  }, [loading, currentUser?.subscriptionTier])
 
   // ALL hooks must be called before any conditional returns (Rules of Hooks)
   const [submitting, setSubmitting] = useState(false)
@@ -60,12 +71,9 @@ export default function NewMarketPage() {
 
   const isFormValid = fieldValid.title && fieldValid.description && fieldValid.resolutionCriteria
 
-  // Check if user can create topics
-  const canCreateTopic = currentUser?.subscriptionTier === 'PRO' || currentUser?.subscriptionTier === 'STANDARD'
-
-  // Show loading state while fetching user OR if we don't have the tier yet
+  // Show loading state while fetching user OR the feature-access check
   // This prevents the flash of "locked" state before the user's actual tier loads
-  if (loading || !currentUser?.subscriptionTier) {
+  if (loading || !currentUser?.subscriptionTier || canCreateTopic === null) {
     return (
       <main style={{ maxWidth: '700px', margin: '0 auto', padding: '40px 20px', textAlign: 'center' }}>
         <p style={{ color: 'var(--mist)' }}>Loading...</p>

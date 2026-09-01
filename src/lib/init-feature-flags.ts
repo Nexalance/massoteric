@@ -55,10 +55,10 @@ export async function ensureFeatureFlags() {
     await prisma.featureFlag.upsert({
       where: { key: flag.key },
       create: flag,
-      update: {
-        isEnabled: flag.isEnabled,
-        isFree: flag.isFree,
-      },
+      // IMPORTANT: never update existing flags here — admin dashboard toggles
+      // are the source of truth once a flag exists. Re-seeding isFree/enabled
+      // on every call silently reverted admin changes.
+      update: {},
     })
   }
 

@@ -5,7 +5,9 @@ export const dynamic = 'force-dynamic'
 import { auth } from '@/lib/auth-mock'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { MarketCategory } from '@prisma/client'
+import { MarketCategory, FeatureKey } from '@prisma/client'
+import { canAccess } from '@/lib/access'
+import { isAdmin } from '@/lib/admin'
 import Link from 'next/link'
 import PolymarketLink from '@/components/PolymarketLink'
 import { formatDistanceToNow } from 'date-fns'
@@ -57,7 +59,11 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
     })
     if (user) {
       userTier = user.subscriptionTier
-      canCreateTopic = userTier === 'PRO' || userTier === 'STANDARD'
+      // Respect the admin-controlled TOPIC_CREATE feature flag (like the API does),
+      // so toggling "Create New Topics" to FREE in the admin dashboard reveals the
+      // button for logged-in users of any tier. PRO always has it; admins bypass too.
+      const admin = isAdmin(clerkId)
+      canCreateTopic = await canAccess(userTier, FeatureKey.TOPIC_CREATE, admin)
     }
   }
 
