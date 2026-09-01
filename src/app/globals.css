@@ -733,3 +733,27 @@ table tbody tr:hover {
 /* Plain spin for loader icons (AutoSyncSubscription) — keyframes at top of file
    include translateY(-50%) which misaligns non-absolute elements, so add a clean one */
 @keyframes spinClean { to { transform: rotate(360deg); } }
+
+/* ── Nav laptop-fit: at 769–1400px allow wordy links to collapse to short labels
+   (client saw avatar pushed off-screen at 100% zoom on a 1366px laptop) ── */
+@media (min-width: 769px) and (max-width: 1400px) {
+  .nav-links-row {
+    gap: 14px !important;
+  }
+  .nav-link-shrinkable {
+    min-width: auto !important;
+    max-width: 72px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* Keep the critical ones fully readable */
+  .nav-links-row a[href="/feed"],
+  .nav-links-row a[href="/admin"] {
+    max-width: none;
+    overflow: visible;
+  }
+  .nav-search {
+    width: 150px !important;
+  }
+}

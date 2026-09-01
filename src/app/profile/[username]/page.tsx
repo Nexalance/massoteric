@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth-mock'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getUserAccuracySummary } from '@/lib/scoring'
+import { isAdmin } from '@/lib/admin'
 import { UserButton } from '@clerk/nextjs'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
@@ -35,6 +36,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   if (!profileUser || profileUser.isSuspended) notFound()
 
   const isOwnProfile = viewer?.id === profileUser.id
+  const viewerIsAdmin = isAdmin(clerkId)
 
   // Fetch existing subscription after we have both profileUser and viewer
   const existingSubscription = viewer?.id
@@ -94,6 +96,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
+                  {isOwnProfile && viewerIsAdmin && (
+                    <Link href="/admin" className="btn btn-secondary" style={{ fontSize: '11px' }}>
+                      Admin
+                    </Link>
+                  )}
                   {isOwnProfile && (
                     <>
                       <UserButton

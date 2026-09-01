@@ -85,9 +85,9 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
       display: 'flex', alignItems: 'center',
       padding: '0 var(--page-pad)',
     }}>
-      <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+      <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', minWidth: 0 }}>
         {/* LEFT zone — logo + browse */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', minWidth: 0 }}>
           <Link href={isSignedIn ? '/feed' : '/'} style={{ textDecoration: 'none' }}>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--cream)' }}>
               Mass<span style={{ color: 'var(--gold)' }}>oteric</span>
@@ -132,20 +132,20 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
           {isSignedIn && userId ? (
             <>
               <span className="nav-divider hide-mobile" />
-              <div className="hide-mobile" style={{ display: 'flex', gap: '22px', alignItems: 'center' }}>
+              <div className="hide-mobile nav-links-row" style={{ display: 'flex', gap: '22px', alignItems: 'center' }}>
                 <Link href="/feed" className="nav-link">Feed</Link>
-                <Link href="/competitions" className="nav-link">Competitions</Link>
-                <Link href="/leaderboard" className="nav-link">Leaderboard</Link>
-                <Link href="/about" className="nav-link">About</Link>
-                <Link href="/" className="nav-link" style={{ color: 'var(--gold)' }}>Home</Link>
+                <Link href="/competitions" className="nav-link nav-link-shrinkable">Competitions</Link>
+                <Link href="/leaderboard" className="nav-link nav-link-shrinkable">Leaderboard</Link>
+                <Link href="/about" className="nav-link nav-link-shrinkable">About</Link>
+                <Link href="/" className="nav-link nav-link-shrinkable" style={{ color: 'var(--gold)' }}>Home</Link>
                 {/* Only show Predict link for PRO/STANDARD users */}
                 {(currentUser?.subscriptionTier === 'PRO' || currentUser?.subscriptionTier === 'STANDARD') && (
-                  <Link href="/market/new" className="nav-link">Predict</Link>
+                  <Link href="/market/new" className="nav-link nav-link-shrinkable">Predict</Link>
                 )}
                 {/* Creator Dashboard - show to all signed-in users */}
-                <Link href="/creator/dashboard" className="nav-link">Creator</Link>
+                <Link href="/creator/dashboard" className="nav-link nav-link-shrinkable">Creator</Link>
                 {currentUser?.isAdmin && (
-                  <Link href="/admin" className="nav-link nav-link-admin">Admin</Link>
+                  <Link href="/admin" className="nav-link nav-link-admin nav-link-shrinkable">Admin</Link>
                 )}
               </div>
             </>
@@ -162,18 +162,18 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
           )}
         </div>
 
-        {/* CENTER zone — search — desktop only */}
-        <div className="hide-mobile">
-          <SearchBar />
+        {/* CENTER zone — search icon — desktop only (hover reveals input below nav) */}
+        <div className="hide-mobile" style={{ minWidth: 0, flexShrink: 0 }}>
+          <SearchBar variant="icon" />
         </div>
 
         {/* RIGHT zone — account */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
           {isSignedIn && userId ? (
             <>
-              <Link href={`/me`} className="nav-link hide-mobile" style={{ letterSpacing: '1px' }}>My Profile</Link>
+              <Link href={`/me`} className="nav-link nav-link-shrinkable hide-mobile" style={{ letterSpacing: '1px' }}>My Profile</Link>
               {username ? (
-                <Link href={`/profile/${username}`} className="nav-link hide-mobile" style={{ letterSpacing: '1px' }}>
+                <Link href={`/profile/${username}`} className="nav-link nav-link-shrinkable hide-mobile" style={{ letterSpacing: '1px' }}>
                   {displayName}
                   {subscriptionTier && subscriptionTier !== 'FREE' && (
                     <span style={{ marginLeft: '6px', color: 'var(--gold)' }}>· {subscriptionTier}</span>
