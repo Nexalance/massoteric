@@ -380,6 +380,7 @@ enum FeatureKey {
   CATEGORY_LEADERBOARD
   EXPERT_QA
   TOPIC_CREATE
+  PREDICT_SUBMIT
 }
 
 enum PayoutStatus {

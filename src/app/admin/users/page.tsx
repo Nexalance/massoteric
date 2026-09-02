@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { SubscriptionTier } from '@prisma/client'
+import TierSelect from './TierSelect'
 
 export const metadata = { title: 'Admin — Users' }
 
@@ -172,15 +173,7 @@ export default async function AdminUsersPage({
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px' }}>
-                    <span
-                      className="badge"
-                      style={{
-                        background: TIER_COLORS[user.subscriptionTier],
-                        color: user.subscriptionTier === 'FREE' ? 'var(--ink)' : 'white',
-                      }}
-                    >
-                      {user.subscriptionTier}
-                    </span>
+                    <TierSelect userId={user.id} tier={user.subscriptionTier} />
                   </td>
                   <td style={{ padding: '12px 16px' }}>
                     {user.isSuspended ? (

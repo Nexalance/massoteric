@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 // Individual market page — shows predictions, discussion, post form
 
 import { auth } from '@/lib/auth-mock'
+import { isAdmin } from '@/lib/admin'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { canAccess } from '@/lib/access'
@@ -45,6 +46,8 @@ export default async function MarketPage({ params }: MarketPageProps) {
 
   const canSeeFullReasoning = viewer ? await canAccess(viewer.subscriptionTier, FeatureKey.FULL_REASONING) : false
   const canFilterAccuracy = viewer ? await canAccess(viewer.subscriptionTier, FeatureKey.ACCURACY_FILTER) : false
+  // Prediction submit gate — admin-controlled flag (was hard-coded to PRO/STANDARD only)
+  const canSubmitPrediction = viewer ? await canAccess(viewer.subscriptionTier, FeatureKey.PREDICT_SUBMIT, isAdmin(clerkId)) : false
   const isLocked = isPredictionLocked(market.closesAt)
 
   // Check if market has expired (past resolvesAt)
@@ -331,7 +334,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
                     </div>
                   </div>
                 </>
-              ) : viewerTier === 'FREE' ? (
+              ) : !canSubmitPrediction ? (
                 <>
                   <div className="section-label" style={{ marginBottom: '16px' }}>
                     Post Your Prediction

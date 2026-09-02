@@ -49,6 +49,13 @@ export async function ensureFeatureFlags() {
       isFree: false,
       isEnabled: true,
     },
+    {
+      key: FeatureKey.PREDICT_SUBMIT,
+      label: 'Submit Predictions',
+      description: 'Allow users to submit predictions on markets',
+      isFree: false,
+      isEnabled: true,
+    },
   ]
 
   for (const flag of flags) {
