@@ -1,92 +1,21 @@
-// src/app/competitions/page.tsx
-// Fantasy League competitions listing
+export const metadata = { title: 'Competitions | Massoteric' }
 
-export const dynamic = 'force-dynamic'
-
-import { auth } from '@/lib/auth-mock'
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import CompetitionsListClient from './CompetitionsListClient'
-
-export const metadata = { title: 'Fantasy Leagues' }
-
-export default async function CompetitionsPage() {
-  const { userId: clerkId, user } = await auth()
-  if (!clerkId) redirect('/sign-in')
-
+// Phase 2 preview — hidden for Milestone 1 per the completion brief.
+// The Fantasy League implementation returns here in Milestone 2.
+export default function CompetitionsPage() {
   return (
     <main>
-      <div className="page-container" style={{ paddingTop: '40px', paddingBottom: '64px' }}>
-        <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-          <div>
-            <div className="section-label">Fantasy League</div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '40px', fontWeight: 300, color: 'var(--cream)' }}>
-              Competitions
-            </h1>
-            <p style={{ fontSize: '14px', color: 'var(--mist)', marginTop: '8px', maxWidth: '500px' }}>
-              Join prediction competitions and compete to have the best Brier score. Compete over time periods
-              and climb the leaderboards.
-            </p>
-          </div>
-          <Link href="/competitions/create" className="btn btn-primary">
-            Create Competition
-          </Link>
-        </div>
-
-        {/* How it works */}
-        <div className="card" style={{ padding: '20px', marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--cream)', marginBottom: '12px' }}>
-            How Fantasy Leagues Work
-          </h3>
-          <div className="profile-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-            {[
-              {
-                step: '1',
-                title: 'Join or Create',
-                description: 'Join a public competition or create your own with custom rules and time periods.',
-              },
-              {
-                step: '2',
-                title: 'Make Predictions',
-                description: 'Predict on markets that resolve within the competition period. Only your best predictions count.',
-              },
-              {
-                step: '3',
-                title: 'Win Prizes',
-                description: 'Competitors with the lowest Brier score (highest accuracy) at the end win prizes.',
-              },
-            ].map(({ step, title, description }) => (
-              <div key={step}>
-                <div
-                  style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    background: 'var(--gold)',
-                    color: 'var(--ink)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    marginBottom: '8px',
-                  }}
-                >
-                  {step}
-                </div>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--cream)', marginBottom: '4px' }}>
-                  {title}
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--mist)', lineHeight: '1.4' }}>
-                  {description}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Competitions list */}
-        <CompetitionsListClient userId={user?.id} />
+      <div className="page-container" style={{ paddingTop: '80px', paddingBottom: '64px', textAlign: 'center' }}>
+        <div className="section-label">Coming Soon</div>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '40px', fontWeight: 300, color: 'var(--cream)', margin: '12px 0 16px' }}>
+          Competitions
+        </h1>
+        <p style={{ fontSize: '15px', color: 'var(--mist)', maxWidth: '480px', margin: '0 auto', lineHeight: '1.7' }}>
+          Prediction competitions are on the way. For now, head back to the feed and start predicting.
+        </p>
+        <a href="/feed/all" className="btn btn-primary" style={{ marginTop: '24px', display: 'inline-flex' }}>
+          Back to Feed
+        </a>
       </div>
     </main>
   )
