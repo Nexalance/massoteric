@@ -20,6 +20,7 @@ interface PolymarketTag {
 
 interface PolymarketEvent {
   id: string
+  slug?: string
   title: string
   description: string
   endDate: string
@@ -981,11 +982,9 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
           continue
         }
 
-        // Validate the event actually exists on Polymarket (non-blocking)
-        const eventUrl = `https://polymarket.com/event/${event.id}`
-        // Skip URL validation during sync to avoid blocking on network issues
-        // Events with invalid URLs will be filtered out in future syncs when they're closed
-        // Consider adding a periodic validation job instead
+        // Capture the event slug — polymarket.us uses /event/{slug} URLs (not numeric IDs),
+        // so we store it to build correct .us links for US visitors later.
+        const polymarketSlug = event.slug || null
 
         try {
           await prisma.market.upsert({
@@ -998,6 +997,7 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
               subcategoryId: subcategory.id,
               category,
               polymarketEventId,
+              ...(polymarketSlug ? { polymarketSlug } : {}),
               updatedAt: new Date(),
             },
             create: {
@@ -1015,6 +1015,7 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
               tags: event.tags?.map(t => t.label) || [],
               subcategoryId: subcategory.id,
               polymarketEventId,
+              ...(polymarketSlug ? { polymarketSlug } : {}),
             },
           })
           synced++

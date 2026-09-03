@@ -11,6 +11,7 @@ import { isPredictionLocked } from '@/lib/scoring'
 import { FeatureKey, MarketStatus } from '@prisma/client'
 import { formatDistanceToNow, format } from 'date-fns'
 import Link from 'next/link'
+import PolymarketLinkClient from './PolymarketLinkClient'
 import { PredictionForm } from './PredictionForm'
 
 interface MarketPageProps {
@@ -148,23 +149,14 @@ export default async function MarketPage({ params }: MarketPageProps) {
             ))}
           </div>
 
-          {/* External source link — above the fold (client request) */}
+          {/* External source link — above the fold, location-aware (polymarket.us for US visitors) */}
           {market.externalUrl && (
-            <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <a
-                href={market.externalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="polymarket-link"
-              >
-                VIEW ON {market.source.replace('_', ' ').toUpperCase()} ↗
-              </a>
-              {market.source === 'POLYMARKET' && (
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--cream)', letterSpacing: '0.5px' }}>
-                  (Polymarket is not available in the US)
-                </span>
-              )}
-            </div>
+            <PolymarketLinkClient
+              externalUrl={market.externalUrl}
+              source={market.source}
+              marketSlug={market.polymarketSlug}
+              marketTitle={market.title}
+            />
           )}
 
           {market.closesAt && (
