@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 // Individual market page — shows predictions, discussion, post form
 
 import { auth } from '@/lib/auth-mock'
+import { isAdmin } from '@/lib/admin'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { canAccess } from '@/lib/access'
@@ -10,6 +11,7 @@ import { isPredictionLocked } from '@/lib/scoring'
 import { FeatureKey, MarketStatus } from '@prisma/client'
 import { formatDistanceToNow, format } from 'date-fns'
 import Link from 'next/link'
+import PolymarketLinkClient from './PolymarketLinkClient'
 import { PredictionForm } from './PredictionForm'
 
 interface MarketPageProps {
@@ -45,6 +47,8 @@ export default async function MarketPage({ params }: MarketPageProps) {
 
   const canSeeFullReasoning = viewer ? await canAccess(viewer.subscriptionTier, FeatureKey.FULL_REASONING) : false
   const canFilterAccuracy = viewer ? await canAccess(viewer.subscriptionTier, FeatureKey.ACCURACY_FILTER) : false
+  // Prediction submit gate — admin-controlled flag (was hard-coded to PRO/STANDARD only)
+  const canSubmitPrediction = viewer ? await canAccess(viewer.subscriptionTier, FeatureKey.PREDICT_SUBMIT, isAdmin(clerkId)) : false
   const isLocked = isPredictionLocked(market.closesAt)
 
   // Check if market has expired (past resolvesAt)
@@ -145,23 +149,14 @@ export default async function MarketPage({ params }: MarketPageProps) {
             ))}
           </div>
 
-          {/* External source link — above the fold (client request) */}
+          {/* External source link — above the fold, location-aware (polymarket.us for US visitors) */}
           {market.externalUrl && (
-            <div style={{ marginTop: '16px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-              <a
-                href={market.externalUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="polymarket-link"
-              >
-                VIEW ON {market.source.replace('_', ' ').toUpperCase()} ↗
-              </a>
-              {market.source === 'POLYMARKET' && (
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--cream)', letterSpacing: '0.5px' }}>
-                  (Polymarket is not available in the US)
-                </span>
-              )}
-            </div>
+            <PolymarketLinkClient
+              externalUrl={market.externalUrl}
+              source={market.source}
+              marketSlug={market.polymarketSlug}
+              marketTitle={market.title}
+            />
           )}
 
           {market.closesAt && (
@@ -331,7 +326,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
                     </div>
                   </div>
                 </>
-              ) : viewerTier === 'FREE' ? (
+              ) : !canSubmitPrediction ? (
                 <>
                   <div className="section-label" style={{ marginBottom: '16px' }}>
                     Post Your Prediction

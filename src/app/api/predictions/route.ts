@@ -12,6 +12,7 @@ import {
   generateReasoningSnippet,
 } from '@/lib/scoring'
 import { canAccess } from '@/lib/access'
+import { isAdmin } from '@/lib/admin'
 import { FeatureKey } from '@prisma/client'
 
 // ── GET: list predictions for a market ──────────────────────────────────────
@@ -157,11 +158,13 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 })
     if (user.isSuspended) return NextResponse.json({ error: 'Account suspended' }, { status: 403 })
 
-    // Check if user can submit predictions (FREE tier cannot)
-    if (user.subscriptionTier === 'FREE') {
+    // Check if user can submit predictions — admin-controlled PREDICT_SUBMIT flag
+    // (was hard-coded to reject FREE tier; now the admin dashboard toggle decides)
+    const canSubmit = await canAccess(user.subscriptionTier, FeatureKey.PREDICT_SUBMIT, isAdmin(clerkId))
+    if (!canSubmit) {
       return NextResponse.json({
         error: 'Upgrade required',
-        message: 'Prediction submission is available for Standard and Pro subscribers. Upgrade to share your forecasts with the community.',
+        message: 'Prediction submission is currently restricted. Upgrade or contact the administrator.',
         requiresUpgrade: true
       }, { status: 403 })
     }

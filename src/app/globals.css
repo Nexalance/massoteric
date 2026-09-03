@@ -77,10 +77,16 @@ code, pre {
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--ink2); }
-::-webkit-scrollbar-thumb { background: var(--fog); border-radius: 3px; }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: var(--ink); }
+::-webkit-scrollbar-thumb { background: #4A5164; border-radius: 5px; border: 2px solid var(--ink); }
 ::-webkit-scrollbar-thumb:hover { background: var(--mist); }
+
+/* Firefox — visible scrollbar (client: no scrollbar visible on laptop) */
+html {
+  scrollbar-width: auto;
+  scrollbar-color: #4A5164 var(--ink);
+}
 
 /* Focus */
 :focus-visible {

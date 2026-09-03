@@ -134,16 +134,11 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
               <span className="nav-divider hide-mobile" />
               <div className="hide-mobile nav-links-row" style={{ display: 'flex', gap: '22px', alignItems: 'center' }}>
                 <Link href="/feed" className="nav-link">Feed</Link>
-                <Link href="/competitions" className="nav-link nav-link-shrinkable">Competitions</Link>
+                {/* Competitions + Creator: Phase 2 — hidden until that milestone ships */}
                 <Link href="/leaderboard" className="nav-link nav-link-shrinkable">Leaderboard</Link>
                 <Link href="/about" className="nav-link nav-link-shrinkable">About</Link>
                 <Link href="/" className="nav-link nav-link-shrinkable" style={{ color: 'var(--gold)' }}>Home</Link>
-                {/* Only show Predict link for PRO/STANDARD users */}
-                {(currentUser?.subscriptionTier === 'PRO' || currentUser?.subscriptionTier === 'STANDARD') && (
-                  <Link href="/market/new" className="nav-link nav-link-shrinkable">Predict</Link>
-                )}
-                {/* Creator Dashboard - show to all signed-in users */}
-                <Link href="/creator/dashboard" className="nav-link nav-link-shrinkable">Creator</Link>
+                <Link href="/market/new" className="nav-link nav-link-shrinkable">Predict</Link>
                 {currentUser?.isAdmin && (
                   <Link href="/admin" className="nav-link nav-link-admin nav-link-shrinkable">Admin</Link>
                 )}
@@ -318,16 +313,6 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
                     Feed
                   </Link>
                   <Link
-                    href="/competitions"
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      padding: '12px 16px', fontSize: '15px', color: 'var(--cream)',
-                      textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                    }}
-                  >
-                    Competitions
-                  </Link>
-                  <Link
                     href="/leaderboard"
                     onClick={() => setMobileMenuOpen(false)}
                     style={{
@@ -357,27 +342,15 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
                   >
                     Home
                   </Link>
-                  {(currentUser?.subscriptionTier === 'PRO' || currentUser?.subscriptionTier === 'STANDARD') && (
-                    <Link
-                      href="/market/new"
-                      onClick={() => setMobileMenuOpen(false)}
-                      style={{
-                        padding: '12px 16px', fontSize: '15px', color: 'var(--cream)',
-                        textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                      }}
-                    >
-                      Predict
-                    </Link>
-                  )}
                   <Link
-                    href="/creator/dashboard"
+                    href="/market/new"
                     onClick={() => setMobileMenuOpen(false)}
                     style={{
                       padding: '12px 16px', fontSize: '15px', color: 'var(--cream)',
                       textDecoration: 'none', borderBottom: '1px solid var(--border)',
                     }}
                   >
-                    Creator Dashboard
+                    Predict
                   </Link>
                   {currentUser?.isAdmin && (
                     <Link

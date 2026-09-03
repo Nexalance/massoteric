@@ -97,6 +97,7 @@ model Market {
   updatedAt          DateTime       @updatedAt
   subcategoryId      String?
   polymarketEventId  String?
+  polymarketSlug     String?
   comments           Comment[]
   createdBy          User?          @relation("topicCreator", fields: [createdByUserId], references: [id])
   subcategory        Subcategory?   @relation(fields: [subcategoryId], references: [id], map: "Market_subcategoryId_Subcategory_id_fk")
@@ -380,6 +381,7 @@ enum FeatureKey {
   CATEGORY_LEADERBOARD
   EXPERT_QA
   TOPIC_CREATE
+  PREDICT_SUBMIT
 }
 
 enum PayoutStatus {
