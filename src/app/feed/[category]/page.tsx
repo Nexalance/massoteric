@@ -9,7 +9,6 @@ import { MarketCategory, FeatureKey } from '@prisma/client'
 import { canAccess } from '@/lib/access'
 import { isAdmin } from '@/lib/admin'
 import Link from 'next/link'
-import PolymarketLink from '@/components/PolymarketLink'
 import { formatDistanceToNow } from 'date-fns'
 import { CATEGORIES, SORTS, SortValue } from '@/lib/categories'
 import { ensureMigrated } from '@/lib/migrations'
@@ -411,11 +410,8 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                         {market._count.predictions} predictions · {market._count.comments} comments
                       </span>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginLeft: 'auto' }}>
-                        {market.source === 'POLYMARKET' && market.externalUrl && (
-                          <PolymarketLink url={market.externalUrl} />
-                        )}
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--gold)', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
-                          PREDICT →
+                          VIEW DETAILS →
                         </span>
                       </div>
                     </div>
