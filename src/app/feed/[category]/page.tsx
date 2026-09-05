@@ -411,7 +411,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                       </span>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginLeft: 'auto' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--gold)', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
-                          PREDICT →
+                          VIEW DETAILS →
                         </span>
                       </div>
                     </div>
