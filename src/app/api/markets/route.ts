@@ -23,6 +23,10 @@ const ListSchema = z.object({
 })
 
 export async function GET(req: NextRequest) {
+  // Seed feature flags on first request so the admin dashboard always has the
+  // full toggle list (incl. "Submit Predictions") even before any POST happens.
+  await ensureFeatureFlags()
+
   const { searchParams } = new URL(req.url)
   const query = ListSchema.safeParse(Object.fromEntries(searchParams))
 
