@@ -252,8 +252,8 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
         )}
 
         {/* Full table */}
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+        <div className="card" style={{ padding: 0, overflowX: 'auto' }}>
+          <table style={{ minWidth: '560px', width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
                 {['Rank', 'Forecaster', 'Category', 'Accuracy', 'Predictions', 'Subscribers'].map(h => (

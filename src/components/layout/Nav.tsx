@@ -20,7 +20,9 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const mobileMenuRef = useRef<HTMLDivElement>(null)
 
-  // Close mobile menu on outside click (both mouse and touch)
+  // Close mobile menu on outside click (both mouse and touch).
+  // Uses `click` (not `touchstart`) so scrolling/tapping inside the tall drawer
+  // never dismisses the menu before a link tap registers.
   useEffect(() => {
     function handleClickOutside(e: MouseEvent | TouchEvent) {
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(e.target as Node)) {
@@ -28,11 +30,9 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
       }
     }
     if (mobileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-      document.addEventListener('touchstart', handleClickOutside)
+      document.addEventListener('click', handleClickOutside)
       return () => {
-        document.removeEventListener('mousedown', handleClickOutside)
-        document.removeEventListener('touchstart', handleClickOutside)
+        document.removeEventListener('click', handleClickOutside)
       }
     }
   }, [mobileMenuOpen])

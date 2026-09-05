@@ -492,9 +492,9 @@ table tbody tr:hover {
   /* Keep 2 columns on small screens - right sidebar stays on right */
   @media (max-width: 640px) {
     .feed-grid {
-      grid-template-columns: 1fr 180px !important;
+      grid-template-columns: minmax(0, 1fr) 180px !important;
       gap: 12px !important;
-      overflow-x: auto;
+      overflow-x: hidden;
     }
 
     .feed-grid aside {
@@ -531,7 +531,7 @@ table tbody tr:hover {
   /* On very small screens, keep 2 columns with narrower sidebar */
   @media (max-width: 380px) {
     .feed-grid {
-      grid-template-columns: 1fr 150px !important;
+      grid-template-columns: minmax(0, 1fr) 150px !important;
       gap: 8px !important;
     }
 
