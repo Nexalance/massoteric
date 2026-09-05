@@ -5,7 +5,13 @@
 import { prisma } from '@/lib/prisma'
 import { FeatureKey } from '@prisma/client'
 
+// Module-level latch: after the first successful seed in a process, skip
+// re-checking on every request (the upserts are cheap but not free).
+let flagsSeeded = false
+
 export async function ensureFeatureFlags() {
+  if (flagsSeeded) return
+
   const flags = [
     {
       key: FeatureKey.FULL_REASONING,
@@ -70,4 +76,5 @@ export async function ensureFeatureFlags() {
   }
 
   console.log('✅ Feature flags initialized')
+  flagsSeeded = true
 }
