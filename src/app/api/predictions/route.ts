@@ -246,11 +246,11 @@ export async function POST(req: NextRequest) {
 
       // Redirect back to market page for form submissions, return JSON for API calls
       if (isFormSubmission) {
-        // Use the host from request headers to construct correct redirect URL
-        const host = req.headers.get('host') || 'massoteric.nexalance.cloud'
-        const protocol = req.headers.get('x-forwarded-proto') || 'https'
-        const appUrl = `${protocol}://${host}`
-        return NextResponse.redirect(new URL(`/market/${marketId}`, appUrl), 303)
+        // 303 back to the market page using a RELATIVE path — Next.js resolves
+        // it against the live request origin. Building an absolute URL from
+        // req.url/host headers broke behind the Docker proxy (HOSTNAME=0.0.0.0),
+        // sending browsers to a blocked "restricted network port" page.
+        return NextResponse.redirect(new URL(`/market/${marketId}`, req.url), 303)
       }
       return NextResponse.json({ prediction: updated, action: 'updated' })
     }
@@ -284,6 +284,8 @@ export async function POST(req: NextRequest) {
 
     // Redirect back to market page for form submissions, return JSON for API calls
     if (isFormSubmission) {
+      // Same relative-redirect rationale as the update path above — never
+      // rebuild an absolute URL from host headers here.
       return NextResponse.redirect(new URL(`/market/${marketId}`, req.url), 303)
     }
     return NextResponse.json({ prediction, action: 'created' }, { status: 201 })
