@@ -246,11 +246,13 @@ export async function POST(req: NextRequest) {
 
       // Redirect back to market page for form submissions, return JSON for API calls
       if (isFormSubmission) {
-        // 303 back to the market page using a RELATIVE path — Next.js resolves
-        // it against the live request origin. Building an absolute URL from
-        // req.url/host headers broke behind the Docker proxy (HOSTNAME=0.0.0.0),
-        // sending browsers to a blocked "restricted network port" page.
-        return NextResponse.redirect(new URL(`/market/${marketId}`, req.url), 303)
+        // Relative Location header (no scheme/host) — the browser resolves it
+        // against the CURRENT page origin, so it works on any domain and can
+        // never land on 0.0.0.0 / localhost behind the Docker proxy.
+        return new NextResponse(null, {
+          status: 303,
+          headers: { Location: `/market/${marketId}` },
+        })
       }
       return NextResponse.json({ prediction: updated, action: 'updated' })
     }
@@ -284,9 +286,12 @@ export async function POST(req: NextRequest) {
 
     // Redirect back to market page for form submissions, return JSON for API calls
     if (isFormSubmission) {
-      // Same relative-redirect rationale as the update path above — never
-      // rebuild an absolute URL from host headers here.
-      return NextResponse.redirect(new URL(`/market/${marketId}`, req.url), 303)
+      // Same relative Location as the update path above — never emit an
+      // absolute URL (host headers behind the Docker proxy are 0.0.0.0).
+      return new NextResponse(null, {
+        status: 303,
+        headers: { Location: `/market/${marketId}` },
+      })
     }
     return NextResponse.json({ prediction, action: 'created' }, { status: 201 })
 
