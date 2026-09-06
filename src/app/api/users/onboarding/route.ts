@@ -69,7 +69,8 @@ export async function POST(req: NextRequest) {
       },
     })
 
-    return NextResponse.redirect(new URL('/feed', req.url))
+    // Relative Location — browser resolves against current origin (never 0.0.0.0 behind the Docker proxy)
+    return new NextResponse(null, { status: 303, headers: { Location: '/feed' } })
   }
 
   await prisma.user.update({
@@ -90,5 +91,6 @@ export async function POST(req: NextRequest) {
     },
   })
 
-  return NextResponse.redirect(new URL('/feed', req.url))
+  // Relative Location — browser resolves against current origin (never 0.0.0.0 behind the Docker proxy)
+  return new NextResponse(null, { status: 303, headers: { Location: '/feed' } })
 }
