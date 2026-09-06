@@ -65,8 +65,8 @@ export default async function MarketPage({ params }: MarketPageProps) {
           id: true, username: true, displayName: true, avatarUrl: true,
           occupation: true,
           accuracyScores: {
-            where: { category: null },
-            select: { avgBrierScore: true, scoredPredictions: true },
+            where: { OR: [{ category: null }, { category: market.category }] },
+            select: { avgBrierScore: true, scoredPredictions: true, accuracyPct: true, category: true },
           },
         },
       },
@@ -207,7 +207,8 @@ export default async function MarketPage({ params }: MarketPageProps) {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {predictions.map((prediction) => {
-                  const overallScore = prediction.user.accuracyScores[0]
+                  const overallScore = prediction.user.accuracyScores.find(s => s.category === null)
+                  const topicScore = prediction.user.accuracyScores.find(s => s.category === market.category && s.scoredPredictions > 0)
                   const isMyPrediction = viewer ? prediction.user.id === viewer.id : false
                   const showFullReasoning = canSeeFullReasoning || isMyPrediction
 
@@ -237,10 +238,19 @@ export default async function MarketPage({ params }: MarketPageProps) {
                         </div>
                       </Link>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {overallScore && (
-                          <span className="badge badge-free" style={{ fontSize: '10px' }}>
-                            {overallScore.accuracyPct}% accurate
-                          </span>
+                        {topicScore && (
+                          <Link href="/about/scoring" style={{ textDecoration: 'none' }} title={`Accuracy on this topic (${market.category.toLowerCase()}, ${topicScore.scoredPredictions} scored) — click to learn how scoring works`}>
+                            <span className="badge badge-free" style={{ fontSize: '10px' }}>
+                              {topicScore.accuracyPct}% on {market.category.toLowerCase()}
+                            </span>
+                          </Link>
+                        )}
+                        {overallScore && overallScore.scoredPredictions > 0 && (
+                          <Link href="/about/scoring" style={{ textDecoration: 'none' }}>
+                            <span className="badge badge-free" style={{ fontSize: '10px', opacity: 0.75 }}>
+                              {overallScore.accuracyPct}% overall
+                            </span>
+                          </Link>
                         )}
                         <div style={{ fontFamily: 'var(--font-display)', fontSize: '36px', fontWeight: 300, color: prediction.probability > 0.5 ? 'var(--signal)' : 'var(--gold)' }}>
                           {Math.round(prediction.probability * 100)}%

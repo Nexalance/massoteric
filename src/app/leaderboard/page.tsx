@@ -153,7 +153,12 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(32px, 5vw, 56px)', fontWeight: 300, color: 'var(--cream)' }}>
             The Leaderboard
           </h1>
-          <p style={{ color: 'var(--mist)', marginTop: '8px' }}>Ranked by Brier Score accuracy. Minimum 1 scored prediction to qualify.</p>
+          <p style={{ color: 'var(--mist)', marginTop: '8px' }}>
+            Ranked by Brier Score accuracy. Minimum 1 scored prediction to qualify.{' '}
+            <Link href="/about/scoring" style={{ color: 'var(--gold)', textDecoration: 'underline' }}>
+              What does this mean?
+            </Link>
+          </p>
         </div>
 
         {/* Filters */}
