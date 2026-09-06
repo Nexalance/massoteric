@@ -208,7 +208,12 @@ export default async function MarketPage({ params }: MarketPageProps) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {predictions.map((prediction) => {
                   const overallScore = prediction.user.accuracyScores.find(s => s.category === null)
+                  // Show the topic badge even at 0% — a 0% topic score is real
+                  // information (forecaster was wrong here), hiding it makes
+                  // users think scoring isn't working.
                   const topicScore = prediction.user.accuracyScores.find(s => s.category === market.category && s.scoredPredictions > 0)
+                  const topicScoreRow = prediction.user.accuracyScores.find(s => s.category === market.category)
+                  const topicScoreDisplay = topicScore ?? (topicScoreRow ? { ...topicScoreRow, accuracyPct: topicScoreRow.accuracyPct ?? 0 } : undefined)
                   const isMyPrediction = viewer ? prediction.user.id === viewer.id : false
                   const showFullReasoning = canSeeFullReasoning || isMyPrediction
 
@@ -238,17 +243,17 @@ export default async function MarketPage({ params }: MarketPageProps) {
                         </div>
                       </Link>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {topicScore && (
-                          <Link href="/about/scoring" style={{ textDecoration: 'none' }} title={`Accuracy on this topic (${market.category.toLowerCase()}, ${topicScore.scoredPredictions} scored) — click to learn how scoring works`}>
-                            <span className="badge badge-free" style={{ fontSize: '10px' }}>
-                              {topicScore.accuracyPct}% on {market.category.toLowerCase()}
+                        {topicScoreDisplay ? (
+                          <Link href="/about/scoring" style={{ textDecoration: 'none' }} title={`Accuracy on this topic (${market.category.toLowerCase()}, ${topicScoreDisplay.scoredPredictions} scored) — click to learn how scoring works`}>
+                            <span className="badge badge-free" style={{ fontSize: '10px', opacity: topicScore ? 1 : 0.6 }}>
+                              {topicScoreDisplay.accuracyPct ?? 0}% on {market.category.toLowerCase()}
                             </span>
                           </Link>
-                        )}
-                        {overallScore && overallScore.scoredPredictions > 0 && (
+                        ) : null}
+                        {overallScore && (overallScore.scoredPredictions > 0 || overallScore.accuracyPct !== null) && (
                           <Link href="/about/scoring" style={{ textDecoration: 'none' }}>
                             <span className="badge badge-free" style={{ fontSize: '10px', opacity: 0.75 }}>
-                              {overallScore.accuracyPct}% overall
+                              {overallScore.accuracyPct ?? 0}% overall
                             </span>
                           </Link>
                         )}
