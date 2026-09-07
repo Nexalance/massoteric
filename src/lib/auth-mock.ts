@@ -79,6 +79,22 @@ async function syncClerkUserToDb(clerkId: string, clerkUser?: any) {
       }
     }
 
+    // Orphan adoption: if no row matches this Clerk ID but the email is already
+    // registered (e.g. the Clerk account was deleted and re-created, issuing a new
+    // user ID), re-link the old row to the new Clerk ID. Without this, the create
+    // below would fail on the email unique constraint and every auth() call would
+    // silently see "no user".
+    if (!existing && clerkEmail) {
+      const orphan = await prisma.user.findUnique({ where: { email: clerkEmail } })
+      if (orphan) {
+        existing = await prisma.user.update({
+          where: { id: orphan.id },
+          data: { clerkId },
+        })
+        console.log('✅ Re-linked orphaned DB user to new Clerk ID:', existing.username)
+      }
+    }
+
     // If user exists, update missing/undefined values
     if (existing) {
       // Check if user is admin - admins always get PRO tier

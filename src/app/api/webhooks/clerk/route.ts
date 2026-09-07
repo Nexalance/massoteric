@@ -63,6 +63,21 @@ export async function POST(req: NextRequest) {
       const username = data.username ||
         `${data.first_name || 'user'}${data.id.slice(-6)}`.toLowerCase().replace(/\s/g, '')
 
+      // Orphan adoption: a row with this email may already exist from a previous
+      // Clerk account (deleted and re-created → new user ID). Re-link it instead of
+      // letting the upsert fail on the email unique constraint.
+      const orphanEmail = primaryEmail?.email_address
+      if (orphanEmail) {
+        const orphan = await prisma.user.findUnique({ where: { email: orphanEmail } })
+        if (orphan && orphan.clerkId !== data.id) {
+          await prisma.user.update({
+            where: { id: orphan.id },
+            data: { clerkId: data.id },
+          })
+          break
+        }
+      }
+
       await prisma.user.upsert({
         where: { clerkId: data.id },
         update: {},
