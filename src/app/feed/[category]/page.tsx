@@ -51,6 +51,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   // Fetch user data
   let userTier: 'FREE' | 'STANDARD' | 'PRO' = 'FREE'
   let canCreateTopic = false
+  let canSeeFullAnalysis = false
   if (clerkId) {
     const user = await prisma.user.findUnique({
       where: { clerkId },
@@ -63,6 +64,9 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
       // button for logged-in users of any tier. PRO always has it; admins bypass too.
       const admin = isAdmin(clerkId)
       canCreateTopic = await canAccess(userTier, FeatureKey.TOPIC_CREATE, admin)
+      // Sidebar "Unlock full analysis" banner must follow the same flag the market
+      // page uses for reasoning — if FULL_REASONING is free, don't upsell it.
+      canSeeFullAnalysis = await canAccess(userTier, FeatureKey.FULL_REASONING, admin)
     }
   }
 
@@ -539,7 +543,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
                   Join Free — Sign Up
                 </Link>
               </div>
-            ) : userTier === 'FREE' ? (
+            ) : userTier === 'FREE' && !canSeeFullAnalysis ? (
               <div className="card" style={{ marginTop: '16px', borderColor: 'rgba(201,168,76,0.2)' }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 600, marginBottom: '10px' }}>
                   Unlock full analysis
