@@ -66,6 +66,7 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
   // Fetch user data
   let userTier: 'FREE' | 'STANDARD' | 'PRO' = 'FREE'
   let canCreateTopic = false
+  let canSeeFullAnalysis = false
   if (clerkId) {
     const user = await prisma.user.findUnique({
       where: { clerkId },
@@ -75,6 +76,9 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
       userTier = user.subscriptionTier
       // Respect the admin-controlled TOPIC_CREATE feature flag (matches feed + API behavior)
       canCreateTopic = await canAccess(userTier, FeatureKey.TOPIC_CREATE, isAdmin(clerkId))
+      // Sidebar "Unlock full analysis" banner must follow the same flag the market
+      // page uses for reasoning — if FULL_REASONING is free, don't upsell it.
+      canSeeFullAnalysis = await canAccess(userTier, FeatureKey.FULL_REASONING, isAdmin(clerkId))
     }
   }
 
@@ -507,7 +511,7 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
                   Join Free — Sign Up
                 </Link>
               </div>
-            ) : userTier === 'FREE' ? (
+            ) : userTier === 'FREE' && !canSeeFullAnalysis ? (
               <div className="card" style={{ marginTop: '16px', borderColor: 'rgba(201,168,76,0.2)' }}>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 600, marginBottom: '10px' }}>
                   Unlock full analysis
