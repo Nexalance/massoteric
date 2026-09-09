@@ -55,16 +55,24 @@ async function syncClerkUserToDb(clerkId: string, clerkUser?: any) {
       where: { clerkId }
     })
 
-    // Extract data from Clerk user
-    // Strip whitespace and keep URL-safe chars — spaces in username break /profile/[username] routing
-    const clerkUsername = (clerkUser?.username ||
-      clerkUser?.firstName?.toLowerCase() + (clerkUser?.lastName?.toLowerCase() || '') ||
-      `user_${Date.now().toString(36)}`)
+    // Extract data from Clerk user.
+    // Careful: `undefined?.toLowerCase() + (undefined || '')` coerces to the string
+    // "undefined" (JS + on undefined), and null fullName + ... yields "null " —
+    // that's how users ended up with username "undefined"/displayName "null".
+    // Build the fallbacks explicitly so nothing stringifies null/undefined.
+    const nameParts = [clerkUser?.firstName, clerkUser?.lastName].filter(
+      (p: any): p is string => typeof p === 'string' && p.trim().length > 0
+    )
+    const clerkUsername = (
+      clerkUser?.username ||
+      (nameParts.length > 0
+        ? nameParts.map((p: string) => p.toLowerCase()).join('')
+        : `user_${Date.now().toString(36)}`)
+    )
       .replace(/\s+/g, '')
 
     const clerkDisplayName = clerkUser?.fullName ||
-      clerkUser?.firstName + ' ' + (clerkUser?.lastName || '') ||
-      'User'
+      (nameParts.length > 0 ? nameParts.join(' ') : 'User')
 
     // Find primary email address from Clerk
     let clerkEmail = clerkUser?.emailAddresses?.[0]?.emailAddress ||
@@ -100,20 +108,27 @@ async function syncClerkUserToDb(clerkId: string, clerkUser?: any) {
       // Check if user is admin - admins always get PRO tier
       const userIsAdmin = isAdmin(clerkId)
 
+      // Repair rows created by the old name-coercion bug (username "undefined",
+      // displayName "null") using the real Clerk values now available.
+      const junkUsername = ['undefined', 'null'].includes(existing.username)
+      const junkDisplayName = !existing.displayName || ['undefined', 'null'].includes(existing.displayName.trim())
+
       // Check if we need to update any missing fields
       const needsUpdate = !existing.displayName || !existing.email ||
                           (userIsAdmin && existing.subscriptionTier !== 'PRO')
 
-      if (needsUpdate && clerkUser) {
+      if ((needsUpdate || junkUsername || junkDisplayName) && clerkUser) {
         existing = await prisma.user.update({
           where: { clerkId },
           data: {
-            displayName: existing.displayName || clerkDisplayName,
+            displayName: junkDisplayName ? clerkDisplayName : (existing.displayName || clerkDisplayName),
             email: existing.email || clerkEmail,
             // Admin users always have PRO tier
             ...(userIsAdmin && existing.subscriptionTier !== 'PRO' ? { subscriptionTier: 'PRO' } : {}),
           }
         })
+        // Only the display name can be safely repaired here; a username change
+        // must stay unique and is user-visible, so leave it to onboarding/edit.
         console.log('✅ Updated user from Clerk:', existing.username, userIsAdmin ? '(Admin → PRO)' : '')
       }
 

@@ -22,6 +22,14 @@ export default async function MePage() {
       username: true,
       displayName: true,
       email: true,
+      bio: true,
+      occupation: true,
+      employer: true,
+      educationLevel: true,
+      educationField: true,
+      institution: true,
+      certifications: true,
+      yearsExperience: true,
       subscriptionTier: true,
       subscriptionStatus: true,
       isAdmin: true,
@@ -155,6 +163,73 @@ export default async function MePage() {
           >
             Manage Subscription
           </Link>
+        </div>
+
+        {/* Edit Profile — reuses the onboarding endpoint, which updates the row
+            when the user already exists */}
+        <div style={{ marginTop: '32px' }}>
+          <div style={{ fontSize: '11px', color: '#8A909E', marginBottom: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+            EDIT PROFILE &amp; BACKGROUND
+          </div>
+          <form action="/api/users/onboarding" method="POST">
+            <div style={{ background: '#151820', borderRadius: '8px', border: '1px solid #3A4055', padding: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#8A909E', marginBottom: '6px' }}>Display Name *</label>
+                  <input name="displayName" defaultValue={['undefined', 'null'].includes(user.displayName?.trim() || '') ? '' : displayDisplayName} className="input" required placeholder="How you'll appear to others" style={{ width: '100%', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', padding: '10px', color: '#F5F0E8', fontSize: '14px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#8A909E', marginBottom: '6px' }}>Username *</label>
+                  <input name="username" defaultValue={['undefined', 'null'].includes(user.username || '') ? '' : user.username} className="input" required placeholder="your_handle" pattern="[a-z0-9_]+" style={{ width: '100%', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', padding: '10px', color: '#F5F0E8', fontSize: '14px' }} />
+                </div>
+              </div>
+              <div style={{ marginTop: '16px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#8A909E', marginBottom: '6px' }}>Bio</label>
+                <textarea name="bio" defaultValue={user.bio || ''} className="input" placeholder="Brief description of your background and areas of expertise" style={{ minHeight: '70px', width: '100%', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', padding: '10px', color: '#F5F0E8', fontSize: '14px' }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#8A909E', marginBottom: '6px' }}>Occupation</label>
+                  <input name="occupation" defaultValue={user.occupation || ''} className="input" placeholder="e.g. Economist" style={{ width: '100%', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', padding: '10px', color: '#F5F0E8', fontSize: '14px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#8A909E', marginBottom: '6px' }}>Employer</label>
+                  <input name="employer" defaultValue={user.employer || ''} className="input" placeholder="e.g. Goldman Sachs" style={{ width: '100%', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', padding: '10px', color: '#F5F0E8', fontSize: '14px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#8A909E', marginBottom: '6px' }}>Education Level</label>
+                  <select name="educationLevel" defaultValue={user.educationLevel || ''} className="input" style={{ width: '100%', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', padding: '10px', color: '#F5F0E8', fontSize: '14px', cursor: 'pointer' }}>
+                    <option value="">Select...</option>
+                    {["High School", "Associate's", "Bachelor's", "Master's", "PhD", "MD", "JD", "Other"].map(e => (
+                      <option key={e} value={e}>{e}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#8A909E', marginBottom: '6px' }}>Field of Study</label>
+                  <input name="educationField" defaultValue={user.educationField || ''} className="input" placeholder="e.g. Finance" style={{ width: '100%', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', padding: '10px', color: '#F5F0E8', fontSize: '14px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#8A909E', marginBottom: '6px' }}>Institution</label>
+                  <input name="institution" defaultValue={user.institution || ''} className="input" placeholder="e.g. University of Chicago" style={{ width: '100%', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', padding: '10px', color: '#F5F0E8', fontSize: '14px' }} />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', color: '#8A909E', marginBottom: '6px' }}>Certifications (comma-separated)</label>
+                  <input name="certifications" defaultValue={(user.certifications || []).join(', ')} className="input" placeholder="CFA, FRM" style={{ width: '100%', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', padding: '10px', color: '#F5F0E8', fontSize: '14px' }} />
+                </div>
+              </div>
+              <div style={{ marginTop: '16px' }}>
+                <label style={{ display: 'block', fontSize: '12px', color: '#8A909E', marginBottom: '6px' }}>Years of Experience</label>
+                <input name="yearsExperience" type="number" min="0" max="60" defaultValue={user.yearsExperience ?? ''} className="input" style={{ width: '120px', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', padding: '10px', color: '#F5F0E8', fontSize: '14px' }} />
+              </div>
+              <button type="submit" style={{ marginTop: '20px', padding: '12px 28px', background: '#C9A84C', border: 'none', borderRadius: '6px', color: '#0D0F14', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>
+                Save Profile
+              </button>
+              <p style={{ fontSize: '12px', color: '#8A909E', marginTop: '10px' }}>
+                This background shows on your public profile and helps others evaluate your predictions. Onboarding asked for this once — you can update it here anytime.
+              </p>
+            </div>
+          </form>
         </div>
 
         {/* Logout / Account Menu */}
