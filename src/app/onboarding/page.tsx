@@ -34,12 +34,12 @@ export default async function OnboardingPage() {
 
               <div>
                 <label className="label">Display Name *</label>
-                <input name="displayName" defaultValue={user.displayName} className="input" required placeholder="How you'll appear to others" />
+                <input name="displayName" defaultValue={['undefined', 'null'].includes(user.displayName?.trim() || '') ? '' : user.displayName} className="input" required placeholder="How you'll appear to others" />
               </div>
 
               <div>
                 <label className="label">Username *</label>
-                <input name="username" defaultValue={user.username} className="input" required placeholder="your_handle" pattern="[a-z0-9_]+" />
+                <input name="username" defaultValue={['undefined', 'null'].includes(user.username || '') ? '' : user.username} className="input" required placeholder="your_handle" pattern="[a-z0-9_]+" />
                 <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--fog)', marginTop: '4px' }}>Lowercase, numbers, underscores only</p>
               </div>
 
