@@ -185,9 +185,9 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
           {isSignedIn && userId ? (
             <>
-              <Link href={`/me`} className="nav-link nav-link-shrinkable hide-mobile" style={{ letterSpacing: '1px' }}>My Profile</Link>
+              <Link href={`/me`} className={"nav-link nav-link-shrinkable hide-mobile" + (isActive('/me', true) ? ' nav-link-active' : '')} style={{ letterSpacing: '1px' }}>My Profile</Link>
               {username ? (
-                <Link href={`/profile/${username}`} className="nav-link nav-link-shrinkable hide-mobile" style={{ letterSpacing: '1px' }}>
+                <Link href={`/profile/${username}`} className={"nav-link nav-link-shrinkable hide-mobile" + (pathname === '/profile/' + username ? ' nav-link-active' : '')} style={{ letterSpacing: '1px' }}>
                   {displayName}
                   {subscriptionTier && subscriptionTier !== 'FREE' && (
                     <span style={{ marginLeft: '6px', color: 'var(--gold)' }}>· {subscriptionTier}</span>
