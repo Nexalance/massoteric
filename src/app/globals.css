@@ -273,6 +273,8 @@ html {
   transition: color 0.15s ease;
 }
 .nav-link:hover { color: var(--cream); }
+.nav-link-active { color: var(--gold); }
+.nav-link-active:hover { color: var(--gold2); }
 .nav-link-admin { color: var(--gold); }
 .nav-link-admin:hover { color: var(--gold2); }
 
