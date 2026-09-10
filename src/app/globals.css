@@ -213,6 +213,8 @@ html {
   background: var(--gold);
   color: var(--ink);
   border-color: var(--gold);
+  /* Gold-on-gold readability: thin 11px mono at weight 500 disappears on gold */
+  font-weight: 700;
 }
 .btn-primary:hover {
   background: var(--gold2);
@@ -236,6 +238,26 @@ html {
   padding: 8px 16px;
 }
 .btn-ghost:hover { color: var(--cream); }
+
+/* Clerk auth widget: the footer strip ("Already have an account? Sign in",
+   "Secured by Clerk") renders on Clerk's default light background and a gold
+   link disappears there — force our dark surface and gold link everywhere. */
+.cl-cardBox,
+.cl-card,
+.cl-footer,
+.cl-footerAction,
+.cl-footerActionLink,
+.cl-developmentModeWarning {
+  background: var(--ink2) !important;
+}
+.cl-footerActionLink {
+  color: var(--gold) !important;
+  font-weight: 700 !important;
+}
+.cl-developmentModeWarning,
+.cl-developmentModeWarningText {
+  color: var(--gold) !important;
+}
 
 /* Top-nav links + search (kept color in CSS so :hover actually fires;
    inline color would win specificity and kill the hover state) */
