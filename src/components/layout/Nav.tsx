@@ -9,12 +9,31 @@ import UserButtonWrapper from '@/components/UserButtonWrapper'
 import SearchBar from '@/components/SearchBar'
 import TopicsMenu from '@/components/layout/TopicsMenu'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Suspense } from 'react'
 import { CATEGORIES } from '@/lib/categories'
 
 export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string }) {
   const { isLoaded, userId, isSignedIn, user: clerkUser } = useAuth()
   const { currentUser, loading: userLoading } = useCurrentUser()
+  const pathname = usePathname()
+
+  // Real active-state: a link is active on its own section only. Home is active
+  // exclusively on "/", so it stops looking permanently highlighted elsewhere.
+  const isActive = (href: string, exact = false) => {
+    const p = pathname.replace(/\/$/, '') || '/'
+    if (exact) return p === href
+    return p === href || p.startsWith(href + '/')
+  }
+
+  // Drawer links: gold when their section is active, cream otherwise
+  const drawerLinkStyle = (href: string, exact = false) => ({
+    padding: '12px 16px',
+    fontSize: '15px',
+    color: isActive(href, exact) ? 'var(--gold)' : 'var(--cream)',
+    textDecoration: 'none',
+    borderBottom: '1px solid var(--border)',
+  })
 
   // Mobile menu state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -133,12 +152,12 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
             <>
               <span className="nav-divider hide-mobile" />
               <div className="hide-mobile nav-links-row" style={{ display: 'flex', gap: '22px', alignItems: 'center' }}>
-                <Link href="/feed" className="nav-link">Feed</Link>
+                <Link href="/feed" className={"nav-link" + (isActive('/feed') ? ' nav-link-active' : '')}>Feed</Link>
                 {/* Competitions + Creator: Phase 2 — hidden until that milestone ships */}
-                <Link href="/leaderboard" className="nav-link nav-link-shrinkable">Leaderboard</Link>
-                <Link href="/about" className="nav-link nav-link-shrinkable">About</Link>
-                <Link href="/" className="nav-link nav-link-shrinkable" style={{ color: 'var(--gold)' }}>Home</Link>
-                <Link href="/market/new" className="nav-link nav-link-shrinkable">Predict</Link>
+                <Link href="/leaderboard" className={"nav-link nav-link-shrinkable" + (isActive('/leaderboard') ? ' nav-link-active' : '')}>Leaderboard</Link>
+                <Link href="/about" className={"nav-link nav-link-shrinkable" + (isActive('/about') ? ' nav-link-active' : '')}>About</Link>
+                <Link href="/" className={"nav-link nav-link-shrinkable" + (isActive('/', true) ? ' nav-link-active' : '')}>Home</Link>
+                <Link href="/market/new" className={"nav-link nav-link-shrinkable" + (isActive('/market/new') ? ' nav-link-active' : '')}>Predict</Link>
                 {currentUser?.isAdmin && (
                   <Link href="/admin" className="nav-link nav-link-admin nav-link-shrinkable">Admin</Link>
                 )}
@@ -149,9 +168,9 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
               {/* Non-signed-in quick links */}
               <span className="nav-divider hide-mobile" />
               <div className="hide-mobile" style={{ display: 'flex', gap: '22px', alignItems: 'center' }}>
-                <Link href="/feed" className="nav-link">Browse Markets</Link>
-                <Link href="/about" className="nav-link">About</Link>
-                <Link href="/" className="nav-link" style={{ color: 'var(--gold)' }}>Home</Link>
+                <Link href="/feed" className={"nav-link" + (isActive('/feed') ? ' nav-link-active' : '')}>Browse Markets</Link>
+                <Link href="/about" className={"nav-link" + (isActive('/about') ? ' nav-link-active' : '')}>About</Link>
+                <Link href="/" className={"nav-link" + (isActive('/', true) ? ' nav-link-active' : '')}>Home</Link>
               </div>
             </>
           )}
@@ -166,9 +185,9 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
           {isSignedIn && userId ? (
             <>
-              <Link href={`/me`} className="nav-link nav-link-shrinkable hide-mobile" style={{ letterSpacing: '1px' }}>My Profile</Link>
+              <Link href={`/me`} className={"nav-link nav-link-shrinkable hide-mobile" + (isActive('/me', true) ? ' nav-link-active' : '')} style={{ letterSpacing: '1px' }}>My Profile</Link>
               {username ? (
-                <Link href={`/profile/${username}`} className="nav-link nav-link-shrinkable hide-mobile" style={{ letterSpacing: '1px' }}>
+                <Link href={`/profile/${username}`} className={"nav-link nav-link-shrinkable hide-mobile" + (pathname === '/profile/' + username ? ' nav-link-active' : '')} style={{ letterSpacing: '1px' }}>
                   {displayName}
                   {subscriptionTier && subscriptionTier !== 'FREE' && (
                     <span style={{ marginLeft: '6px', color: 'var(--gold)' }}>· {subscriptionTier}</span>
@@ -306,50 +325,35 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
                   <Link
                     href="/feed"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      padding: '12px 16px', fontSize: '15px', color: 'var(--cream)',
-                      textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                    }}
+                    style={drawerLinkStyle('/feed')}
                   >
                     Feed
                   </Link>
                   <Link
                     href="/leaderboard"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      padding: '12px 16px', fontSize: '15px', color: 'var(--cream)',
-                      textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                    }}
+                    style={drawerLinkStyle('/leaderboard')}
                   >
                     Leaderboard
                   </Link>
                   <Link
                     href="/about"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      padding: '12px 16px', fontSize: '15px', color: 'var(--cream)',
-                      textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                    }}
+                    style={drawerLinkStyle('/about')}
                   >
                     About
                   </Link>
                   <Link
                     href="/"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      padding: '12px 16px', fontSize: '15px', color: 'var(--gold)',
-                      textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                    }}
+                    style={drawerLinkStyle('/', true)}
                   >
                     Home
                   </Link>
                   <Link
                     href="/market/new"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      padding: '12px 16px', fontSize: '15px', color: 'var(--cream)',
-                      textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                    }}
+                    style={drawerLinkStyle('/market/new')}
                   >
                     Predict
                   </Link>
@@ -368,10 +372,7 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
                   <Link
                     href={`/me`}
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      padding: '12px 16px', fontSize: '15px', color: 'var(--cream)',
-                      textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                    }}
+                    style={drawerLinkStyle('/me', true)}
                   >
                     My Profile
                   </Link>
@@ -384,30 +385,21 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
                   <Link
                     href="/"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      padding: '12px 16px', fontSize: '15px', color: 'var(--gold)',
-                      textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                    }}
+                    style={drawerLinkStyle('/', true)}
                   >
                     Home
                   </Link>
                   <Link
                     href="/feed"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      padding: '12px 16px', fontSize: '15px', color: 'var(--cream)',
-                      textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                    }}
+                    style={drawerLinkStyle('/feed')}
                   >
                     Browse Markets
                   </Link>
                   <Link
                     href="/about"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      padding: '12px 16px', fontSize: '15px', color: 'var(--cream)',
-                      textDecoration: 'none', borderBottom: '1px solid var(--border)',
-                    }}
+                    style={drawerLinkStyle('/about')}
                   >
                     About
                   </Link>
