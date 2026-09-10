@@ -118,17 +118,29 @@ async function syncClerkUserToDb(clerkId: string, clerkUser?: any) {
                           (userIsAdmin && existing.subscriptionTier !== 'PRO')
 
       if ((needsUpdate || junkUsername || junkDisplayName) && clerkUser) {
+        // A junk username ("undefined"/"null") can be replaced safely too: if the
+        // Clerk-derived name is taken, suffix it so the update never fails.
+        let repairUsername: string | undefined
+        if (junkUsername) {
+          const base = clerkUsername || `user_${Date.now().toString(36)}`
+          repairUsername = base
+          for (let i = 0; i < 5; i++) {
+            const taken = await prisma.user.findUnique({ where: { username: repairUsername } })
+            if (!taken) break
+            repairUsername = `${base}${Math.random().toString(36).slice(2, 6)}`
+          }
+        }
+
         existing = await prisma.user.update({
           where: { clerkId },
           data: {
             displayName: junkDisplayName ? clerkDisplayName : (existing.displayName || clerkDisplayName),
+            ...(repairUsername ? { username: repairUsername } : {}),
             email: existing.email || clerkEmail,
             // Admin users always have PRO tier
             ...(userIsAdmin && existing.subscriptionTier !== 'PRO' ? { subscriptionTier: 'PRO' } : {}),
           }
         })
-        // Only the display name can be safely repaired here; a username change
-        // must stay unique and is user-visible, so leave it to onboarding/edit.
         console.log('✅ Updated user from Clerk:', existing.username, userIsAdmin ? '(Admin → PRO)' : '')
       }
 
