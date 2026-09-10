@@ -186,8 +186,9 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
             </>
           ) : (
             <div style={{ display: 'flex', gap: '8px' }}>
-              <Link href="/sign-in" className="btn btn-ghost" style={{ fontSize: '11px' }}>Sign In</Link>
-              <Link href="/sign-up" className="btn btn-primary" style={{ fontSize: '11px' }}>Join Free</Link>
+              {/* Mobile: both CTAs live in the drawer — top-bar links collide with the hamburger */}
+              <Link href="/sign-in" className="btn btn-ghost hide-mobile" style={{ fontSize: '11px' }}>Sign In</Link>
+              <Link href="/sign-up" className="btn btn-primary hide-mobile" style={{ fontSize: '11px' }}>Join Free</Link>
             </div>
           )}
         </div>

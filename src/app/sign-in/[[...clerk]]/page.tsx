@@ -88,7 +88,7 @@ export default function SignInCatchAllPage() {
               formButtonPrimary: {
                 background: 'var(--gold)',
                 color: 'var(--ink)',
-                fontWeight: '600',
+                fontWeight: '700',
               },
               formFieldLabel: {
                 color: 'var(--mist)',
