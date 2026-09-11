@@ -6,7 +6,7 @@ import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { getUserAccuracySummary } from '@/lib/scoring'
 import { isAdmin } from '@/lib/admin'
-import { UserButton } from '@clerk/nextjs'
+import UserButtonWrapper from '@/components/UserButtonWrapper'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import SubscribeButton from './SubscribeButton'
@@ -114,19 +114,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                     </Link>
                   )}
                   {isOwnProfile && (
-                    <>
-                      <UserButton
-                        afterSignOutUrl="/"
-                        appearance={{
-                          elements: {
-                            userButtonTrigger: {
-                              fontWeight: '500',
-                              fontSize: '14px',
-                            },
-                          },
-                        }}
-                      />
-                    </>
+                    <UserButtonWrapper afterSignOutUrl="/" />
                   )}
                   {!isOwnProfile && (
                     <SubscribeButton
@@ -148,6 +136,46 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   {profileUser.bio}
                 </p>
               )}
+
+              {/* Background — lives with the bio so all profile info is in one place */}
+              {(() => {
+                const bgRows = [
+                  { label: 'Occupation', value: profileUser.occupation },
+                  { label: 'Employer', value: profileUser.employer },
+                  { label: 'Education', value: [profileUser.educationLevel, profileUser.educationField].filter(Boolean).join(', ') || null },
+                  { label: 'Institution', value: profileUser.institution },
+                  { label: 'Experience', value: profileUser.yearsExperience ? `${profileUser.yearsExperience} years` : null },
+                ].filter(row => row.value)
+                if (bgRows.length === 0 && !profileUser.websiteUrl && !profileUser.linkedinUrl) return null
+                return (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 28px', margin: '4px 0 12px', alignItems: 'flex-end' }}>
+                    {bgRows.map(({ label, value }) => (
+                      <div key={label} style={{ minWidth: '110px' }}>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--mist)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '2px' }}>
+                          {label}
+                        </div>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--cream)' }}>{value}</div>
+                      </div>
+                    ))}
+                    {(profileUser.websiteUrl || profileUser.linkedinUrl) && (
+                      <div style={{ display: 'flex', gap: '14px' }}>
+                        {profileUser.linkedinUrl && (
+                          <a href={profileUser.linkedinUrl} target="_blank" rel="noopener noreferrer"
+                            style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--gold)', letterSpacing: '1px', fontWeight: 600 }}>
+                            LINKEDIN ↗
+                          </a>
+                        )}
+                        {profileUser.websiteUrl && (
+                          <a href={profileUser.websiteUrl} target="_blank" rel="noopener noreferrer"
+                            style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--gold)', letterSpacing: '1px', fontWeight: 600 }}>
+                            WEBSITE ↗
+                          </a>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
 
               {/* Certifications / tags */}
               {profileUser.certifications.length > 0 && (
@@ -175,7 +203,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '24px', alignItems: 'start' }}>
+        <div className={"profile-layout" + (accuracySummary.byCategory.length === 0 ? ' profile-layout-single' : '')} style={{ display: 'grid', gridTemplateColumns: accuracySummary.byCategory.length === 0 ? '1fr' : '1fr 300px', gap: '24px', alignItems: 'start' }}>
 
           {/* Predictions */}
           <div>
@@ -260,57 +288,30 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             </div>
           </div>
 
-          {/* Background sidebar */}
-          <aside>
-            <div className="section-label">Background</div>
-            <div className="card">
-              {[
-                { label: 'Occupation', value: profileUser.occupation },
-                { label: 'Employer', value: profileUser.employer },
-                { label: 'Education', value: [profileUser.educationLevel, profileUser.educationField].filter(Boolean).join(', ') || null },
-                { label: 'Institution', value: profileUser.institution },
-                { label: 'Experience', value: profileUser.yearsExperience ? `${profileUser.yearsExperience} years` : null },
-              ].filter(row => row.value).map(({ label, value }) => (
-                <div key={label} style={{ padding: '10px 0', borderBottom: '1px solid var(--border)' }}>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--mist)', letterSpacing: '1px', marginBottom: '4px' }}>
-                    {label.toUpperCase()}
-                  </div>
-                  <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--cream)' }}>{value}</div>
-                </div>
-              ))}
-              {profileUser.websiteUrl && (
-                <a href={profileUser.websiteUrl} target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'block', marginTop: '12px', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--gold)', letterSpacing: '1px' }}>
-                  WEBSITE ↗
-                </a>
-              )}
-            </div>
-
-            {/* Accuracy by category */}
-            {accuracySummary.byCategory.length > 0 && (
-              <>
-                <div className="section-label" style={{ marginTop: '20px' }}>Accuracy by Topic</div>
-                <div className="card">
-                  {accuracySummary.byCategory.map(score => (
-                    <div key={score.category} style={{ marginBottom: '14px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                        <span style={{ fontSize: '13px', color: 'var(--cream)' }}>{score.category}</span>
-                        <span style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 300, color: (score.accuracyPct || 0) > 75 ? 'var(--signal)' : 'var(--gold)' }}>
-                          {score.accuracyPct}%
-                        </span>
-                      </div>
-                      <div className="accuracy-bar">
-                        <div className="accuracy-bar-fill" style={{ width: `${score.accuracyPct}%` }} />
-                      </div>
-                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--fog)', marginTop: '3px' }}>
-                        {score.scoredPredictions} scored predictions
-                      </div>
+          {/* Accuracy sidebar — background info moved into the header card */}
+          {accuracySummary.byCategory.length > 0 && (
+            <aside>
+              <div className="section-label">Accuracy by Topic</div>
+              <div className="card">
+                {accuracySummary.byCategory.map(score => (
+                  <div key={score.category} style={{ marginBottom: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '13px', color: 'var(--cream)' }}>{score.category}</span>
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 300, color: (score.accuracyPct || 0) > 75 ? 'var(--signal)' : 'var(--gold)' }}>
+                        {score.accuracyPct}%
+                      </span>
                     </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </aside>
+                    <div className="accuracy-bar">
+                      <div className="accuracy-bar-fill" style={{ width: `${score.accuracyPct}%` }} />
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--fog)', marginTop: '3px' }}>
+                      {score.scoredPredictions} scored predictions
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          )}
         </div>
       </div>
     </main>

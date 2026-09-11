@@ -19,7 +19,7 @@ export default function MockSignUpPage() {
           <h1 style={{ fontSize: '36px', fontWeight: 'bold', letterSpacing: '0.2em', color: '#F5F0E8', lineHeight: '1.2' }}>
             MASS<span style={{ color: '#C9A84C' }}>OTERIC</span>
           </h1>
-          <p style={{ color: '#8A909E', marginTop: '8px', fontSize: '14px', letterSpacing: '0.05em' }}>
+          <p style={{ color: '#B8BCC6', marginTop: '8px', fontSize: '14px', letterSpacing: '0.05em' }}>
             The Prediction Intelligence Platform
           </p>
         </div>
@@ -30,7 +30,7 @@ export default function MockSignUpPage() {
             <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#F5F0E8', marginBottom: '8px' }}>
               Create Account
             </h2>
-            <p style={{ color: '#8A909E', fontSize: '14px', marginBottom: '24px' }}>
+            <p style={{ color: '#B8BCC6', fontSize: '14px', marginBottom: '24px' }}>
               Start tracking your predictions today
             </p>
 
@@ -66,7 +66,7 @@ export default function MockSignUpPage() {
 
             {/* Dev Notice */}
             <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #3A4055' }}>
-              <p style={{ color: '#8A909E', fontSize: '12px', textAlign: 'center' }}>
+              <p style={{ color: '#B8BCC6', fontSize: '12px', textAlign: 'center' }}>
                 ⚡ Development mode — Skips verification
               </p>
             </div>
@@ -74,7 +74,7 @@ export default function MockSignUpPage() {
 
           {/* Sign In Link */}
           <div style={{ padding: '16px 32px', background: '#1E2230', borderTop: '1px solid #3A4055' }}>
-            <p style={{ textAlign: 'center', color: '#8A909E', fontSize: '14px' }}>
+            <p style={{ textAlign: 'center', color: '#B8BCC6', fontSize: '14px' }}>
               Already have an account?{' '}
               <a href="/sign-in" style={{ color: '#C9A84C', fontWeight: '500', textDecoration: 'none' }}>
                 Sign in
@@ -92,10 +92,10 @@ export default function MockSignUpPage() {
           {/* FREE */}
           <div style={{ padding: '12px', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', marginBottom: '10px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#8A909E', letterSpacing: '1px' }}>Free</span>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#B8BCC6', letterSpacing: '1px' }}>Free</span>
               <span style={{ fontSize: '18px', fontWeight: 300, color: '#F5F0E8' }}>$0/mo</span>
             </div>
-            <p style={{ fontSize: '11px', color: '#8A909E', margin: 0 }}>Make predictions, track accuracy, browse markets</p>
+            <p style={{ fontSize: '11px', color: '#B8BCC6', margin: 0 }}>Make predictions, track accuracy, browse markets</p>
           </div>
 
           {/* STANDARD */}
@@ -110,7 +110,7 @@ export default function MockSignUpPage() {
           {/* PRO */}
           <div style={{ padding: '12px', background: '#0D0F14', border: '1px solid #3A4055', borderRadius: '4px', marginBottom: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#8A909E', letterSpacing: '1px' }}>Pro</span>
+              <span style={{ fontSize: '11px', textTransform: 'uppercase', color: '#B8BCC6', letterSpacing: '1px' }}>Pro</span>
               <span style={{ fontSize: '18px', fontWeight: 300, color: '#F5F0E8' }}>$29/mo</span>
             </div>
             <p style={{ fontSize: '11px', color: '#F5F0E8', margin: 0 }}><strong>Everything in Standard</strong> + expert Q&A, early access</p>
@@ -121,14 +121,14 @@ export default function MockSignUpPage() {
             <p style={{ fontSize: '10px', color: '#C9A84C', letterSpacing: '1px', textTransform: 'uppercase', margin: '0 0 6px 0' }}>
               Creator Subscriptions
             </p>
-            <p style={{ fontSize: '11px', color: '#8A909E', margin: '0 0 4px 0' }}>Proven forecasters can offer subscriptions and earn income</p>
+            <p style={{ fontSize: '11px', color: '#B8BCC6', margin: '0 0 4px 0' }}>Proven forecasters can offer subscriptions and earn income</p>
             <p style={{ fontSize: '11px', color: '#C9A84C', margin: 0, fontWeight: 500 }}>Set your own price. Keep 80% of revenue.</p>
           </div>
         </div>
 
         {/* Footer */}
         <div style={{ textAlign: 'center', marginTop: '32px' }}>
-          <p style={{ color: '#8A909E', fontSize: '12px' }}>
+          <p style={{ color: '#B8BCC6', fontSize: '12px' }}>
             Powered by Clerk Authentication
           </p>
         </div>
