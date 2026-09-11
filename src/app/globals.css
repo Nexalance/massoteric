@@ -8,7 +8,7 @@
   --gold:       #C9A84C;
   --gold2:      #E8C96A;
   --cream:      #F5F0E8;
-  --mist:       #B8BCC6; /* Improved from #8A909E for better contrast */
+  --mist:       #B8BCC6; /* Improved from #B8BCC6 for better contrast */
   --fog:        #5A6075; /* Improved from #3A4055 for better contrast */
   --signal:     #4FC3A1;
   --danger:     #E05C5C;
@@ -263,7 +263,7 @@ html {
    inline color would win specificity and kill the hover state) */
 .nav-link {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: var(--mist);
@@ -271,6 +271,27 @@ html {
   white-space: nowrap;
 			min-width: 50px;
   transition: color 0.15s ease;
+}
+
+/* Client: links should be obvious — underline plain inline text links
+   (buttons/cards/branded links carry classes and are unaffected) */
+main p a:not([class]),
+main li a:not([class]),
+main td a:not([class]),
+main span a:not([class]) {
+  color: var(--gold);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Profile page: collapse to a single column on narrow screens so the
+   sidebar no longer gets squeezed off-screen (client: "empty space on the
+   right seems odd") */
+@media (max-width: 900px) {
+  .profile-layout {
+    grid-template-columns: 1fr !important;
+  }
 }
 .nav-link:hover { color: var(--cream); }
 .nav-link-active { color: var(--gold); }

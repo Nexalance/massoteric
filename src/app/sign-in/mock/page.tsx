@@ -25,7 +25,7 @@ export default function MockSignInPage() {
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0D0F14' }}>
-        <div style={{ color: '#8A909E' }}>Loading...</div>
+        <div style={{ color: '#B8BCC6' }}>Loading...</div>
       </div>
     )
   }
@@ -38,7 +38,7 @@ export default function MockSignInPage() {
           <h1 style={{ fontSize: '36px', fontWeight: 'bold', letterSpacing: '0.2em', color: '#F5F0E8', lineHeight: '1.2' }}>
             MASS<span style={{ color: '#C9A84C' }}>OTERIC</span>
           </h1>
-          <p style={{ color: '#8A909E', marginTop: '8px', fontSize: '14px', letterSpacing: '0.05em' }}>
+          <p style={{ color: '#B8BCC6', marginTop: '8px', fontSize: '14px', letterSpacing: '0.05em' }}>
             The Prediction Intelligence Platform
           </p>
         </div>
@@ -49,7 +49,7 @@ export default function MockSignInPage() {
             <h2 style={{ fontSize: '20px', fontWeight: '600', color: '#F5F0E8', marginBottom: '8px' }}>
               Sign In
             </h2>
-            <p style={{ color: '#8A909E', fontSize: '14px', marginBottom: '24px' }}>
+            <p style={{ color: '#B8BCC6', fontSize: '14px', marginBottom: '24px' }}>
               Mock authentication for local development
             </p>
 
@@ -61,7 +61,7 @@ export default function MockSignInPage() {
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ color: '#F5F0E8', fontWeight: '500', marginBottom: '4px' }}>Mock User</p>
-                  <p style={{ color: '#8A909E', fontSize: '14px' }}>mock@massoteric.dev</p>
+                  <p style={{ color: '#B8BCC6', fontSize: '14px' }}>mock@massoteric.dev</p>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <p style={{ color: '#C9A84C', fontSize: '12px', fontWeight: '600', padding: '4px 8px', background: 'rgba(201, 168, 76, 0.1)', borderRadius: '4px', display: 'inline-block' }}>
@@ -83,7 +83,7 @@ export default function MockSignInPage() {
 
             {/* Dev Notice */}
             <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #3A4055' }}>
-              <p style={{ color: '#8A909E', fontSize: '12px', textAlign: 'center' }}>
+              <p style={{ color: '#B8BCC6', fontSize: '12px', textAlign: 'center' }}>
                 ⚡ Development mode — No real authentication required
               </p>
             </div>
@@ -91,7 +91,7 @@ export default function MockSignInPage() {
 
           {/* Sign Up Link */}
           <div style={{ padding: '16px 32px', background: '#1E2230', borderTop: '1px solid #3A4055' }}>
-            <p style={{ textAlign: 'center', color: '#8A909E', fontSize: '14px' }}>
+            <p style={{ textAlign: 'center', color: '#B8BCC6', fontSize: '14px' }}>
               Don&apos;t have an account?{' '}
               <a href="/sign-up" style={{ color: '#C9A84C', fontWeight: '500', textDecoration: 'none' }}>
                 Sign up
@@ -102,7 +102,7 @@ export default function MockSignInPage() {
 
         {/* Footer */}
         <div style={{ textAlign: 'center', marginTop: '32px' }}>
-          <p style={{ color: '#8A909E', fontSize: '12px' }}>
+          <p style={{ color: '#B8BCC6', fontSize: '12px' }}>
             Powered by Clerk Authentication
           </p>
         </div>
