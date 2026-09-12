@@ -710,6 +710,51 @@ table tbody tr:hover {
   }
 }
 
+/* ── Admin suite on mobile ──
+   The admin pages use desktop flex/grid inline styles: the Dashboard title
+   collided with its nav tabs and both 2-col sections squeezed off-screen.
+   These rules reflow them (smaller fonts where space is tight). */
+@media (max-width: 768px) {
+  .admin-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .admin-header h1 {
+    font-size: 26px !important;
+  }
+  .admin-tabs-row {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .admin-tabs-row .btn {
+    min-height: 38px !important;
+    min-width: 0 !important;
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+  .admin-two-col {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+  }
+  .admin-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .admin-stats-grid .card {
+    padding: 14px 8px !important;
+  }
+  .admin-stats-grid .card > div:first-child {
+    font-size: 24px !important;
+  }
+  .admin-actions {
+    width: 100%;
+  }
+  .admin-actions .btn {
+    flex: 1 1 auto;
+    min-width: 0 !important;
+  }
+}
+
 /* ── Market detail grid (moved from inline <style> in market/[id]/page.tsx — fixes hydration mismatch) ── */
 .market-grid {
   display: grid;

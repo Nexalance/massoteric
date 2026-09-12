@@ -34,12 +34,12 @@ export default async function AdminPage() {
   return (
     <main>
       <div className="page-container" style={{ paddingTop: '40px', paddingBottom: '64px' }}>
-        <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div className="admin-header" style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
           <div>
             <div className="section-label">Admin</div>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '40px', fontWeight: 300, color: 'var(--cream)' }}>Dashboard</h1>
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className="admin-tabs-row" style={{ display: 'flex', gap: '8px' }}>
             <Link href="/admin/topics" className="btn btn-secondary">Topic Queue ({pendingTopics})</Link>
             <Link href="/admin/markets" className="btn btn-secondary">Resolve Markets ({unresolvedMarkets})</Link>
             <Link href="/admin/markets/resolved" className="btn btn-secondary">Resolved ({resolvedMarkets})</Link>
@@ -66,7 +66,7 @@ export default async function AdminPage() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <div className="admin-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           {/* Feature Flags */}
           <div>
             <div className="section-label">Feature Access Controls</div>

@@ -39,7 +39,7 @@ export default async function AdminMarketsPage() {
   return (
     <main>
       <div className="page-container" style={{ paddingTop: '40px', paddingBottom: '64px' }}>
-        <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="admin-header" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link href="/admin" style={{ color: 'var(--mist)', fontSize: '14px' }}>
             ← Back to Dashboard
           </Link>

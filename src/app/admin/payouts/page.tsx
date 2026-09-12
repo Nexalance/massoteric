@@ -49,7 +49,7 @@ export default async function AdminPayoutsPage() {
   return (
     <main>
       <div className="page-container" style={{ paddingTop: '40px', paddingBottom: '64px' }}>
-        <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="admin-header" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px' }}>
           <Link href="/admin" style={{ color: 'var(--mist)', fontSize: '14px' }}>
             ← Back to Dashboard
           </Link>
@@ -65,7 +65,7 @@ export default async function AdminPayoutsPage() {
         </div>
 
         {/* Summary Stats */}
-        <div style={{
+        <div className="admin-stats-grid" style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: '4px',
