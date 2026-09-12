@@ -4,7 +4,7 @@
 
 import { MarketCategory } from '@prisma/client'
 
-export type SortValue = 'trending' | 'new' | 'breaking'
+export type SortValue = 'trending' | 'new' | 'breaking' | 'closing'
 
 export interface CategoryDef {
   value: MarketCategory | 'ALL'
@@ -37,4 +37,5 @@ export const SORTS: SortDef[] = [
   { value: 'trending', label: 'Trending' },
   { value: 'new', label: 'New' },
   { value: 'breaking', label: 'Breaking' },
+  { value: 'closing', label: 'Closing Soon' },
 ]

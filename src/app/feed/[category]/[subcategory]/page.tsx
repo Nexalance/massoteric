@@ -170,9 +170,17 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
     ],
   }
 
+  // "Closing Soon" surfaces markets the user can still act on: skip markets inside
+  // the 48h prediction-lock window (they close too soon to accept predictions).
+  if (sort === 'closing') {
+    where.AND.push({ closesAt: { gte: new Date(now.getTime() + 48 * 60 * 60 * 1000) } })
+  }
+
   const orderBy =
     sort === 'new'
       ? [{ createdAt: 'desc' as const }]
+      : sort === 'closing'
+      ? [{ closesAt: 'asc' as const }, { createdAt: 'desc' as const }]
       : sort === 'breaking'
       ? [{ featured: 'desc' as const }, { createdAt: 'desc' as const }]
       : [{ featured: 'desc' as const }, { viewCount: 'desc' as const }, { createdAt: 'desc' as const }]

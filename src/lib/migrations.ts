@@ -147,6 +147,94 @@ export async function ensureMigrated() {
       console.log('[migrate] applied: add Market.subcategoryId foreign key')
     }
 
+    // --- Seed: short-horizon binary test topics (client scoring demo) -------
+    // The client onboarding needs topics that resolve within the first week so
+    // the full predict → resolve → Brier → leaderboard loop is visible. There
+    // is no direct prod DB access, so the topics ship as code and are inserted
+    // on the first runtime run after deploy. Idempotent by exact title; topics
+    // whose prediction window is already inside the 48h lock (or past) are
+    // skipped — a seeded topic must still be predictable to be useful.
+    const TEST_TOPICS = [
+      {
+        title: 'Will the Fed cut interest rates at the September 2026 FOMC meeting?',
+        description: 'The Federal Open Market Committee meets on September 15-16, 2026 for its scheduled policy meeting. This topic asks whether the committee will announce a cut to the federal funds target range at that meeting. This is a short-horizon binary test topic for community forecasting practice.',
+        resolutionCriteria: 'Resolves YES if the FOMC announces a lower federal funds target range in its statement on September 16, 2026, according to the official Federal Reserve press release (federalreserve.gov). Resolves NO if rates are held steady or raised.',
+        category: 'ECONOMY' as const,
+        closesAt: '2026-09-16T21:00:00Z',
+        resolvesAt: '2026-09-16T22:00:00Z',
+      },
+      {
+        title: 'Will it rain in New York City on September 16, 2026?',
+        description: 'Short-horizon binary test topic. Asks whether measurable rain falls in Central Park, New York City on September 16, 2026.',
+        resolutionCriteria: 'Resolves YES if the National Weather Service records 0.01 inch or more of precipitation at Central Park, NYC on September 16, 2026. Otherwise NO.',
+        category: 'WEATHER' as const,
+        closesAt: '2026-09-16T04:00:00Z',
+        resolvesAt: '2026-09-17T12:00:00Z',
+      },
+      {
+        title: 'Will Bitcoin trade above $90,000 at any point before September 19, 2026?',
+        description: 'Short-horizon binary test topic. Asks whether Bitcoin (BTC/USD) touches $90,000 or higher on any major exchange at any time before September 19, 2026.',
+        resolutionCriteria: 'Resolves YES if BTC/USD trades at or above $90,000 on Coinbase or another major exchange before September 19, 2026 23:59 UTC. Otherwise NO.',
+        category: 'CRYPTO' as const,
+        closesAt: '2026-09-18T23:59:00Z',
+        resolvesAt: '2026-09-18T23:59:00Z',
+      },
+      {
+        title: 'Will gold (XAU/USD) close above $4,000 per ounce on September 18, 2026?',
+        description: 'Short-horizon binary test topic. Asks whether spot gold settles above the $4,000/oz level at the end of the New York trading day on September 18, 2026.',
+        resolutionCriteria: 'Resolves YES if XAU/USD spot price is above $4,000.00 at the September 18, 2026 New York market close (5pm ET), per Bloomberg or Reuters pricing. Otherwise NO.',
+        category: 'FINANCE' as const,
+        closesAt: '2026-09-18T21:00:00Z',
+        resolvesAt: '2026-09-18T22:00:00Z',
+      },
+      {
+        title: 'Will a SpaceX Falcon 9 rocket launch before September 19, 2026?',
+        description: 'Short-horizon binary test topic. Asks whether SpaceX conducts at least one Falcon 9 orbital rocket launch before September 19, 2026.',
+        resolutionCriteria: 'Resolves YES if a SpaceX Falcon 9 launch lifts off at any time before September 19, 2026 23:59 UTC, confirmed by SpaceX or major spaceflight news coverage. Otherwise NO.',
+        category: 'TECH' as const,
+        closesAt: '2026-09-18T23:00:00Z',
+        resolvesAt: '2026-09-18T23:59:00Z',
+      },
+      {
+        title: 'Will Arsenal win a Premier League match played between September 14 and September 19, 2026?',
+        description: 'Short-horizon binary test topic. Asks whether Arsenal FC wins any Premier League fixture played in the week September 14-19, 2026.',
+        resolutionCriteria: 'Resolves YES if Arsenal wins (in regulation or extra time) any Premier League match played between September 14 and September 19, 2026 inclusive. Draws or losses count as NO.',
+        category: 'SPORTS' as const,
+        closesAt: '2026-09-19T11:00:00Z',
+        resolvesAt: '2026-09-19T12:00:00Z',
+      },
+    ]
+
+    for (const topic of TEST_TOPICS) {
+      try {
+        const closesAt = new Date(topic.closesAt)
+        if (closesAt.getTime() < Date.now() + 49 * 60 * 60 * 1000) continue // too close to accept predictions — skip
+        const exists = await prisma.market.findFirst({
+          where: { source: 'USER_CREATED', title: topic.title },
+          select: { id: true },
+        })
+        if (exists) continue
+        await prisma.market.create({
+          data: {
+            source: 'USER_CREATED',
+            topicStatus: 'APPROVED',
+            status: 'OPEN',
+            title: topic.title,
+            description: topic.description,
+            resolutionCriteria: topic.resolutionCriteria,
+            category: topic.category,
+            closesAt,
+            resolvesAt: new Date(topic.resolvesAt),
+            tags: ['test'],
+          },
+        })
+        console.log('[migrate] seeded test topic:', topic.title)
+      } catch (err) {
+        // One bad topic must never block the migration flag — log and continue.
+        console.error('[migrate] seeding test topic failed:', topic.title, err)
+      }
+    }
+
     migrated = true
   } catch (err) {
     // Never break the page render or the sync cron. Retry on the next call.
