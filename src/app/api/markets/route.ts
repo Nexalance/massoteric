@@ -96,10 +96,12 @@ export async function GET(req: NextRequest) {
 
 const CreateTopicSchema = z.object({
   title: z.string().min(10).max(300),
-  description: z.string().min(20).max(2000),
+  // Description is optional context — store null when absent
+  description: z.string().max(2000).optional(),
   category: z.nativeEnum(MarketCategory),
   resolutionCriteria: z.string().min(20).max(1000),
-  closesAt: z.string().nullable().optional().transform(val => {
+  // Closing date is required — future-date check happens after parse
+  closesAt: z.string().transform(val => {
     // Handle empty, null, undefined
     if (!val || val === '' || val === null) return undefined
 
@@ -169,6 +171,16 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json()
+
+  // Clear, specific messages for the required closing date (before generic
+  // zod errors) so users see exactly why the submit was blocked.
+  if (!body?.closesAt || typeof body.closesAt !== 'string' || body.closesAt.trim() === '') {
+    return NextResponse.json({
+      error: 'Missing closing date',
+      message: 'A closing date is required. Pick a future date so the topic can score and appear in closing-soon.',
+    }, { status: 400 })
+  }
+
   const parsed = CreateTopicSchema.safeParse(body)
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
@@ -176,15 +188,33 @@ export async function POST(req: NextRequest) {
 
   const { title, description, category, resolutionCriteria, closesAt, resolvesAt, tags } = parsed.data
 
+  const closeDate = closesAt ? new Date(closesAt) : null
+  if (!closeDate || isNaN(closeDate.getTime()) || closeDate.getTime() <= Date.now()) {
+    return NextResponse.json({
+      error: 'Invalid closing date',
+      message: 'The closing date must be in the future.',
+    }, { status: 400 })
+  }
+
+  if (resolvesAt) {
+    const resolveDate = new Date(resolvesAt)
+    if (isNaN(resolveDate.getTime()) || resolveDate.getTime() <= Date.now()) {
+      return NextResponse.json({
+        error: 'Invalid resolution date',
+        message: 'If provided, the resolution date must be in the future.',
+      }, { status: 400 })
+    }
+  }
+
   const topic = await prisma.market.create({
     data: {
       source: MarketSource.USER_CREATED,
       category,
       title,
-      description,
+      description: description ?? null,
       resolutionCriteria,
-      closesAt: closesAt ? new Date(closesAt) : null,
-      resolvesAt: resolvesAt ? new Date(resolvesAt) : (closesAt ? new Date(closesAt) : null), // Default to closesAt if resolvesAt not provided
+      closesAt: closeDate,
+      resolvesAt: resolvesAt ? new Date(resolvesAt) : closeDate, // Default to closesAt if resolvesAt not provided
       tags,
       status: MarketStatus.OPEN,
       topicStatus: 'PENDING',

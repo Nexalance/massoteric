@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { TopicStatus } from '@prisma/client'
 import Link from 'next/link'
-import { formatDistanceToNow } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 import { TopicActions } from '@/components/admin/TopicActions'
 
 export const metadata = { title: 'Topic Review Queue' }
@@ -82,6 +82,20 @@ export default async function AdminTopicsPage() {
                     <div style={{ background: 'var(--ink3)', padding: '12px', borderRadius: '4px', fontSize: '13px' }}>
                       <strong style={{ color: 'var(--gold)' }}>Resolution Criteria:</strong>
                       <p style={{ color: 'var(--cream)', marginTop: '4px' }}>{topic.resolutionCriteria}</p>
+                    </div>
+                    <div style={{ marginTop: '12px', display: 'flex', gap: '24px', flexWrap: 'wrap', fontSize: '13px' }}>
+                      <div>
+                        <span style={{ color: 'var(--gold)', fontWeight: 600 }}>Closes: </span>
+                        <span style={{ color: topic.closesAt ? 'var(--cream)' : 'var(--danger)' }}>
+                          {topic.closesAt ? format(new Date(topic.closesAt), 'MMM d, yyyy — HH:mm') : 'No date set'}
+                        </span>
+                      </div>
+                      <div>
+                        <span style={{ color: 'var(--gold)', fontWeight: 600 }}>Resolves: </span>
+                        <span style={{ color: 'var(--cream)' }}>
+                          {topic.resolvesAt ? format(new Date(topic.resolvesAt), 'MMM d, yyyy — HH:mm') : 'Not set'}
+                        </span>
+                      </div>
                     </div>
                     {topic.tags && topic.tags.length > 0 && (
                       <div style={{ marginTop: '12px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>

@@ -32,6 +32,37 @@ const selectStyle = {
   cursor: 'pointer',
 }
 
+const labelStyle = {
+  display: 'block',
+  fontSize: '12px',
+  fontWeight: 600,
+  marginBottom: '12px',
+  textTransform: 'uppercase',
+  letterSpacing: '1px',
+  color: 'var(--gold)',
+  fontFamily: 'var(--font-mono)',
+}
+
+const guidanceStyle = {
+  fontSize: '13px',
+  color: 'var(--mist)',
+  marginTop: '6px',
+  lineHeight: '1.5',
+}
+
+// datetime-local `min` needs a local-time "YYYY-MM-DDTHH:mm" string
+function localDatetimeMin(): string {
+  const d = new Date()
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function isFutureDateValue(value: string): boolean {
+  if (!value) return false
+  const t = new Date(value).getTime()
+  return !isNaN(t) && t > Date.now()
+}
+
 export default function NewMarketPage() {
   const router = useRouter()
   const { currentUser, loading } = useCurrentUser()
@@ -62,14 +93,20 @@ export default function NewMarketPage() {
     tagInput: '',
   })
 
-  // Validation state
+  // Validation state — description is optional per spec, so it is not gated
   const [fieldValid, setFieldValid] = useState({
     title: false,
-    description: false,
     resolutionCriteria: false,
   })
+  // closesAt is required and must be in the future; resolvesAt is optional
+  // but if the user fills it, it must also be in the future (a past
+  // resolvesAt would hide the market from the feed's open-markets filter).
+  const [dateValid, setDateValid] = useState({
+    closesAt: false,
+    resolvesAt: true,
+  })
 
-  const isFormValid = fieldValid.title && fieldValid.description && fieldValid.resolutionCriteria
+  const isFormValid = fieldValid.title && fieldValid.resolutionCriteria && dateValid.closesAt && dateValid.resolvesAt
 
   // Show loading state while fetching user OR the feature-access check
   // This prevents the flash of "locked" state before the user's actual tier loads
@@ -141,10 +178,12 @@ export default function NewMarketPage() {
     // Update validation state
     if (name === 'title') {
       setFieldValid(prev => ({ ...prev, title: value.length >= 10 }))
-    } else if (name === 'description') {
-      setFieldValid(prev => ({ ...prev, description: value.length >= 20 }))
     } else if (name === 'resolutionCriteria') {
       setFieldValid(prev => ({ ...prev, resolutionCriteria: value.length >= 20 }))
+    } else if (name === 'closesAt') {
+      setDateValid(prev => ({ ...prev, closesAt: isFutureDateValue(value) }))
+    } else if (name === 'resolvesAt') {
+      setDateValid(prev => ({ ...prev, resolvesAt: value === '' || isFutureDateValue(value) }))
     }
   }
 
@@ -156,7 +195,7 @@ export default function NewMarketPage() {
   }
 
   const handleRemoveTag = (tagToRemove: string) => {
-    setFormData(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tagToRemove) }))
+    setFormData(prev => ({ ...prev, tags: formData.tags.filter(t => t !== tagToRemove) }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -230,6 +269,18 @@ export default function NewMarketPage() {
         </p>
       </div>
 
+      {/* What makes a good topic */}
+      <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: '6px', padding: '16px 20px', marginBottom: '32px' }}>
+        <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--gold)', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
+          What makes a good topic
+        </div>
+        <ul style={{ margin: 0, paddingLeft: '18px', color: 'var(--mist)', fontSize: '13px', lineHeight: '1.8' }}>
+          <li>A clear yes/no question with one definite outcome — specific and time-bound.</li>
+          <li>Resolution criteria that name exactly how YES vs NO is decided, and the source that decides it.</li>
+          <li>A resolution date in the future, when the outcome will be known.</li>
+        </ul>
+      </div>
+
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
         {error && (
           <div style={{ padding: '16px 20px', background: 'rgba(224, 92, 92, 0.15)', color: 'var(--danger)', borderRadius: '6px', fontSize: '14px', border: '1px solid rgba(224, 92, 92, 0.3)' }}>
@@ -237,22 +288,26 @@ export default function NewMarketPage() {
           </div>
         )}
 
-        {/* Title */}
+        {/* Topic Question */}
         <div>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--gold)', fontFamily: 'var(--font-mono)' }}>
-            Title <span style={{ color: 'var(--danger)' }}>*</span>
+          <label htmlFor="topic-title" style={labelStyle}>
+            Topic Question <span style={{ color: 'var(--danger)' }}>*</span>
           </label>
           <input
+            id="topic-title"
             type="text"
             name="title"
             value={formData.title}
             onChange={handleChange}
-            placeholder="Will Bitcoin exceed $100,000 by 2026?"
+            placeholder="Will the Fed cut rates at the September 2026 meeting?"
             required
             minLength={10}
             maxLength={300}
             style={inputStyle}
           />
+          <p style={guidanceStyle}>
+            A clear yes/no question with one definite outcome. Keep it specific and time-bound.
+          </p>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '6px' }}>
             <span style={{ color: fieldValid.title ? 'var(--signal)' : 'var(--mist)' }}>
               {fieldValid.title ? '✓' : `${10 - formData.title.length} more needed`}
@@ -263,10 +318,11 @@ export default function NewMarketPage() {
 
         {/* Category */}
         <div>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--gold)', fontFamily: 'var(--font-mono)' }}>
+          <label htmlFor="topic-category" style={labelStyle}>
             Category <span style={{ color: 'var(--danger)' }}>*</span>
           </label>
           <select
+            id="topic-category"
             name="category"
             value={formData.category}
             onChange={handleChange}
@@ -277,48 +333,45 @@ export default function NewMarketPage() {
               <option key={cat.value} value={cat.value}>{cat.label}</option>
             ))}
           </select>
+          <p style={guidanceStyle}>
+            So it files into the right feed and filter.
+          </p>
         </div>
 
-        {/* Description */}
+        {/* Outcome Type — locked to Yes/No until multi-outcome scoring ships */}
         <div>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--gold)', fontFamily: 'var(--font-mono)' }}>
-            Description <span style={{ color: 'var(--danger)' }}>*</span>
+          <label style={labelStyle}>
+            Outcome Type <span style={{ fontSize: '10px', color: 'var(--mist)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(Locked)</span>
           </label>
-          <textarea
-            name="description"
-            value={formData.description}
-            onChange={handleChange}
-            placeholder="Provide context and background information about this prediction market..."
-            required
-            minLength={20}
-            maxLength={2000}
-            rows={5}
-            style={{ ...inputStyle, resize: 'vertical', minHeight: '140px', lineHeight: '1.6' }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '6px' }}>
-            <span style={{ color: fieldValid.description ? 'var(--signal)' : 'var(--mist)' }}>
-              {fieldValid.description ? '✓' : `${20 - formData.description.length} more needed`}
-            </span>
-            <span style={{ color: 'var(--fog)' }}>{formData.description.length}/2000</span>
+          <div style={{ ...inputStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'default', background: 'var(--ink3)' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 600 }}>YES / NO</span>
+            <span style={{ fontSize: '11px', color: 'var(--mist)' }}>More outcome types coming soon</span>
           </div>
+          <p style={guidanceStyle}>
+            Every topic resolves to exactly one of two outcomes — YES or NO.
+          </p>
         </div>
 
         {/* Resolution Criteria */}
         <div>
-          <label style={{ display: 'block', fontSize: '12px', fontWeight: 600, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--gold)', fontFamily: 'var(--font-mono)' }}>
+          <label htmlFor="topic-criteria" style={labelStyle}>
             Resolution Criteria <span style={{ color: 'var(--danger)' }}>*</span>
           </label>
           <textarea
+            id="topic-criteria"
             name="resolutionCriteria"
             value={formData.resolutionCriteria}
             onChange={handleChange}
-            placeholder="This market resolves to YES if... It resolves to NO if... Sources for resolution will be..."
+            placeholder="Resolves YES if the official Fed statement announces a rate cut; source: federalreserve.gov. Resolves NO otherwise."
             required
             minLength={20}
             maxLength={1000}
             rows={4}
             style={{ ...inputStyle, resize: 'vertical', minHeight: '110px', lineHeight: '1.6' }}
           />
+          <p style={guidanceStyle}>
+            How will YES vs NO be decided, and by what source or authority? This is the most important field — ambiguous criteria is how topics go bad.
+          </p>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '6px' }}>
             <span style={{ color: fieldValid.resolutionCriteria ? 'var(--signal)' : 'var(--mist)' }}>
               {fieldValid.resolutionCriteria ? '✓' : `${20 - formData.resolutionCriteria.length} more needed`}
@@ -327,49 +380,83 @@ export default function NewMarketPage() {
           </div>
         </div>
 
-        {/* Closing Date */}
+        {/* Closing Date — required, must be in the future */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--mist)', fontFamily: 'var(--font-mono)' }}>
-            Closing Date (Optional)
+          <label htmlFor="topic-closes-at" style={labelStyle}>
+            Closing Date <span style={{ color: 'var(--danger)' }}>*</span>
           </label>
           <input
+            id="topic-closes-at"
             type="datetime-local"
             name="closesAt"
             value={formData.closesAt}
             onChange={handleChange}
+            min={localDatetimeMin()}
+            required
             style={{
               ...inputStyle,
               colorScheme: 'dark',
             }}
           />
-          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>When predictions close</p>
+          {formData.closesAt === '' ? (
+            <p style={guidanceStyle}>When predictions close — required, and must be a future date.</p>
+          ) : !dateValid.closesAt ? (
+            <p style={{ ...guidanceStyle, color: 'var(--danger)' }}>Closing date must be in the future.</p>
+          ) : (
+            <p style={{ ...guidanceStyle, color: 'var(--signal)' }}>✓ Closes {new Date(formData.closesAt).toLocaleString()}</p>
+          )}
         </div>
 
         {/* Resolution Date */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--gold)', fontFamily: 'var(--font-mono)' }}>
+          <label htmlFor="topic-resolves-at" style={labelStyle}>
             Resolution Date <span style={{ fontSize: '10px', color: 'var(--mist)', fontWeight: 400 }}>(Recommended)</span>
           </label>
           <input
+            id="topic-resolves-at"
             type="datetime-local"
             name="resolvesAt"
             value={formData.resolvesAt}
             onChange={handleChange}
+            min={localDatetimeMin()}
             style={{
               ...inputStyle,
               colorScheme: 'dark',
             }}
           />
-          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>When the outcome will be known (market closes for predictions at this time)</p>
+          {formData.resolvesAt !== '' && !dateValid.resolvesAt ? (
+            <p style={{ ...guidanceStyle, color: 'var(--danger)' }}>Resolution date must be in the future.</p>
+          ) : (
+            <p style={guidanceStyle}>When the outcome will be known. If left empty, it defaults to the closing date.</p>
+          )}
+        </div>
+
+        {/* Description / Context — optional */}
+        <div>
+          <label htmlFor="topic-description" style={labelStyle}>
+            Description <span style={{ fontSize: '10px', color: 'var(--mist)', fontWeight: 400 }}>(Optional)</span>
+          </label>
+          <textarea
+            id="topic-description"
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="Provide context and background information about this prediction market..."
+            maxLength={2000}
+            rows={5}
+            style={{ ...inputStyle, resize: 'vertical', minHeight: '120px', lineHeight: '1.6' }}
+          />
+          <p style={guidanceStyle}>Optional — add any extra background or context for readers.</p>
         </div>
 
         {/* Tags */}
         <div>
-          <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--mist)', fontFamily: 'var(--font-mono)' }}>
-            Tags (Optional)
+          <label htmlFor="topic-tag-input" style={labelStyle}>
+            Tags <span style={{ fontSize: '10px', color: 'var(--mist)', fontWeight: 400 }}>(Optional)</span>
           </label>
           <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
             <input
+              id="topic-tag-input"
               type="text"
               name="tagInput"
               value={formData.tagInput}
@@ -471,7 +558,7 @@ export default function NewMarketPage() {
         </div>
 
         <p style={{ fontSize: '13px', color: 'var(--fog)', marginTop: '12px', fontStyle: 'italic' }}>
-          * Your topic will be reviewed before appearing in the feed. You'll receive a notification once it's approved.
+          * Your topic will be reviewed before appearing in the feed. You&apos;ll receive a notification once it&apos;s approved.
         </p>
       </form>
     </main>
