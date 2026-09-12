@@ -60,7 +60,7 @@ export function ResolveActions({ marketId }: ResolveActionsProps) {
   }
 
   return (
-    <div style={{ display: 'flex', gap: '8px' }}>
+    <div className="admin-actions" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
       <button
         onClick={() => handleResolve(false)}
         disabled={loading !== null}
