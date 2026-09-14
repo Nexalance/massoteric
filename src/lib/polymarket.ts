@@ -832,6 +832,16 @@ function mapCategory(tags: { label: string; slug?: string }[]): MarketCategory {
 const MIN_EVENT_DURATION_MS = 48 * 60 * 60 * 1000
 
 /**
+ * The "Up or Down" hourly/daily price windows (BNB/Bitcoin/…) are minted ~2
+ * days before close, so some slip past a pure 48h duration check. But the
+ * phrase also appears in legitimate long-horizon markets ("Canada's population
+ * Up or Down this year?") — so title matching only disqualifies events whose
+ * total lifetime is still short (hourly/daily/weekly windows).
+ */
+const MICRO_WINDOW_TITLE = /up or down/i
+const MICRO_WINDOW_MAX_DURATION_MS = 8 * 24 * 60 * 60 * 1000
+
+/**
  * Sync Polymarket markets into our database.
  * Called on a schedule (e.g., every 5 minutes via a cron job or revalidation).
  *
@@ -920,11 +930,19 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
   for (const event of allEvents) {
     try {
       // Exclude ultra-short-lived events (5-minute/1-hour/daily crypto windows)
-      // and close any copies from earlier syncs so they leave the feed/ticker.
-      // Events without a parseable startDate are kept (conservative).
+      // and short-lived "Up or Down" price windows, and close any copies from
+      // earlier syncs so they leave the feed/ticker. Events without a parseable
+      // startDate are kept (conservative — duration rules need both endpoints).
       const endMs = event.endDate ? new Date(event.endDate).getTime() : NaN
       const startMs = event.startDate ? new Date(event.startDate).getTime() : NaN
-      if (!isNaN(endMs) && !isNaN(startMs) && endMs - startMs < MIN_EVENT_DURATION_MS) {
+      const durationKnown = !isNaN(endMs) && !isNaN(startMs)
+      const durationMs = durationKnown ? endMs - startMs : NaN
+      const durationShort = durationKnown && durationMs < MIN_EVENT_DURATION_MS
+      const isMicroWindow =
+        durationKnown &&
+        durationMs < MICRO_WINDOW_MAX_DURATION_MS &&
+        MICRO_WINDOW_TITLE.test(event.title || event.markets?.[0]?.question || '')
+      if (durationShort || isMicroWindow) {
         const closed = await prisma.market.updateMany({
           where: { polymarketEventId: event.id, status: MarketStatus.OPEN },
           data: { status: MarketStatus.CLOSED },

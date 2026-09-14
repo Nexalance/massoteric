@@ -87,7 +87,7 @@ export function PredictionForm({ marketId, marketStatus, closesAt, existingPredi
         <input type="hidden" name="marketId" value={marketId} />
 
         <label className="label">Your Probability Estimate</label>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
           <input
             type="range"
             name="probability_range"
@@ -101,6 +101,12 @@ export function PredictionForm({ marketId, marketStatus, closesAt, existingPredi
             {sliderValue}%
           </span>
         </div>
+        <p style={{ fontSize: '13px', color: 'var(--mist)', margin: '0 0 20px', lineHeight: '1.6' }}>
+          Your forecast:{' '}
+          <span style={{ color: 'var(--signal)', fontWeight: 600 }}>{sliderValue}%</span>{' '}
+          chance this topic resolves <span style={{ color: 'var(--cream)', fontWeight: 600 }}>YES</span>.
+          Slide toward 100% if you&apos;re confident it will happen, toward 0% if you&apos;re confident it won&apos;t.
+        </p>
 
         <label className="label">Your Reasoning</label>
         <textarea
