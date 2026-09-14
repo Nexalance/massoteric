@@ -399,7 +399,7 @@ export default function LandingPageContent(props: LandingPageContentProps) {
               { icon: '📊', title: 'Brier Score Accuracy', body: 'The gold standard of forecasting measurement. Your score is calculated automatically at resolution — overall and by topic.', tag: 'Free', tagType: 'free' },
               { icon: '🔒', title: 'Full Analysis Access', body: 'Free users see a teaser. Paid members read the complete reasoning, filter by accuracy score, and follow specific forecasters.', tag: 'Paid', tagType: 'paid' },
               { icon: '🏆', title: 'Expert Leaderboards', body: 'Ranked by category, time period, and overall score. Find the most accurate voice on any topic — fast.', tag: 'Paid', tagType: 'paid' },
-              { icon: '💰', title: 'Creator Monetization', body: 'Proven forecasters can offer subscriptions, exclusive Q&A, and early access to their analysis. Set your own price. Keep 85% of revenue. Turn your accuracy into income.', tag: 'Live', tagType: 'paid' },
+              { icon: '💰', title: 'Creator Monetization', body: 'Proven forecasters can offer subscriptions, exclusive Q&A, and early access to their analysis. Set your own price. Keep 85% of revenue. Turn your accuracy into income.', tag: 'Coming Soon', tagType: 'paid' },
             ].map((feat, i) => (
               <div key={i} className={styles.feat}>
                 <div className={styles.featIcon}>{feat.icon}</div>

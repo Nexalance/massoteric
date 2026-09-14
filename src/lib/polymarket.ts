@@ -23,6 +23,7 @@ interface PolymarketEvent {
   slug?: string
   title: string
   description: string
+  startDate?: string
   endDate: string
   active: boolean
   closed: boolean
@@ -822,6 +823,15 @@ function mapCategory(tags: { label: string; slug?: string }[]): MarketCategory {
 }
 
 /**
+ * Polymarket mints ultra-short-horizon crypto markets on 5-minute/hourly/daily
+ * windows (e.g. "BNB Up or Down — 5 minute intervals"). They top the
+ * volume-sorted fetches but are churn, not forecastable topics — skip any
+ * event whose total lifetime is below this threshold, and close copies we
+ * stored in earlier syncs.
+ */
+const MIN_EVENT_DURATION_MS = 48 * 60 * 60 * 1000
+
+/**
  * Sync Polymarket markets into our database.
  * Called on a schedule (e.g., every 5 minutes via a cron job or revalidation).
  *
@@ -839,6 +849,7 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
 }> {
   let synced = 0
   let errors = 0
+  let shortLivedRemoved = 0
 
   // Collect tag slugs from curated subcategories (filtered by category if specified)
   const tagSlugs = new Set<string>()
@@ -908,6 +919,20 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
 
   for (const event of allEvents) {
     try {
+      // Exclude ultra-short-lived events (5-minute/1-hour/daily crypto windows)
+      // and close any copies from earlier syncs so they leave the feed/ticker.
+      // Events without a parseable startDate are kept (conservative).
+      const endMs = event.endDate ? new Date(event.endDate).getTime() : NaN
+      const startMs = event.startDate ? new Date(event.startDate).getTime() : NaN
+      if (!isNaN(endMs) && !isNaN(startMs) && endMs - startMs < MIN_EVENT_DURATION_MS) {
+        const closed = await prisma.market.updateMany({
+          where: { polymarketEventId: event.id, status: MarketStatus.OPEN },
+          data: { status: MarketStatus.CLOSED },
+        })
+        shortLivedRemoved += closed.count
+        continue
+      }
+
       // Each event may have multiple markets — we take the first (binary) one
       const market = event.markets?.[0]
       if (!market) continue
@@ -1039,6 +1064,7 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
   console.log(`Polymarket sync complete:`)
   console.log(`  - Total synced: ${synced}`)
   console.log(`  - Total fetched (pre-dedup): ${totalFetched}`)
+  console.log(`  - Short-lived events closed: ${shortLivedRemoved}`)
   console.log(`  - Errors: ${errors}`)
   console.log(`  - Top subcategories:`)
   for (const [slug, count] of topSubcategories) {

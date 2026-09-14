@@ -19,17 +19,34 @@ export default async function HomePage() {
   }
 
   // Fetch live data for landing page
-  const [userCount, marketCount, predictionCount, liveMarkets] = await Promise.all([
+  const [userCount, marketCount, predictionCount] = await Promise.all([
     prisma.user.count(),
     prisma.market.count({ where: { status: 'OPEN' } }),
     prisma.prediction.count(),
-    prisma.market.findMany({
-      where: { status: 'OPEN' },
-      select: { id: true, title: true, category: true, marketProbability: true },
-      orderBy: { createdAt: 'desc' },
-      take: 8,
-    }),
   ])
+
+  // Ticker: prefer longer-duration, higher-interest markets. Plain
+  // order-by-createdAt lets Polymarket's constantly-minted 5-minute crypto
+  // micro-windows dominate, so rank markets that stay open at least 3 more
+  // days and fall back to newest-first only if there aren't enough.
+  const tickerSelect = { id: true, title: true, category: true, marketProbability: true } as const
+  const threeDaysOut = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+  const longHorizonMarkets = await prisma.market.findMany({
+    where: { status: 'OPEN', closesAt: { gte: threeDaysOut } },
+    select: tickerSelect,
+    orderBy: [{ viewCount: 'desc' }, { createdAt: 'desc' }],
+    take: 8,
+  })
+  let liveMarkets = longHorizonMarkets
+  if (liveMarkets.length < 8) {
+    const fill = await prisma.market.findMany({
+      where: { status: 'OPEN', id: { notIn: longHorizonMarkets.map(m => m.id) } },
+      select: tickerSelect,
+      orderBy: { createdAt: 'desc' },
+      take: 8 - longHorizonMarkets.length,
+    })
+    liveMarkets = [...longHorizonMarkets, ...fill]
+  }
 
   // Format markets for ticker
   const tickerMarkets = liveMarkets.map(m => {
