@@ -18,6 +18,12 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
   const { currentUser, loading: userLoading } = useCurrentUser()
   const pathname = usePathname()
 
+  // Reviewer magic-link sessions carry no Clerk identity — the server sees
+  // them as the admin user via the msr_reviewer cookie, and /api/users/current
+  // returns that user. Treat "our API knows this visitor" as signed-in so the
+  // full signed-in nav (Admin link included) renders for reviewers too.
+  const signedIn = isSignedIn || !!currentUser
+
   // Real active-state: a link is active on its own section only. Home is active
   // exclusively on "/", so it stops looking permanently highlighted elsewhere.
   const isActive = (href: string, exact = false) => {
@@ -107,7 +113,7 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
       <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', minWidth: 0 }}>
         {/* LEFT zone — logo + browse */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', minWidth: 0 }}>
-          <Link href={isSignedIn ? '/feed' : '/'} style={{ textDecoration: 'none' }}>
+          <Link href={signedIn ? '/feed' : '/'} style={{ textDecoration: 'none' }}>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: '22px', fontWeight: 700, letterSpacing: '3px', textTransform: 'uppercase', color: 'var(--cream)' }}>
               Mass<span style={{ color: 'var(--gold)' }}>oteric</span>
             </div>
@@ -148,7 +154,7 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
           </button>
 
           {/* Quick links — desktop only */}
-          {isSignedIn && userId ? (
+          {signedIn ? (
             <>
               <span className="nav-divider hide-mobile" />
               <div className="hide-mobile nav-links-row" style={{ display: 'flex', gap: '22px', alignItems: 'center' }}>
@@ -183,7 +189,7 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
 
         {/* RIGHT zone — account */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
-          {isSignedIn && userId ? (
+          {signedIn ? (
             <>
               <Link href={`/me`} className={"nav-link nav-link-shrinkable hide-mobile" + (isActive('/me', true) ? ' nav-link-active' : '')} style={{ letterSpacing: '1px' }}>My Profile</Link>
               {username ? (
@@ -201,7 +207,9 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
                   )}
                 </span>
               )}
-              <UserButtonWrapper afterSignOutUrl="/" />
+              {/* Clerk avatar/sign-out menu needs a Clerk identity — reviewer
+                  sessions (magic link) only get the name chip above. */}
+              {clerkUser && <UserButtonWrapper afterSignOutUrl="/" />}
             </>
           ) : (
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -294,7 +302,7 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
               </div>
             </div>
 
-            {isSignedIn && userId ? (
+            {signedIn ? (
               <>
                 {/* User info header */}
                 <div style={{

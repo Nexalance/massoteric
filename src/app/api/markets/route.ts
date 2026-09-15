@@ -39,11 +39,22 @@ export async function GET(req: NextRequest) {
 
   const now = new Date()
 
+  // Yes/No-only testing mode: while the SIMPLE_BINARY_ONLY flag is enabled,
+  // group brackets, scalar counts and price-target markets (isBinary=false)
+  // are hidden from the feed. Site-level display toggle — read the flag
+  // directly, not tier access. Toggle lives in the admin dashboard.
+  const binaryOnlyFlag = await prisma.featureFlag.findUnique({
+    where: { key: FeatureKey.SIMPLE_BINARY_ONLY },
+    select: { isEnabled: true },
+  })
+  const binaryOnly = binaryOnlyFlag ? binaryOnlyFlag.isEnabled : true
+
   const where = {
     ...(category && { category }),
     ...(source && { source }),
     ...(status ? { status } : { status: MarketStatus.OPEN }),
     ...(featured !== undefined && { featured }),
+    ...(binaryOnly && { isBinary: true }),
     // Only show markets that haven't closed yet (no closesAt, or closesAt is in the future)
     // NOTE: Prisma can't mix null with gte in one OR array — split into two branches.
     AND: [

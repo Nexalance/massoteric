@@ -29,10 +29,16 @@ export default async function HomePage() {
   // order-by-createdAt lets Polymarket's constantly-minted 5-minute crypto
   // micro-windows dominate, so rank markets that stay open at least 3 more
   // days and fall back to newest-first only if there aren't enough.
+  // Honours the yes/no-only display flag like the feed does.
+  const binaryOnlyFlag = await prisma.featureFlag.findUnique({
+    where: { key: 'SIMPLE_BINARY_ONLY' },
+    select: { isEnabled: true },
+  })
+  const binaryOnly = binaryOnlyFlag ? binaryOnlyFlag.isEnabled : true
   const tickerSelect = { id: true, title: true, category: true, marketProbability: true } as const
   const threeDaysOut = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
   const longHorizonMarkets = await prisma.market.findMany({
-    where: { status: 'OPEN', closesAt: { gte: threeDaysOut } },
+    where: { status: 'OPEN', closesAt: { gte: threeDaysOut }, ...(binaryOnly && { isBinary: true }) },
     select: tickerSelect,
     orderBy: [{ viewCount: 'desc' }, { createdAt: 'desc' }],
     take: 8,
@@ -40,7 +46,7 @@ export default async function HomePage() {
   let liveMarkets = longHorizonMarkets
   if (liveMarkets.length < 8) {
     const fill = await prisma.market.findMany({
-      where: { status: 'OPEN', id: { notIn: longHorizonMarkets.map(m => m.id) } },
+      where: { status: 'OPEN', id: { notIn: longHorizonMarkets.map(m => m.id) }, ...(binaryOnly && { isBinary: true }) },
       select: tickerSelect,
       orderBy: { createdAt: 'desc' },
       take: 8 - longHorizonMarkets.length,
