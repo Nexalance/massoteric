@@ -62,6 +62,13 @@ export async function ensureFeatureFlags() {
       isFree: false,
       isEnabled: true,
     },
+    {
+      key: FeatureKey.SIMPLE_BINARY_ONLY,
+      label: 'Show Only Yes/No Topics',
+      description: 'Feed and ticker show only simple yes/no topics — group brackets, scalar counts and price-target markets are hidden (not deleted). Turn off to show every market again.',
+      isFree: true,
+      isEnabled: true,
+    },
   ]
 
   for (const flag of flags) {

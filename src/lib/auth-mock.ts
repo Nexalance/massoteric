@@ -2,11 +2,37 @@
 // Mock auth for development without Clerk keys
 // Auto-creates users in database when they first authenticate with Clerk
 
+import { createHash } from 'crypto'
+import { cookies } from 'next/headers'
 import { prisma } from './prisma'
 import { syncSubscriptionFromStripe, isStripeConfigured } from './stripe'
 import { isAdmin } from './admin'
 
 const hasValidClerkKey = !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.includes('placeholder')
+
+// REVIEWER_COOKIE is set by /dev-access?token=… for time-limited reviewer
+// links. auth() re-validates it against the MagicLink table on EVERY request,
+// so expiring or revoking the link kills existing reviewer sessions instantly.
+// While valid, the reviewer carries the identity of the first admin in
+// ADMIN_USER_IDS (full admin powers by design — see the reviewer access guide).
+const REVIEWER_COOKIE = 'msr_reviewer'
+
+async function reviewerSessionAdminId(): Promise<string | null> {
+  try {
+    const raw = cookies().get(REVIEWER_COOKIE)?.value
+    if (!raw) return null
+    const tokenHash = createHash('sha256').update(raw).digest('hex')
+    const link = await prisma.magicLink.findUnique({ where: { tokenHash } })
+    if (!link || link.revokedAt || link.expiresAt <= new Date()) return null
+    const adminId = (process.env.ADMIN_USER_IDS || '')
+      .split(',')
+      .map(s => s.trim())
+      .find(Boolean)
+    return adminId || null
+  } catch {
+    return null
+  }
+}
 
 const DEV_USER = {
   id: 'dev-user-123',
@@ -205,6 +231,12 @@ async function syncClerkUserToDb(clerkId: string, clerkUser?: any) {
 }
 
 export async function auth() {
+  // Reviewer magic-link session takes precedence: it IS the admin session.
+  const reviewerAdminId = await reviewerSessionAdminId()
+  if (reviewerAdminId) {
+    return { userId: reviewerAdminId }
+  }
+
   if (hasValidClerkKey) {
     // Use real Clerk auth
     const { auth: clerkAuth, currentUser } = require('@clerk/nextjs/server')

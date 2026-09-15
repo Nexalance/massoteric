@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from './useAuth'
 
 interface CurrentUser {
   username: string | null
@@ -11,7 +10,6 @@ interface CurrentUser {
 }
 
 export function useCurrentUser() {
-  const { userId, isLoaded } = useAuth()
   const [currentUser, setCurrentUser] = useState<CurrentUser>({
     username: null,
     displayName: null,
@@ -21,18 +19,19 @@ export function useCurrentUser() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!userId || !isLoaded) {
-      setLoading(false)
-      return
-    }
-
-    // Fetch current user from database
+    // Always ask the server who this visitor is. Reviewer magic-link sessions
+    // carry no Clerk userId but DO have a valid server session via the
+    // msr_reviewer cookie — gating on Clerk's userId here made those sessions
+    // invisible to every client component. Anonymous visitors just get a 401
+    // and stay signed out, exactly as before.
+    let cancelled = false
     fetch('/api/users/current')
       .then(res => {
-        if (!res.ok) throw new Error('Failed to fetch user')
+        if (!res.ok) throw new Error('Not signed in')
         return res.json()
       })
       .then(data => {
+        if (cancelled) return
         setCurrentUser({
           username: data.username,
           displayName: data.displayName,
@@ -40,13 +39,16 @@ export function useCurrentUser() {
           isAdmin: data.isAdmin,
         })
       })
-      .catch(err => {
-        console.error('Error fetching current user:', err)
+      .catch(() => {
+        /* anonymous visitor — currentUser stays null */
       })
       .finally(() => {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       })
-  }, [userId, isLoaded])
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   return { currentUser, loading }
 }

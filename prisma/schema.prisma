@@ -87,6 +87,10 @@ model Market {
   resolvedAt         DateTime?
   status             MarketStatus   @default(OPEN)
   resolvedValue      Boolean?
+  // True only for simple yes/no topics (single-market event with Yes/No
+  // outcomes). Group/scalar markets (brackets, "how many", price targets)
+  // are false — the feed hides them while the yes/no-only flag is enabled.
+  isBinary           Boolean        @default(true)
   externalUrl        String?
   createdByUserId    String?
   topicStatus        TopicStatus?
@@ -382,6 +386,19 @@ enum FeatureKey {
   EXPERT_QA
   TOPIC_CREATE
   PREDICT_SUBMIT
+  SIMPLE_BINARY_ONLY
+}
+
+// Time-limited reviewer access links (see /dev-access). Only the SHA-256
+// hash of the token is stored — the raw token lives solely in the URL.
+model MagicLink {
+  id         String    @id @default(cuid())
+  tokenHash  String    @unique
+  label      String    @default("Reviewer access")
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  createdById String?
 }
 
 enum PayoutStatus {

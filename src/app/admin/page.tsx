@@ -6,6 +6,8 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import FeatureFlagsClient from './FeatureFlagsClient'
+import { MagicLinkPanel } from '@/components/admin/MagicLinkPanel'
+import { BinaryOnlyToggle } from '@/components/admin/BinaryOnlyToggle'
 
 export const metadata = { title: 'Admin Dashboard' }
 
@@ -30,6 +32,8 @@ export default async function AdminPage() {
     prisma.featureFlag.findMany({ orderBy: { key: 'asc' } }),
     prisma.user.findMany({ orderBy: { createdAt: 'desc' }, take: 5, select: { id: true, displayName: true, email: true, subscriptionTier: true, createdAt: true } }),
   ])
+
+  const binaryOnlyEnabled = flags.find(f => f.key === 'SIMPLE_BINARY_ONLY')?.isEnabled ?? true
 
   return (
     <main>
@@ -73,7 +77,11 @@ export default async function AdminPage() {
             <div className="card">
               <FeatureFlagsClient initialFlags={flags.map(f => ({ key: f.key, label: f.label, description: f.description, isFree: f.isFree }))} />
             </div>
+            <BinaryOnlyToggle initialEnabled={binaryOnlyEnabled} />
           </div>
+
+          {/* Reviewer access (magic link) — right column */}
+          <MagicLinkPanel />
 
           {/* Recent signups + topic queue */}
           <div>

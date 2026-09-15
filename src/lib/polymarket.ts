@@ -955,6 +955,23 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
       const market = event.markets?.[0]
       if (!market) continue
 
+      // Ground-truth binary check: a simple yes/no topic is an event with
+      // exactly ONE market whose outcomes are literally Yes/No. Group brackets
+      // ("Who will win…", price-target ladders) and scalar counts ("How many…")
+      // fail this and get isBinary=false — hidden from the feed while the
+      // SIMPLE_BINARY_ONLY flag is on, never deleted.
+      let isBinary = true
+      try {
+        const outcomes = JSON.parse(market.outcomes)
+        isBinary =
+          (event.markets?.length ?? 0) === 1 &&
+          Array.isArray(outcomes) &&
+          outcomes.length === 2 &&
+          outcomes.every((o: unknown) => typeof o === 'string' && /^(yes|no)$/i.test(o.trim()))
+      } catch {
+        isBinary = false // unparseable outcomes — treat as not a simple yes/no
+      }
+
       let probability: number | null = null
       try {
         const prices = JSON.parse(market.outcomePrices)
@@ -1039,6 +1056,7 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
               externalUrl: `https://polymarket.com/event/${event.id}`,
               subcategoryId: subcategory.id,
               category,
+              isBinary,
               polymarketEventId,
               ...(polymarketSlug ? { polymarketSlug } : {}),
               updatedAt: new Date(),
@@ -1058,6 +1076,7 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
               tags: event.tags?.map(t => t.label) || [],
               subcategoryId: subcategory.id,
               polymarketEventId,
+              isBinary,
               ...(polymarketSlug ? { polymarketSlug } : {}),
             },
           })
