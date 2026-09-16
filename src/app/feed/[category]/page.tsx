@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { CATEGORIES, SORTS, SortValue } from '@/lib/categories'
 import { ensureMigrated } from '@/lib/migrations'
+import { yesNoOnlyMode, binaryOnlyWhere } from '@/lib/yes-no-filter'
 import SubcategoryMenu from '@/components/feed/SubcategoryMenu'
 
 interface CategoryPageProps {
@@ -74,6 +75,10 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const limit = 50
   const now = new Date()
 
+  // Yes/No-only display mode: hide group brackets, scalar counts and
+  // price-target ladders from every listing and count on this page.
+  const binaryOnly = await yesNoOnlyMode()
+
   const sortParam = (searchParams.sort || 'trending') as SortValue
   const sort: SortValue = SORTS.some(s => s.value === sortParam) ? sortParam : 'trending'
   const search = searchParams.search?.trim() || undefined
@@ -109,6 +114,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           category: categoryEnum,
           subcategoryId: { not: null },
           source: 'POLYMARKET' as const, // Only count Polymarket markets to match their counts
+          ...binaryOnlyWhere(binaryOnly),
         },
         _count: { id: true },
       })
@@ -123,6 +129,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           subcategoryId: { not: null },
           source: 'POLYMARKET' as const,
           status: 'OPEN' as const,
+          ...binaryOnlyWhere(binaryOnly),
         },
         select: { polymarketEventId: true, externalId: true, subcategoryId: true },
       })
@@ -155,6 +162,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const where = {
     status: 'OPEN' as const,
     ...(categoryEnum && { category: categoryEnum }),
+    ...binaryOnlyWhere(binaryOnly),
     AND: [
       { OR: [{ closesAt: null }, { closesAt: { gte: now } }] },
       { OR: [{ resolvesAt: null }, { resolvesAt: { gte: now } }] },
@@ -211,6 +219,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
           status: 'OPEN' as const,
           category: categoryEnum,
           source: 'POLYMARKET' as const,
+          ...binaryOnlyWhere(binaryOnly),
         },
         select: { polymarketEventId: true, externalId: true },
       })
