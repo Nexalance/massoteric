@@ -6,6 +6,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { MarketStatus, MarketSource, TopicStatus } from '@prisma/client'
+import { yesNoOnlyMode, binaryOnlyWhere } from '@/lib/yes-no-filter'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -19,7 +20,11 @@ export async function GET(req: NextRequest) {
 
   const now = new Date()
 
+  // Search respects the yes/no-only display flag like the feed does
+  const binaryOnly = await yesNoOnlyMode()
+
   const where = {
+    ...binaryOnlyWhere(binaryOnly),
     status: MarketStatus.OPEN,
     AND: [
       // Not yet closed / resolved

@@ -75,7 +75,10 @@ export default async function AdminPage() {
           <div>
             <div className="section-label">Feature Access Controls</div>
             <div className="card">
-              <FeatureFlagsClient initialFlags={flags.map(f => ({ key: f.key, label: f.label, description: f.description, isFree: f.isFree }))} />
+              {/* SIMPLE_BINARY_ONLY is excluded here — it is a display mode with
+                  its own ON/OFF switch below, not a Free/Paid feature. Showing it
+                  in this list made it look like a second (broken) switch. */}
+              <FeatureFlagsClient initialFlags={flags.filter(f => f.key !== 'SIMPLE_BINARY_ONLY').map(f => ({ key: f.key, label: f.label, description: f.description, isFree: f.isFree }))} />
             </div>
             <BinaryOnlyToggle initialEnabled={binaryOnlyEnabled} />
           </div>

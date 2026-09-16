@@ -12,6 +12,7 @@ import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { CATEGORIES, SORTS, SortValue } from '@/lib/categories'
 import { ensureMigrated } from '@/lib/migrations'
+import { yesNoOnlyMode, binaryOnlyWhere } from '@/lib/yes-no-filter'
 import SubcategoryMenu from '@/components/feed/SubcategoryMenu'
 
 interface SubcategoryPageProps {
@@ -86,6 +87,10 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
   const limit = 50
   const now = new Date()
 
+  // Yes/No-only display mode: hide group brackets, scalar counts and
+  // price-target ladders from every listing and count on this page.
+  const binaryOnly = await yesNoOnlyMode()
+
   const sortParam = (searchParams.sort || 'trending') as SortValue
   const sort: SortValue = SORTS.some(s => s.value === sortParam) ? sortParam : 'trending'
   const search = searchParams.search?.trim() || undefined
@@ -115,6 +120,7 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
       source: 'POLYMARKET' as const,
       status: 'OPEN' as const,
       subcategoryId: { not: null },
+      ...binaryOnlyWhere(binaryOnly),
     },
     select: { polymarketEventId: true, externalId: true, subcategoryId: true },
   })
@@ -149,6 +155,7 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
     status: 'OPEN' as const,
     category,
     subcategoryId: subcategoryRecord.id,
+    ...binaryOnlyWhere(binaryOnly),
     AND: [
       { OR: [{ closesAt: null }, { closesAt: { gte: now } }] },
       { OR: [{ resolvesAt: null }, { resolvesAt: { gte: now } }] },
