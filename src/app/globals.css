@@ -823,3 +823,17 @@ table tbody tr:hover {
     width: 150px !important;
   }
 }
+
+/* /me page: extra breathing room between the fixed navbar and the
+   "My Profile Info" heading. The global mobile clamp
+   `main { padding-top: 56px !important }` squeezes this page on small
+   screens, so the page adds its own spacer inside the content wrapper. */
+.me-page-topgap {
+  padding-top: 0;
+}
+
+@media (max-width: 768px) {
+  .me-page-topgap {
+    padding-top: 20px;
+  }
+}

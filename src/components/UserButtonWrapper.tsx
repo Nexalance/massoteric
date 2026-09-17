@@ -89,7 +89,7 @@ export default function UserButtonWrapper({ afterSignOutUrl }: { afterSignOutUrl
       }}
     >
       <UserButton.MenuItems>
-        <UserButton.Link label="Edit Profile" labelIcon={PENCIL_ICON} href="/me" />
+        <UserButton.Link label="My Profile" labelIcon={PENCIL_ICON} href="/me" />
       </UserButton.MenuItems>
     </UserButton>
   )
