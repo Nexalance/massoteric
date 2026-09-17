@@ -10,7 +10,15 @@ interface CurrentUser {
   isAdmin: boolean | null
 }
 
-export function useCurrentUser(initial?: { id: string; displayName: string; username: string | null; subscriptionTier: string | null; isAdmin: boolean } | null) {
+const NULL_USER: CurrentUser = {
+  id: null,
+  username: null,
+  displayName: null,
+  subscriptionTier: null,
+  isAdmin: null,
+}
+
+export function useCurrentUser(initial?: { id: string; displayName: string; username: string | null; subscriptionTier: string | null; isAdmin: boolean } | null, refetchKey?: boolean) {
   const [currentUser, setCurrentUser] = useState<CurrentUser>(
     initial
       ? {
@@ -20,13 +28,7 @@ export function useCurrentUser(initial?: { id: string; displayName: string; user
           subscriptionTier: initial.subscriptionTier,
           isAdmin: initial.isAdmin,
         }
-      : {
-          id: null,
-          username: null,
-          displayName: null,
-          subscriptionTier: null,
-          isAdmin: null,
-        }
+      : NULL_USER
   )
   const [loading, setLoading] = useState(true)
 
@@ -53,7 +55,8 @@ export function useCurrentUser(initial?: { id: string; displayName: string; user
         })
       })
       .catch(() => {
-        /* anonymous visitor — currentUser stays null */
+        /* anonymous or signed-out — clear so the nav flips back correctly */
+        if (!cancelled) setCurrentUser(NULL_USER)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -61,7 +64,7 @@ export function useCurrentUser(initial?: { id: string; displayName: string; user
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [refetchKey])
 
   return { currentUser, loading }
 }

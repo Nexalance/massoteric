@@ -16,7 +16,7 @@ import { CATEGORIES } from '@/lib/categories'
 
 export default function Nav({ dataMassotericNav, initialUser }: { dataMassotericNav?: string; initialUser?: { id: string; displayName: string; username: string | null; subscriptionTier: string | null; isAdmin: boolean } | null }) {
   const { isLoaded, userId, isSignedIn, user: clerkUser } = useAuth()
-  const { currentUser, loading: userLoading } = useCurrentUser(initialUser)
+  const { currentUser, loading: userLoading } = useCurrentUser(initialUser, isSignedIn)
   const pathname = usePathname()
 
   // Reviewer magic-link sessions carry no Clerk identity — the server sees
