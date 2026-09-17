@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { useCurrentUser } from '@/lib/useCurrentUser'
 import UserButtonWrapper from '@/components/UserButtonWrapper'
+import { ReviewerMenu } from '@/components/layout/ReviewerMenu'
 import SearchBar from '@/components/SearchBar'
 import TopicsMenu from '@/components/layout/TopicsMenu'
 import Link from 'next/link'
@@ -13,16 +14,18 @@ import { usePathname } from 'next/navigation'
 import { Suspense } from 'react'
 import { CATEGORIES } from '@/lib/categories'
 
-export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string }) {
+export default function Nav({ dataMassotericNav, initialUser }: { dataMassotericNav?: string; initialUser?: { id: string; displayName: string; username: string | null; subscriptionTier: string | null; isAdmin: boolean } | null }) {
   const { isLoaded, userId, isSignedIn, user: clerkUser } = useAuth()
-  const { currentUser, loading: userLoading } = useCurrentUser()
+  const { currentUser, loading: userLoading } = useCurrentUser(initialUser, isSignedIn)
   const pathname = usePathname()
 
   // Reviewer magic-link sessions carry no Clerk identity — the server sees
-  // them as the admin user via the msr_reviewer cookie, and /api/users/current
-  // returns that user. Treat "our API knows this visitor" as signed-in so the
-  // full signed-in nav (Admin link included) renders for reviewers too.
-  const signedIn = isSignedIn || !!currentUser
+  // them as the "Site Reviewer" user via the msr_reviewer cookie, and
+  // /api/users/current returns that user. Treat "our API returned an actual
+  // user" as signed-in so reviewers get the full nav. NOTE: currentUser is
+  // always an object (null fields when anonymous) — check its id, not the
+  // object itself, or EVERY visitor looks signed in.
+  const signedIn = isSignedIn || !!currentUser?.id
 
   // Real active-state: a link is active on its own section only. Home is active
   // exclusively on "/", so it stops looking permanently highlighted elsewhere.
@@ -191,7 +194,6 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
           {signedIn ? (
             <>
-              <Link href={`/me`} className={"nav-link nav-link-shrinkable hide-mobile" + (isActive('/me', true) ? ' nav-link-active' : '')} style={{ letterSpacing: '1px' }}>My Profile</Link>
               {username ? (
                 <Link href={`/profile/${username}`} className={"nav-link nav-link-shrinkable hide-mobile" + (pathname === '/profile/' + username ? ' nav-link-active' : '')} style={{ letterSpacing: '1px' }}>
                   {displayName}
@@ -207,9 +209,15 @@ export default function Nav({ dataMassotericNav }: { dataMassotericNav?: string 
                   )}
                 </span>
               )}
-              {/* Clerk avatar/sign-out menu needs a Clerk identity — reviewer
-                  sessions (magic link) only get the name chip above. */}
-              {clerkUser && <UserButtonWrapper afterSignOutUrl="/" />}
+              {/* Reviewer (magic-link) sessions: no Clerk identity, so they get
+                  a dedicated account menu in the same slot as Clerk's UserButton. */}
+              {!isSignedIn && !!currentUser?.id && (
+                <ReviewerMenu displayName={displayName} tier={subscriptionTier} />
+              )}
+              {/* Clerk avatar/sign-out menu: renders for real Clerk sessions.
+                  Clerk v5's useAuth() does not expose `user`, so gate on
+                  isSignedIn rather than the user object. */}
+              {isSignedIn && <UserButtonWrapper afterSignOutUrl="/" />}
             </>
           ) : (
             <div style={{ display: 'flex', gap: '8px' }}>

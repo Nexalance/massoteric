@@ -3,19 +3,33 @@
 import { useEffect, useState } from 'react'
 
 interface CurrentUser {
+  id: string | null
   username: string | null
   displayName: string | null
   subscriptionTier: string | null
   isAdmin: boolean | null
 }
 
-export function useCurrentUser() {
-  const [currentUser, setCurrentUser] = useState<CurrentUser>({
-    username: null,
-    displayName: null,
-    subscriptionTier: null,
-    isAdmin: null,
-  })
+const NULL_USER: CurrentUser = {
+  id: null,
+  username: null,
+  displayName: null,
+  subscriptionTier: null,
+  isAdmin: null,
+}
+
+export function useCurrentUser(initial?: { id: string; displayName: string; username: string | null; subscriptionTier: string | null; isAdmin: boolean } | null, refetchKey?: boolean) {
+  const [currentUser, setCurrentUser] = useState<CurrentUser>(
+    initial
+      ? {
+          id: initial.id,
+          username: initial.username,
+          displayName: initial.displayName,
+          subscriptionTier: initial.subscriptionTier,
+          isAdmin: initial.isAdmin,
+        }
+      : NULL_USER
+  )
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -25,7 +39,7 @@ export function useCurrentUser() {
     // invisible to every client component. Anonymous visitors just get a 401
     // and stay signed out, exactly as before.
     let cancelled = false
-    fetch('/api/users/current')
+    fetch('/api/users/current', { cache: 'no-store' })
       .then(res => {
         if (!res.ok) throw new Error('Not signed in')
         return res.json()
@@ -33,6 +47,7 @@ export function useCurrentUser() {
       .then(data => {
         if (cancelled) return
         setCurrentUser({
+          id: data.id,
           username: data.username,
           displayName: data.displayName,
           subscriptionTier: data.subscriptionTier,
@@ -40,7 +55,8 @@ export function useCurrentUser() {
         })
       })
       .catch(() => {
-        /* anonymous visitor — currentUser stays null */
+        /* anonymous or signed-out — clear so the nav flips back correctly */
+        if (!cancelled) setCurrentUser(NULL_USER)
       })
       .finally(() => {
         if (!cancelled) setLoading(false)
@@ -48,7 +64,7 @@ export function useCurrentUser() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [refetchKey])
 
   return { currentUser, loading }
 }

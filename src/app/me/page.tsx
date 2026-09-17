@@ -46,8 +46,12 @@ export default async function MePage() {
   const displayEmail = user.email || clerkUser?.emailAddresses?.[0]?.emailAddress || clerkUser?.email || 'No email'
 
   return (
-    <main style={{ minHeight: '100vh', paddingTop: '80px', padding: '80px 20px 40px', background: '#0D0F14' }}>
+    <main style={{ minHeight: '100vh', padding: '110px 20px 40px', background: '#0D0F14' }}>
       <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        {/* Mobile-only breathing room: the global small-screen clamp
+            `main { padding-top: 56px !important }` puts the heading flush
+            against the fixed navbar. */}
+        <div className="me-page-topgap" aria-hidden="true" />
 
         {/* Header */}
         <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>

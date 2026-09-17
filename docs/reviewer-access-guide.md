@@ -33,5 +33,5 @@ The link also **expires on its own** at the chosen date — check the card to se
 
 - **I lost the URL.** Generate a new one; the old link is revoked automatically.
 - **Reviewer closed the browser.** The session cookie lasts until the link expires — reopening the same URL restores admin access while the link is alive.
-- **Who do reviewer actions show up as?** The reviewer carries the site's primary admin identity (the first ID in `ADMIN_USER_IDS`), so their actions appear as that admin. Keep the link inside your trusted circle.
+- **Who do reviewer actions show up as?** A dedicated "Site Reviewer" account created for the link — not your personal admin account. Keep the link inside your trusted circle.
 - **Does the site change for normal users?** No. Regular sign-ins, tiers and permissions are untouched; the link only opens an additional admin door that you control.

@@ -13,9 +13,12 @@ const hasValidClerkKey = !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.include
 // REVIEWER_COOKIE is set by /dev-access?token=… for time-limited reviewer
 // links. auth() re-validates it against the MagicLink table on EVERY request,
 // so expiring or revoking the link kills existing reviewer sessions instantly.
-// While valid, the reviewer carries the identity of the first admin in
-// ADMIN_USER_IDS (full admin powers by design — see the reviewer access guide).
+// While valid, the reviewer carries a DEDICATED "Site Reviewer" identity —
+// NOT a real user's account (the client must not land inside serhad/anas
+// sessions). That identity needs admin powers, so its clerkId must appear in
+// ADMIN_USER_IDS.
 const REVIEWER_COOKIE = 'msr_reviewer'
+const REVIEWER_CLERK_ID = process.env.REVIEWER_CLERK_ID || 'site-reviewer'
 
 async function reviewerSessionAdminId(): Promise<string | null> {
   try {
@@ -24,11 +27,25 @@ async function reviewerSessionAdminId(): Promise<string | null> {
     const tokenHash = createHash('sha256').update(raw).digest('hex')
     const link = await prisma.magicLink.findUnique({ where: { tokenHash } })
     if (!link || link.revokedAt || link.expiresAt <= new Date()) return null
-    const adminId = (process.env.ADMIN_USER_IDS || '')
-      .split(',')
-      .map(s => s.trim())
-      .find(Boolean)
-    return adminId || null
+
+    // Ensure the dedicated reviewer identity exists in the database so every
+    // lookup-by-clerkId across the app resolves to it. Admin powers require
+    // this clerkId to be whitelisted in ADMIN_USER_IDS.
+    await prisma.user.upsert({
+      where: { clerkId: REVIEWER_CLERK_ID },
+      update: {},
+      create: {
+        clerkId: REVIEWER_CLERK_ID,
+        username: 'site-reviewer',
+        displayName: 'Site Reviewer',
+        email: 'site-reviewer@massoteric.local',
+        subscriptionTier: 'PRO',
+        onboardingComplete: true,
+        hasSeenLanding: true,
+      },
+    })
+
+    return REVIEWER_CLERK_ID
   } catch {
     return null
   }
