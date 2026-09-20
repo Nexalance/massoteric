@@ -452,7 +452,7 @@ export default function LandingPageContent(props: LandingPageContentProps) {
           Mass<span className={styles.footerLogoSpan}>oteric</span>
         </div>
         <p className={styles.footerCopy}>
-          © 2026 Massoteric. All rights reserved. · Auto-deploy pipeline: LIVE ✓
+          © 2026 Massoteric. All rights reserved.
         </p>
         <div className={styles.footerLinks}>
           <a href="#" className={styles.footerLink}>Privacy</a>
