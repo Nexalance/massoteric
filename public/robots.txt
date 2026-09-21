@@ -1,0 +1,9 @@
+# Temporarily allowing all automated fetchers for the review period.
+# REVERT after the review is done (restore the staging block below).
+User-agent: *
+Allow: /
+
+# --- STAGING BLOCK (restore this section and remove the Allow block above
+# --- when the review window ends, to keep the site out of search engines):
+# User-agent: *
+# Disallow: /
