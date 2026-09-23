@@ -396,8 +396,8 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
 
                     {/* Bottom row - stats + actions */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--fog)' }}>
-                        {market._count.predictions} predictions · {market._count.comments} comments
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--cream)' }}>
+                        {market._count.predictions} predictions · {market._count.comments} comments · Updated {formatDistanceToNow(market.updatedAt, { addSuffix: true })}
                       </span>
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginLeft: 'auto' }}>
                         <span style={{ fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--gold)', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
