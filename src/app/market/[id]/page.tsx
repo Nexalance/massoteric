@@ -156,6 +156,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
               source={market.source}
               marketSlug={market.polymarketSlug}
               marketTitle={market.title}
+              updatedAt={market.updatedAt}
             />
           )}
 
