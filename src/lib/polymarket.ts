@@ -1011,82 +1011,84 @@ export async function syncPolymarketMarkets(categoryFilter: string | null = null
         }
       }
 
-      // Map Polymarket tags to ALL matching subcategories
-      // An event can belong to multiple subcategories (e.g., negotiations + ceasefire)
+      // Map Polymarket tags to matching subcategories and keep only the primary one
+      // (first = most specific by mapTagsToAllSubcategories ordering).
+      // ONE event = ONE market row: listing the same event once per subcategory used to
+      // clone rows ({eventId}-{subcategorySlug} externalIds), which duplicated events in
+      // the feed and split users' predictions across clones.
       const tagSlugs = event.tags?.map(t => t.slug).filter((s): s is string => !!s) || []
       const matchingSubcategories = mapTagsToAllSubcategories(tagSlugs, category)
+      const subcategorySlug = matchingSubcategories[0]
 
-      // Create a market entry for EACH matching subcategory
-      // This allows the same event to appear in multiple subcategory feeds
-      for (const subcategorySlug of matchingSubcategories) {
-        // Find subcategory in database
-        const subcategory = await prisma.subcategory.findUnique({
-          where: { slug_category: { slug: subcategorySlug, category } },
-          select: { id: true },
+      if (!subcategorySlug) {
+        continue
+      }
+
+      // Find subcategory in database
+      const subcategory = await prisma.subcategory.findUnique({
+        where: { slug_category: { slug: subcategorySlug, category } },
+        select: { id: true },
+      })
+
+      if (!subcategory) {
+        console.warn(`[Polymarket] Subcategory not found: ${subcategorySlug}/${category}, skipping`)
+        continue
+      }
+
+      // Always use the bare event ID so every sync cycle updates the same row
+      const externalId = event.id
+      const polymarketEventId = event.id // Always use the true Polymarket event ID
+
+      // Validate event has a valid ID for URL construction
+      if (!event.id || event.id.length < 5) {
+        console.warn(`[Polymarket] Invalid event ID: ${event.id}, skipping`)
+        continue
+      }
+
+      // Capture the event slug — polymarket.us uses /event/{slug} URLs (not numeric IDs),
+      // so we store it to build correct .us links for US visitors later.
+      const polymarketSlug = event.slug || null
+
+      try {
+        await prisma.market.upsert({
+          where: { externalId },
+          update: {
+            title: event.title || market.question,
+            marketProbability: probability,
+            status: event.closed || event.archived ? MarketStatus.CLOSED : MarketStatus.OPEN,
+            externalUrl: `https://polymarket.com/event/${event.id}`,
+            subcategoryId: subcategory.id,
+            category,
+            isBinary,
+            polymarketEventId,
+            ...(polymarketSlug ? { polymarketSlug } : {}),
+            updatedAt: new Date(),
+          },
+          create: {
+            externalId,
+            source: 'POLYMARKET',
+            category,
+            title: event.title || market.question,
+            description: event.description || market.description,
+            marketProbability: probability,
+            imageUrl: event.image,
+            closesAt: event.endDate ? new Date(event.endDate) : null,
+            resolvesAt: event.endDate ? new Date(event.endDate) : null,
+            status: event.closed || event.archived ? MarketStatus.CLOSED : MarketStatus.OPEN,
+            externalUrl: `https://polymarket.com/event/${event.id}`,
+            tags: event.tags?.map(t => t.label) || [],
+            subcategoryId: subcategory.id,
+            polymarketEventId,
+            isBinary,
+            ...(polymarketSlug ? { polymarketSlug } : {}),
+          },
         })
-
-        if (!subcategory) {
-          console.warn(`[Polymarket] Subcategory not found: ${subcategorySlug}/${category}, skipping`)
-          continue
-        }
-
-        // Use composite externalId for duplicate entries: {eventId}-{subcategorySlug}
-        // The primary entry uses just the eventId, duplicates use the composite format
-        const isPrimary = subcategorySlug === matchingSubcategories[0]
-        const externalId = isPrimary ? event.id : `${event.id}-${subcategorySlug}`
-        const polymarketEventId = event.id // Always use the true Polymarket event ID
-
-        // Validate event has a valid ID for URL construction
-        if (!event.id || event.id.length < 5) {
-          console.warn(`[Polymarket] Invalid event ID: ${event.id}, skipping`)
-          continue
-        }
-
-        // Capture the event slug — polymarket.us uses /event/{slug} URLs (not numeric IDs),
-        // so we store it to build correct .us links for US visitors later.
-        const polymarketSlug = event.slug || null
-
-        try {
-          await prisma.market.upsert({
-            where: { externalId },
-            update: {
-              title: event.title || market.question,
-              marketProbability: probability,
-              status: event.closed || event.archived ? MarketStatus.CLOSED : MarketStatus.OPEN,
-              externalUrl: `https://polymarket.com/event/${event.id}`,
-              subcategoryId: subcategory.id,
-              category,
-              isBinary,
-              polymarketEventId,
-              ...(polymarketSlug ? { polymarketSlug } : {}),
-              updatedAt: new Date(),
-            },
-            create: {
-              externalId,
-              source: 'POLYMARKET',
-              category,
-              title: event.title || market.question,
-              description: event.description || market.description,
-              marketProbability: probability,
-              imageUrl: event.image,
-              closesAt: event.endDate ? new Date(event.endDate) : null,
-              resolvesAt: event.endDate ? new Date(event.endDate) : null,
-              status: event.closed || event.archived ? MarketStatus.CLOSED : MarketStatus.OPEN,
-              externalUrl: `https://polymarket.com/event/${event.id}`,
-              tags: event.tags?.map(t => t.label) || [],
-              subcategoryId: subcategory.id,
-              polymarketEventId,
-              isBinary,
-              ...(polymarketSlug ? { polymarketSlug } : {}),
-            },
-          })
-          synced++
-          // Track sync count per subcategory
-          subcategoryCounts[subcategorySlug] = (subcategoryCounts[subcategorySlug] || 0) + 1
-        } catch (err) {
-          console.error(`Failed to sync market ${externalId} for subcategory ${subcategorySlug}:`, err)
-          errors++
-        }
+        synced++
+        // Track sync count per subcategory
+        subcategoryCounts[subcategorySlug] = (subcategoryCounts[subcategorySlug] || 0) + 1
+      } catch (err) {
+        console.error(`Failed to sync market ${externalId} for subcategory ${subcategorySlug}:`, err)
+        errors++
       }
     } catch (err) {
       console.error(`Failed to sync market ${event.id}:`, err)
@@ -1223,33 +1225,59 @@ export async function checkMarketResolutions(): Promise<void> {
     }
   }
 
-  // 2. Handle USER_CREATED markets (auto-close when resolvesAt passes)
+  // 2. Handle USER_CREATED markets (auto-resolve or auto-close when resolvesAt passes)
+  //    Published (APPROVED) topics with predictions auto-RESOLVE by community
+  //    consensus: the final marketProbability is the community's position, so
+  //    >= 0.5 resolves YES and < 0.5 resolves NO. Topics with no predictions
+  //    (no probability to read) and unpublished topics just auto-close for
+  //    admin review.
   const pendingCustom = await prisma.market.findMany({
     where: {
       status: MarketStatus.OPEN,
       resolvesAt: { lte: new Date() },
       source: 'USER_CREATED',
     },
+    select: { id: true, title: true, topicStatus: true, marketProbability: true },
   })
+
+  let autoResolvedCustom = 0
 
   for (const market of pendingCustom) {
     try {
-      // Auto-close the market but DON'T resolve (admin still sets outcome)
-      await prisma.market.update({
-        where: { id: market.id },
-        data: {
-          status: MarketStatus.CLOSED,
-          // No resolvedValue - admin must set it manually
-        },
-      })
-      console.log(`[Custom Market] Auto-closed: ${market.id} (${market.title})`)
+      if (market.topicStatus === 'APPROVED' && market.marketProbability !== null) {
+        // Auto-resolve: community consensus outcome, then score predictions
+        const outcome = market.marketProbability >= 0.5
+        await prisma.market.update({
+          where: { id: market.id },
+          data: {
+            status: MarketStatus.RESOLVED,
+            resolvedAt: new Date(),
+            resolvedValue: outcome,
+          },
+        })
+        const { scoreMarket, updateCompetitionScores } = await import('@/lib/scoring')
+        await scoreMarket(market.id, outcome)
+        await updateCompetitionScores(market.id, new Date())
+        autoResolvedCustom++
+        console.log(`[Custom Market] Auto-resolved (${outcome ? 'YES' : 'NO'} by consensus): ${market.id} (${market.title})`)
+      } else {
+        // No community signal (or not published) — auto-close, admin sets outcome
+        await prisma.market.update({
+          where: { id: market.id },
+          data: {
+            status: MarketStatus.CLOSED,
+            // No resolvedValue - admin must set it manually
+          },
+        })
+        console.log(`[Custom Market] Auto-closed: ${market.id} (${market.title})`)
+      }
     } catch (err) {
-      console.error(`Failed to close custom market ${market.id}:`, err)
+      console.error(`Failed to process custom market ${market.id}:`, err)
     }
   }
 
   if (pendingCustom.length > 0) {
-    console.log(`[Custom Markets] Auto-closed ${pendingCustom.length} market(s) past resolution date`)
+    console.log(`[Custom Markets] Past resolution date: ${autoResolvedCustom} auto-resolved, ${pendingCustom.length - autoResolvedCustom} auto-closed`)
   }
 
   // 3. Catch-all: auto-close any remaining OPEN market past its resolution date
