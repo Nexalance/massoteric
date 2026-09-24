@@ -50,6 +50,37 @@ const guidanceStyle = {
   lineHeight: '1.5',
 }
 
+// Good/bad example blocks — high-contrast text (mist on ink2) with a colored
+// accent edge so examples stand out without hurting readability.
+const exampleBlock = (accent: string, label: string, text: string) => (
+  <div
+    key={label}
+    style={{
+      marginTop: '8px',
+      padding: '10px 14px',
+      background: 'var(--ink2)',
+      borderLeft: `3px solid ${accent}`,
+      borderRadius: '0 4px 4px 0',
+    }}
+  >
+    <div
+      style={{
+        fontSize: '11px',
+        color: accent,
+        fontFamily: 'var(--font-mono)',
+        letterSpacing: '0.5px',
+        marginBottom: '4px',
+        fontWeight: 600,
+      }}
+    >
+      {label}
+    </div>
+    <div style={{ fontSize: '13px', color: 'var(--mist)', lineHeight: '1.5', fontFamily: 'var(--font-mono)' }}>
+      {text}
+    </div>
+  </div>
+)
+
 // datetime-local `min` needs a local-time "YYYY-MM-DDTHH:mm" string
 function localDatetimeMin(): string {
   const d = new Date()
@@ -269,7 +300,7 @@ export default function NewMarketPage() {
         </p>
       </div>
 
-      {/* What makes a good topic */}
+      {/* What makes a good topic + how the process works */}
       <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: '6px', padding: '16px 20px', marginBottom: '32px' }}>
         <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--gold)', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
           What makes a good topic
@@ -279,6 +310,17 @@ export default function NewMarketPage() {
           <li>Resolution criteria that name exactly how YES vs NO is decided, and the source that decides it.</li>
           <li>A resolution date in the future, when the outcome will be known.</li>
         </ul>
+        <div style={{ marginTop: '14px', paddingTop: '12px', borderTop: '1px solid rgba(201,168,76,0.2)' }}>
+          <div style={{ fontSize: '12px', fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase', color: 'var(--gold)', fontFamily: 'var(--font-mono)', marginBottom: '8px' }}>
+            How it works
+          </div>
+          <ol style={{ margin: 0, paddingLeft: '18px', color: 'var(--mist)', fontSize: '13px', lineHeight: '1.8' }}>
+            <li>Write your topic below and submit it.</li>
+            <li>An admin reviews it — usually within a day.</li>
+            <li>Once approved, it goes live in the feed and anyone can predict.</li>
+            <li>When the deadline passes, the topic resolves automatically and every prediction is scored.</li>
+          </ol>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
@@ -308,11 +350,13 @@ export default function NewMarketPage() {
           <p style={guidanceStyle}>
             A clear yes/no question with one definite outcome. Keep it specific and time-bound.
           </p>
+          {exampleBlock('var(--signal)', '✓ GOOD', '"Will the Fed cut rates at the September 2026 meeting?"')}
+          {exampleBlock('var(--danger)', '✗ AVOID', '"What will happen with the economy?" — vague, not yes/no, no time frame.')}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '6px' }}>
             <span style={{ color: fieldValid.title ? 'var(--signal)' : 'var(--mist)' }}>
               {fieldValid.title ? '✓' : `${10 - formData.title.length} more needed`}
             </span>
-            <span style={{ color: 'var(--fog)' }}>{formData.title.length}/300</span>
+            <span style={{ color: 'var(--mist)' }}>{formData.title.length}/300</span>
           </div>
         </div>
 
@@ -370,13 +414,19 @@ export default function NewMarketPage() {
             style={{ ...inputStyle, resize: 'vertical', minHeight: '110px', lineHeight: '1.6' }}
           />
           <p style={guidanceStyle}>
-            How will YES vs NO be decided, and by what source or authority? This is the most important field — ambiguous criteria is how topics go bad.
+            How will YES vs NO be decided, and by what source or authority? This is the most important field — ambiguous criteria is how topics go bad. Name the exact source (website, publication, or organisation) that will decide it.
           </p>
+          {exampleBlock(
+            'var(--signal)',
+            '✓ GOOD',
+            '"Resolves YES if the official Fed statement announces a rate cut at the September 2026 meeting; source: federalreserve.gov. Resolves NO otherwise."'
+          )}
+          {exampleBlock('var(--danger)', '✗ AVOID', '"Whenever the Fed changes rates" — no date, no source, and "changes" is open to argument.')}
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '6px' }}>
             <span style={{ color: fieldValid.resolutionCriteria ? 'var(--signal)' : 'var(--mist)' }}>
               {fieldValid.resolutionCriteria ? '✓' : `${20 - formData.resolutionCriteria.length} more needed`}
             </span>
-            <span style={{ color: 'var(--fog)' }}>{formData.resolutionCriteria.length}/1000</span>
+            <span style={{ color: 'var(--mist)' }}>{formData.resolutionCriteria.length}/1000</span>
           </div>
         </div>
 
@@ -399,7 +449,9 @@ export default function NewMarketPage() {
             }}
           />
           {formData.closesAt === '' ? (
-            <p style={guidanceStyle}>When predictions close — required, and must be a future date.</p>
+            <p style={guidanceStyle}>
+              When predictions stop being accepted — required, and must be a future date. Tip: give people a few days to find and predict on your topic.
+            </p>
           ) : !dateValid.closesAt ? (
             <p style={{ ...guidanceStyle, color: 'var(--danger)' }}>Closing date must be in the future.</p>
           ) : (
@@ -427,7 +479,9 @@ export default function NewMarketPage() {
           {formData.resolvesAt !== '' && !dateValid.resolvesAt ? (
             <p style={{ ...guidanceStyle, color: 'var(--danger)' }}>Resolution date must be in the future.</p>
           ) : (
-            <p style={guidanceStyle}>When the outcome will be known. If left empty, it defaults to the closing date.</p>
+            <p style={guidanceStyle}>
+              When the outcome will actually be known — often a few hours or days after predictions close. If left empty, it defaults to the closing date. When this time passes, the topic resolves automatically and every prediction is scored.
+            </p>
           )}
         </div>
 
@@ -446,7 +500,9 @@ export default function NewMarketPage() {
             rows={5}
             style={{ ...inputStyle, resize: 'vertical', minHeight: '120px', lineHeight: '1.6' }}
           />
-          <p style={guidanceStyle}>Optional — add any extra background or context for readers.</p>
+          <p style={guidanceStyle}>
+            Optional — background for other predictors: the story behind your question, key numbers, deadlines, or links to sources. It helps people predict well, but it doesn&apos;t decide YES/NO — that&apos;s the Resolution Criteria above.
+          </p>
         </div>
 
         {/* Tags */}
@@ -509,7 +565,9 @@ export default function NewMarketPage() {
               </span>
             ))}
           </div>
-          <p style={{ fontSize: '12px', color: 'var(--fog)', marginTop: '6px' }}>Up to 5 tags</p>
+          <p style={{ fontSize: '12px', color: 'var(--mist)', marginTop: '6px' }}>
+            Optional — tags help people find your topic in search (up to 5).
+          </p>
         </div>
 
         {/* Submit Buttons */}
@@ -557,7 +615,7 @@ export default function NewMarketPage() {
           </button>
         </div>
 
-        <p style={{ fontSize: '13px', color: 'var(--fog)', marginTop: '12px', fontStyle: 'italic' }}>
+        <p style={{ fontSize: '13px', color: 'var(--mist)', marginTop: '12px', fontStyle: 'italic' }}>
           * Your topic will be reviewed before appearing in the feed. You&apos;ll receive a notification once it&apos;s approved.
         </p>
       </form>
