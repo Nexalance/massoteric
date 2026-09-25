@@ -124,7 +124,15 @@ export default async function AdminTopicsPage() {
                     {' · '}{topic.createdBy.email}
                   </div>
 
-                  <TopicActions topicId={topic.id} />
+                  <TopicActions
+                    topicId={topic.id}
+                    topic={{
+                      title: topic.title,
+                      description: topic.description,
+                      resolutionCriteria: topic.resolutionCriteria,
+                      closesAt: topic.closesAt,
+                    }}
+                  />
                 </div>
               </div>
             ))}

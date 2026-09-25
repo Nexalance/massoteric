@@ -387,6 +387,8 @@ enum FeatureKey {
   TOPIC_CREATE
   PREDICT_SUBMIT
   SIMPLE_BINARY_ONLY
+  COMMENTS_VIEW
+  COMMENTS_CREATE
 }
 
 // Time-limited reviewer access links (see /dev-access). Only the SHA-256

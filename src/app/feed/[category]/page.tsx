@@ -261,10 +261,15 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto' }}>
           {/* Scrollable category tabs row */}
           <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', padding: '12px 0', alignItems: 'center' }}>
-            {/* Category tabs */}
+            {/* Category tabs — preserve the active sort/search so switching
+                topic (e.g. CLOSING SOON → IRAN) keeps the filtered view */}
             {CATEGORIES.map(cat => {
               const isActive = category === cat.value
-              const catHref = cat.value === 'ALL' ? '/feed/all' : `/feed/${cat.value.toLowerCase()}`
+              const catParams = new URLSearchParams()
+              if (sort !== 'trending') catParams.set('sort', sort)
+              if (search) catParams.set('search', search)
+              const catQuery = catParams.toString()
+              const catHref = (cat.value === 'ALL' ? '/feed/all' : `/feed/${cat.value.toLowerCase()}`) + (catQuery ? `?${catQuery}` : '')
               return (
                 <Link
                   key={cat.value}
@@ -347,6 +352,8 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
       {/* Subcategory menu - only show if we have subcategories */}
       {categoryEnum && subcategories.length > 0 && (
         <SubcategoryMenu
+          sort={sort}
+          search={search}
           category={categoryEnum}
           subcategories={subcategories}
           counts={subcategoryCounts}

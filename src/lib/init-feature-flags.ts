@@ -69,6 +69,20 @@ export async function ensureFeatureFlags() {
       isFree: true,
       isEnabled: true,
     },
+    {
+      key: FeatureKey.COMMENTS_VIEW,
+      label: 'View Comments & Discussions',
+      description: 'Who can see the threaded discussion under a topic. Turn off to hide discussions entirely; mark paid-only to restrict viewing to Standard/Pro subscribers.',
+      isFree: true,
+      isEnabled: true,
+    },
+    {
+      key: FeatureKey.COMMENTS_CREATE,
+      label: 'Post Comments & Replies',
+      description: 'Who can join the discussion — post comments and replies. Mark paid-only to restrict posting to Standard/Pro subscribers.',
+      isFree: false,
+      isEnabled: true,
+    },
   ]
 
   for (const flag of flags) {

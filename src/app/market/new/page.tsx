@@ -5,6 +5,14 @@ import { useRouter } from 'next/navigation'
 import { useCurrentUser } from '@/lib/useCurrentUser'
 import { MarketCategory } from '@prisma/client'
 
+interface TopicReviewNotice {
+  marketId: string
+  title: string
+  status: 'APPROVED' | 'REJECTED'
+  reason: string | null
+  createdAt: string
+}
+
 const CATEGORIES = [
   { value: 'POLITICS' as const, label: 'Politics' },
   { value: 'FINANCE' as const, label: 'Finance' },
@@ -108,6 +116,19 @@ export default function NewMarketPage() {
       .then(data => setCanCreateTopic(!!data.canAccess))
       .catch(() => setCanCreateTopic(false))
   }, [loading, currentUser?.subscriptionTier])
+
+  // Review outcomes for this user's own submissions — the "your topic was
+  // approved / wasn't approved (reason)" notice above the form.
+  const [reviewNotices, setReviewNotices] = useState<TopicReviewNotice[]>([])
+  const [dismissedNotices, setDismissedNotices] = useState<string[]>([])
+
+  useEffect(() => {
+    if (loading || !currentUser?.id) return
+    fetch('/api/topics/mine')
+      .then(res => res.json())
+      .then(data => setReviewNotices(Array.isArray(data.reviews) ? data.reviews : []))
+      .catch(() => setReviewNotices([]))
+  }, [loading, currentUser?.id])
 
   // ALL hooks must be called before any conditional returns (Rules of Hooks)
   const [submitting, setSubmitting] = useState(false)
@@ -299,6 +320,47 @@ export default function NewMarketPage() {
           Submit a prediction market for community review
         </p>
       </div>
+
+      {/* Review outcomes for this user's own submissions */}
+      {reviewNotices.filter(n => !dismissedNotices.includes(n.marketId + n.createdAt)).map(n => (
+        <div
+          key={n.marketId + n.createdAt}
+          style={{
+            padding: '14px 18px',
+            marginBottom: '16px',
+            borderRadius: '6px',
+            fontSize: '13px',
+            lineHeight: '1.6',
+            color: 'var(--cream)',
+            background: n.status === 'APPROVED' ? 'rgba(79, 195, 161, 0.1)' : 'rgba(224, 92, 92, 0.12)',
+            border: n.status === 'APPROVED' ? '1px solid rgba(79, 195, 161, 0.35)' : '1px solid rgba(224, 92, 92, 0.35)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: '12px',
+          }}
+        >
+          <div>
+            <strong style={{ color: n.status === 'APPROVED' ? 'var(--signal)' : 'var(--danger)' }}>
+              {n.status === 'APPROVED' ? '✓ Topic approved' : '✗ Topic not approved'}
+            </strong>{' '}
+            — “{n.title}”
+            {n.status === 'APPROVED' && ' and is now live in the feed.'}
+            {n.reason && (
+              <div style={{ color: 'var(--mist)', marginTop: '4px' }}>
+                Reviewer note: {n.reason}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => setDismissedNotices(prev => [...prev, n.marketId + n.createdAt])}
+            aria-label="Dismiss"
+            style={{ background: 'none', border: 'none', color: 'var(--mist)', fontSize: '18px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}
+          >
+            ×
+          </button>
+        </div>
+      ))}
 
       {/* What makes a good topic + how the process works */}
       <div style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.25)', borderRadius: '6px', padding: '16px 20px', marginBottom: '32px' }}>

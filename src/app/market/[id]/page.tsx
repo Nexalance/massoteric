@@ -13,6 +13,7 @@ import { formatDistanceToNow, format } from 'date-fns'
 import Link from 'next/link'
 import PolymarketLinkClient from './PolymarketLinkClient'
 import { PredictionForm } from './PredictionForm'
+import CommentsSection from './CommentsSection'
 
 interface MarketPageProps {
   params: { id: string }
@@ -417,6 +418,11 @@ export default async function MarketPage({ params }: MarketPageProps) {
             </div>
           </aside>
         </div>
+
+        {/* Threaded discussion — visibility/posting controlled by the admin
+            COMMENTS_VIEW / COMMENTS_CREATE feature flags (the section renders
+            nothing when discussions are switched off) */}
+        <CommentsSection marketId={market.id} />
       </div>
     </main>
   )

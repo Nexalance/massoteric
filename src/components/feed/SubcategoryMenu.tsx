@@ -14,6 +14,8 @@ interface SubcategoryMenuProps {
   counts: Record<string, number> // subcategoryId -> count
   activeSubcategory: string | null
   totalCount?: number // Total unique events for the category (optional)
+  sort?: string // Active sort — carried into every pill link so
+  search?: string // switching topic keeps the filtered view (e.g. CLOSING SOON)
 }
 
 export default function SubcategoryMenu({
@@ -22,6 +24,8 @@ export default function SubcategoryMenu({
   counts,
   activeSubcategory,
   totalCount,
+  sort,
+  search,
 }: SubcategoryMenuProps) {
   // Filter out subcategories with 0 count (fetch-only tags)
   const visibleSubcategories = subcategories.filter(sub => {
@@ -30,6 +34,13 @@ export default function SubcategoryMenu({
   })
 
   if (visibleSubcategories.length === 0) return null
+
+  // Query string carried into every pill link — keeps the active sort/search
+  // so users can e.g. stay on CLOSING SOON while drilling into a topic.
+  const params = new URLSearchParams()
+  if (sort && sort !== 'trending') params.set('sort', sort)
+  if (search) params.set('search', search)
+  const query = params.toString() ? `?${params.toString()}` : ''
 
   // Format count for display
   function formatCount(count: number): string {
@@ -42,7 +53,7 @@ export default function SubcategoryMenu({
       <div className="subcategory-menu-inner">
         {/* "All" link - goes back to category page */}
         <Link
-          href={`/feed/${category.toLowerCase()}`}
+          href={`/feed/${category.toLowerCase()}${query}`}
           className={`subcategory-pill${!activeSubcategory ? ' active' : ''}`}
         >
           All <span className="subcategory-pill-count">({formatCount(
@@ -58,7 +69,7 @@ export default function SubcategoryMenu({
           return (
             <Link
               key={sub.slug}
-              href={`/feed/${category.toLowerCase()}/${sub.slug}`}
+              href={`/feed/${category.toLowerCase()}/${sub.slug}${query}`}
               className={`subcategory-pill${isActive ? ' active' : ''}`}
             >
               {sub.label}

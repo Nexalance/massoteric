@@ -101,11 +101,15 @@ export function PredictionForm({ marketId, marketStatus, closesAt, existingPredi
             {sliderValue}%
           </span>
         </div>
-        <p style={{ fontSize: '13px', color: 'var(--mist)', margin: '0 0 20px', lineHeight: '1.6' }}>
+        <p style={{ fontSize: '13px', color: 'var(--mist)', margin: '0 0 8px', lineHeight: '1.6' }}>
           Your forecast:{' '}
           <span style={{ color: 'var(--signal)', fontWeight: 600 }}>{sliderValue}%</span>{' '}
           chance this topic resolves <span style={{ color: 'var(--cream)', fontWeight: 600 }}>YES</span>.
-          Slide toward 100% if you&apos;re confident it will happen, toward 0% if you&apos;re confident it won&apos;t.
+          Slide toward 99% if you&apos;re confident it will happen, toward 1% if you&apos;re confident it won&apos;t.
+        </p>
+        <p style={{ fontSize: '12px', color: 'var(--mist)', margin: '0 0 20px', lineHeight: '1.5' }}>
+          Predictions run from 1% to 99% — 0% and 100% aren&apos;t allowed, because nothing in the real
+          world is ever completely certain.
         </p>
 
         <label className="label">Your Reasoning</label>
@@ -115,7 +119,7 @@ export function PredictionForm({ marketId, marketStatus, closesAt, existingPredi
           onChange={handleReasoningChange}
           className="input"
           placeholder="Explain your reasoning (minimum 50 characters). This builds your reputation and track record."
-          style={{ marginBottom: '4px', minHeight: '140px' }}
+          style={{ marginBottom: '4px', minHeight: '140px', userSelect: 'text', WebkitUserSelect: 'text' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginTop: '4px', marginBottom: '12px' }}>
           <span style={{ color: isValid ? 'var(--signal)' : 'var(--mist)' }}>
@@ -153,7 +157,7 @@ export function PredictionForm({ marketId, marketStatus, closesAt, existingPredi
           {existingPrediction ? 'Update Prediction' : 'Submit Prediction'}
         </button>
 
-        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--fog)', marginTop: '10px', lineHeight: '1.5' }}>
+        <p style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--mist)', marginTop: '10px', lineHeight: '1.5' }}>
           All edits are timestamped and public. Predictions lock 48 hours before market close.
         </p>
       </form>
