@@ -241,14 +241,17 @@ export default function Nav({ dataMassotericNav, initialUser }: { dataMassoteric
             }}
           />
 
-          {/* Mobile menu panel */}
+          {/* Mobile menu panel — .mobile-drawer (globals.css) keeps the panel
+              inside the VISIBLE viewport on iOS Safari, where 100vh is taller
+              than the screen (bottom URL bar), and stops the page's rubber-band
+              gesture from eating the drawer scroll. */}
           <div
             ref={mobileMenuRef}
+            className="mobile-drawer"
             style={{
               position: 'fixed', top: 60, left: 0, right: 0,
               background: 'var(--ink2)', borderBottom: '1px solid var(--border)',
-              zIndex: 900, padding: '16px var(--page-pad)',
-              maxHeight: 'calc(100vh - 60px)', overflowY: 'auto',
+              zIndex: 900, padding: '16px var(--page-pad) 32px',
             }}
           >
             {/* Close button at top */}

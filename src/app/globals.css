@@ -837,3 +837,20 @@ table tbody tr:hover {
     padding-top: 20px;
   }
 }
+
+/* Mobile nav drawer — scroll fixes (client report: "can't scroll to the end"):
+   1. dvh keeps max-height inside the VISIBLE viewport on iOS Safari, where
+      100vh ignores the collapsing bottom URL bar (panel bottom hid behind it).
+   2. overscroll-behavior: contain stops the page-behind rubber-band gesture
+      from swallowing the drawer's scroll on touch devices. */
+.mobile-drawer {
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+@supports (height: 100dvh) {
+  .mobile-drawer {
+    max-height: calc(100dvh - 60px);
+  }
+}

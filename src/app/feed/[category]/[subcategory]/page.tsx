@@ -322,6 +322,8 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
         subcategories={allSubcategories}
         counts={subcategoryCounts}
         activeSubcategory={params.subcategory}
+        sort={sort}
+        search={search}
       />
 
       <div className="page-container" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
