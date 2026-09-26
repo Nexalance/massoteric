@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { auth } from '@/lib/auth-mock'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { MarketCategory, FeatureKey } from '@prisma/client'
+import { Prisma, MarketCategory, FeatureKey } from '@prisma/client'
 import { canAccess } from '@/lib/access'
 import { isAdmin } from '@/lib/admin'
 import Link from 'next/link'
@@ -17,8 +17,24 @@ import SubcategoryMenu from '@/components/feed/SubcategoryMenu'
 
 interface CategoryPageProps {
   params: { category: string }
-  searchParams: { page?: string; sort?: string; search?: string }
+  searchParams: { page?: string; sort?: string; search?: string; within?: string; source?: string }
 }
+
+// "Closes within" windows (hours) for the Closing Soon sort — '' = no window
+const WITHIN_OPTIONS = [
+  { value: '', label: 'All' },
+  { value: '24', label: '24h' },
+  { value: '72', label: '3 days' },
+  { value: '168', label: '7 days' },
+  { value: '720', label: '30 days' },
+]
+
+// Source filter — where a topic comes from. '' = all sources
+const SOURCE_OPTIONS = [
+  { value: '', label: 'All' },
+  { value: 'POLYMARKET', label: 'Polymarket' },
+  { value: 'USER_CREATED', label: 'Massoteric' },
+]
 
 // Normalize category slug to enum value
 function normalizeCategory(slug: string): MarketCategory | 'ALL' {
@@ -82,6 +98,12 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   const sortParam = (searchParams.sort || 'trending') as SortValue
   const sort: SortValue = SORTS.some(s => s.value === sortParam) ? sortParam : 'trending'
   const search = searchParams.search?.trim() || undefined
+
+  // "Closes within" windows (hours) narrow the Closing Soon sort; the source
+  // filter separates Polymarket topics from Massoteric originals. Both combine
+  // with any sort + topic selection.
+  const within = WITHIN_OPTIONS.some(o => o.value === (searchParams.within || '')) ? (searchParams.within || '') : ''
+  const source = SOURCE_OPTIONS.some(o => o.value === (searchParams.source || '')) ? (searchParams.source || '') : ''
 
   // Fetch subcategories for this category from database (dynamic, not hardcoded)
   let subcategories: Array<{ slug: string; label: string; category: string }> = []
@@ -159,35 +181,47 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   }
 
   // Fetch markets
-  const where = {
-    status: 'OPEN' as const,
-    ...(categoryEnum && { category: categoryEnum }),
-    ...binaryOnlyWhere(binaryOnly),
-    AND: [
-      { OR: [{ closesAt: null }, { closesAt: { gte: now } }] },
-      { OR: [{ resolvesAt: null }, { resolvesAt: { gte: now } }] },
-      {
-        OR: [
-          { source: { not: 'USER_CREATED' as const } },
-          { source: 'USER_CREATED' as const, topicStatus: 'APPROVED' as const },
-        ],
-      },
-      ...(search
-        ? [{
-            OR: [
-              { title: { contains: search, mode: 'insensitive' as const } },
-              { description: { contains: search, mode: 'insensitive' as const } },
-              { tags: { has: search } },
-            ],
-          }]
-        : []),
-    ],
-  }
+  const andFilters: Prisma.MarketWhereInput[] = [
+    { OR: [{ closesAt: null }, { closesAt: { gte: now } }] },
+    { OR: [{ resolvesAt: null }, { resolvesAt: { gte: now } }] },
+    {
+      OR: [
+        { source: { not: 'USER_CREATED' as const } },
+        { source: 'USER_CREATED' as const, topicStatus: 'APPROVED' as const },
+      ],
+    },
+    ...(search
+      ? [{
+          OR: [
+            { title: { contains: search, mode: 'insensitive' as const } },
+            { description: { contains: search, mode: 'insensitive' as const } },
+            { tags: { has: search } },
+          ],
+        }]
+      : []),
+  ]
 
   // "Closing Soon" surfaces markets the user can still act on: skip markets inside
   // the 48h prediction-lock window (they close too soon to accept predictions).
   if (sort === 'closing') {
-    where.AND.push({ closesAt: { gte: new Date(now.getTime() + 48 * 60 * 60 * 1000) } })
+    andFilters.push({ closesAt: { gte: new Date(now.getTime() + 48 * 60 * 60 * 1000) } })
+  }
+
+  // "Closes within" window — only meaningful for the Closing Soon sort
+  if (sort === 'closing' && within) {
+    andFilters.push({ closesAt: { lte: new Date(now.getTime() + Number(within) * 60 * 60 * 1000) } })
+  }
+
+  // Source filter — Polymarket vs Massoteric originals
+  if (source) {
+    andFilters.push({ source: source as 'POLYMARKET' | 'USER_CREATED' })
+  }
+
+  const where = {
+    status: 'OPEN' as const,
+    ...(categoryEnum && { category: categoryEnum }),
+    ...binaryOnlyWhere(binaryOnly),
+    AND: andFilters,
   }
 
   const orderBy =
@@ -240,13 +274,17 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   const totalPages = Math.ceil(total / limit)
 
-  // Build href that preserves sort/search
-  function feedHref(opts: { sort?: string; search?: string; page?: number }) {
+  // Build href that preserves sort/search and the within/source filters
+  function feedHref(opts: { sort?: string; search?: string; page?: number; within?: string; source?: string }) {
     const basePath = `/feed/${params.category}`
     const sp = new URLSearchParams()
     if (opts.sort && opts.sort !== 'trending') sp.set('sort', opts.sort)
     if (opts.search) sp.set('search', opts.search)
     if (opts.page && opts.page > 1) sp.set('page', String(opts.page))
+    const withinValue = opts.within !== undefined ? opts.within : within
+    if (opts.sort === 'closing' && withinValue) sp.set('within', withinValue)
+    const sourceValue = opts.source !== undefined ? opts.source : source
+    if (sourceValue) sp.set('source', sourceValue)
     const s = sp.toString()
     return s ? `${basePath}?${s}` : basePath
   }
@@ -261,13 +299,15 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         <div style={{ maxWidth: 'var(--content-max)', margin: '0 auto' }}>
           {/* Scrollable category tabs row */}
           <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', padding: '12px 0', alignItems: 'center' }}>
-            {/* Category tabs — preserve the active sort/search so switching
+            {/* Category tabs — preserve sort + filters so switching
                 topic (e.g. CLOSING SOON → IRAN) keeps the filtered view */}
             {CATEGORIES.map(cat => {
               const isActive = category === cat.value
               const catParams = new URLSearchParams()
               if (sort !== 'trending') catParams.set('sort', sort)
               if (search) catParams.set('search', search)
+              if (sort === 'closing' && within) catParams.set('within', within)
+              if (source) catParams.set('source', source)
               const catQuery = catParams.toString()
               const catHref = (cat.value === 'ALL' ? '/feed/all' : `/feed/${cat.value.toLowerCase()}`) + (catQuery ? `?${catQuery}` : '')
               return (
@@ -325,6 +365,73 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
             })}
           </div>
 
+          {/* How the two-level filtering works — small always-visible hint */}
+          <p style={{ fontSize: '11px', color: 'var(--mist)', margin: '0 0 10px', lineHeight: '1.5' }}>
+            Tip: pick a topic above to narrow the list — your sort and filters stay applied.
+          </p>
+
+          {/* "Closes within" window — only meaningful for the Closing Soon sort */}
+          {sort === 'closing' && (
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap', padding: '0 0 8px 0' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--fog)', letterSpacing: '1px', marginRight: '8px' }}>
+                CLOSES WITHIN:
+              </span>
+              {WITHIN_OPTIONS.map(o => {
+                const isActive = within === o.value
+                return (
+                  <Link
+                    key={o.label}
+                    href={feedHref({ sort, search, within: o.value })}
+                    style={{
+                      padding: '4px 12px',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '10px',
+                      letterSpacing: '1px',
+                      color: isActive ? 'var(--cream)' : 'var(--mist)',
+                      background: isActive ? 'rgba(201,168,76,0.15)' : 'transparent',
+                      border: isActive ? '1px solid var(--gold)' : '1px solid var(--border)',
+                      borderRadius: '2px',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {o.label}
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Source filter — Polymarket vs Massoteric originals */}
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap', padding: '0 0 8px 0' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--fog)', letterSpacing: '1px', marginRight: '8px' }}>
+              SOURCE:
+            </span>
+            {SOURCE_OPTIONS.map(o => {
+              const isActive = source === o.value
+              return (
+                <Link
+                  key={o.label}
+                  href={feedHref({ sort, search, source: o.value })}
+                  style={{
+                    padding: '4px 12px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '10px',
+                    letterSpacing: '1px',
+                    color: isActive ? 'var(--cream)' : 'var(--mist)',
+                    background: isActive ? 'rgba(201,168,76,0.15)' : 'transparent',
+                    border: isActive ? '1px solid var(--gold)' : '1px solid var(--border)',
+                    borderRadius: '2px',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {o.label}
+                </Link>
+              )
+            })}
+          </div>
+
           {/* "+ New Topic" button - at end of sort row */}
           {canCreateTopic && (
             <div style={{ marginLeft: 'auto', paddingLeft: '12px' }}>
@@ -354,6 +461,8 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         <SubcategoryMenu
           sort={sort}
           search={search}
+          within={sort === 'closing' ? within : ''}
+          source={source}
           category={categoryEnum}
           subcategories={subcategories}
           counts={subcategoryCounts}

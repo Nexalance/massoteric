@@ -78,7 +78,10 @@ export default async function AdminPage() {
               {/* SIMPLE_BINARY_ONLY is excluded here — it is a display mode with
                   its own ON/OFF switch below, not a Free/Paid feature. Showing it
                   in this list made it look like a second (broken) switch. */}
-              <FeatureFlagsClient initialFlags={flags.filter(f => f.key !== 'SIMPLE_BINARY_ONLY').map(f => ({ key: f.key, label: f.label, description: f.description, isFree: f.isFree }))} />
+              {/* EXPERT_QA is excluded too — it is an unbuilt placeholder (flag only,
+                  no feature behind it). Exposing the toggle invites admins to switch
+                  on a feature that does not exist. Revisit when Q&A is actually built. */}
+              <FeatureFlagsClient initialFlags={flags.filter(f => f.key !== 'SIMPLE_BINARY_ONLY' && f.key !== 'EXPERT_QA').map(f => ({ key: f.key, label: f.label, description: f.description, isFree: f.isFree }))} />
             </div>
             <BinaryOnlyToggle initialEnabled={binaryOnlyEnabled} />
           </div>

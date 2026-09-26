@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 import { auth } from '@/lib/auth-mock'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { MarketCategory, FeatureKey } from '@prisma/client'
+import { Prisma, MarketCategory, FeatureKey } from '@prisma/client'
 import { canAccess } from '@/lib/access'
 import { isAdmin } from '@/lib/admin'
 import Link from 'next/link'
@@ -17,8 +17,24 @@ import SubcategoryMenu from '@/components/feed/SubcategoryMenu'
 
 interface SubcategoryPageProps {
   params: { category: string; subcategory: string }
-  searchParams: { page?: string; sort?: string; search?: string }
+  searchParams: { page?: string; sort?: string; search?: string; within?: string; source?: string }
 }
+
+// "Closes within" windows (hours) for the Closing Soon sort — '' = no window
+const WITHIN_OPTIONS = [
+  { value: '', label: 'All' },
+  { value: '24', label: '24h' },
+  { value: '72', label: '3 days' },
+  { value: '168', label: '7 days' },
+  { value: '720', label: '30 days' },
+]
+
+// Source filter — where a topic comes from. '' = all sources
+const SOURCE_OPTIONS = [
+  { value: '', label: 'All' },
+  { value: 'POLYMARKET', label: 'Polymarket' },
+  { value: 'USER_CREATED', label: 'Massoteric' },
+]
 
 function normalizeCategory(slug: string): MarketCategory | null {
   const upper = slug.toUpperCase()
@@ -94,6 +110,8 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
   const sortParam = (searchParams.sort || 'trending') as SortValue
   const sort: SortValue = SORTS.some(s => s.value === sortParam) ? sortParam : 'trending'
   const search = searchParams.search?.trim() || undefined
+  const within = WITHIN_OPTIONS.some(o => o.value === (searchParams.within || '')) ? (searchParams.within || '') : ''
+  const source = SOURCE_OPTIONS.some(o => o.value === (searchParams.source || '')) ? (searchParams.source || '') : ''
 
   // Fetch all subcategories for this category from database (for the menu)
   const allSubcategories = await prisma.subcategory.findMany({
@@ -151,36 +169,48 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
   }
 
   // Fetch markets - filtered by subcategory
+  const andFilters: Prisma.MarketWhereInput[] = [
+    { OR: [{ closesAt: null }, { closesAt: { gte: now } }] },
+    { OR: [{ resolvesAt: null }, { resolvesAt: { gte: now } }] },
+    {
+      OR: [
+        { source: { not: 'USER_CREATED' as const } },
+        { source: 'USER_CREATED' as const, topicStatus: 'APPROVED' as const },
+      ],
+    },
+    ...(search
+      ? [{
+          OR: [
+            { title: { contains: search, mode: 'insensitive' as const } },
+            { description: { contains: search, mode: 'insensitive' as const } },
+            { tags: { has: search } },
+          ],
+        }]
+      : []),
+  ]
+
+  // "Closing Soon" surfaces markets the user can still act on: skip markets inside
+  // the 48h prediction-lock window (they close too soon to accept predictions).
+  if (sort === 'closing') {
+    andFilters.push({ closesAt: { gte: new Date(now.getTime() + 48 * 60 * 60 * 1000) } })
+  }
+
+  // "Closes within" window — only meaningful for the Closing Soon sort
+  if (sort === 'closing' && within) {
+    andFilters.push({ closesAt: { lte: new Date(now.getTime() + Number(within) * 60 * 60 * 1000) } })
+  }
+
+  // Source filter — Polymarket vs Massoteric originals
+  if (source) {
+    andFilters.push({ source: source as 'POLYMARKET' | 'USER_CREATED' })
+  }
+
   const where = {
     status: 'OPEN' as const,
     category,
     subcategoryId: subcategoryRecord.id,
     ...binaryOnlyWhere(binaryOnly),
-    AND: [
-      { OR: [{ closesAt: null }, { closesAt: { gte: now } }] },
-      { OR: [{ resolvesAt: null }, { resolvesAt: { gte: now } }] },
-      {
-        OR: [
-          { source: { not: 'USER_CREATED' as const } },
-          { source: 'USER_CREATED' as const, topicStatus: 'APPROVED' as const },
-        ],
-      },
-      ...(search
-        ? [{
-            OR: [
-              { title: { contains: search, mode: 'insensitive' as const } },
-              { description: { contains: search, mode: 'insensitive' as const } },
-              { tags: { has: search } },
-            ],
-          }]
-        : []),
-    ],
-  }
-
-  // "Closing Soon" surfaces markets the user can still act on: skip markets inside
-  // the 48h prediction-lock window (they close too soon to accept predictions).
-  if (sort === 'closing') {
-    where.AND.push({ closesAt: { gte: new Date(now.getTime() + 48 * 60 * 60 * 1000) } })
+    AND: andFilters,
   }
 
   const orderBy =
@@ -223,13 +253,17 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
 
   const totalPages = Math.ceil(total / limit)
 
-  // Build href that preserves sort/search
-  function feedHref(opts: { sort?: string; search?: string; page?: number }) {
+  // Build href that preserves sort/search and the within/source filters
+  function feedHref(opts: { sort?: string; search?: string; page?: number; within?: string; source?: string }) {
     const basePath = `/feed/${params.category}/${params.subcategory}`
     const sp = new URLSearchParams()
     if (opts.sort && opts.sort !== 'trending') sp.set('sort', opts.sort)
     if (opts.search) sp.set('search', opts.search)
     if (opts.page && opts.page > 1) sp.set('page', String(opts.page))
+    const withinValue = opts.within !== undefined ? opts.within : within
+    if (opts.sort === 'closing' && withinValue) sp.set('within', withinValue)
+    const sourceValue = opts.source !== undefined ? opts.source : source
+    if (sourceValue) sp.set('source', sourceValue)
     const s = sp.toString()
     return s ? `${basePath}?${s}` : basePath
   }
@@ -292,6 +326,68 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
             })}
           </div>
 
+          {/* "Closes within" window — only meaningful for the Closing Soon sort */}
+          {sort === 'closing' && (
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap', padding: '0 0 8px 0' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--fog)', letterSpacing: '1px', marginRight: '8px' }}>
+                CLOSES WITHIN:
+              </span>
+              {WITHIN_OPTIONS.map(o => {
+                const isActive = within === o.value
+                return (
+                  <Link
+                    key={o.label}
+                    href={feedHref({ sort, search, within: o.value })}
+                    style={{
+                      padding: '4px 12px',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '10px',
+                      letterSpacing: '1px',
+                      color: isActive ? 'var(--cream)' : 'var(--mist)',
+                      background: isActive ? 'rgba(201,168,76,0.15)' : 'transparent',
+                      border: isActive ? '1px solid var(--gold)' : '1px solid var(--border)',
+                      borderRadius: '2px',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {o.label}
+                  </Link>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Source filter — Polymarket vs Massoteric originals */}
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap', padding: '0 0 8px 0' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--fog)', letterSpacing: '1px', marginRight: '8px' }}>
+              SOURCE:
+            </span>
+            {SOURCE_OPTIONS.map(o => {
+              const isActive = source === o.value
+              return (
+                <Link
+                  key={o.label}
+                  href={feedHref({ sort, search, source: o.value })}
+                  style={{
+                    padding: '4px 12px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '10px',
+                    letterSpacing: '1px',
+                    color: isActive ? 'var(--cream)' : 'var(--mist)',
+                    background: isActive ? 'rgba(201,168,76,0.15)' : 'transparent',
+                    border: isActive ? '1px solid var(--gold)' : '1px solid var(--border)',
+                    borderRadius: '2px',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.15s',
+                  }}
+                >
+                  {o.label}
+                </Link>
+              )
+            })}
+          </div>
+
           {/* "+ New Topic" button - separate row, always visible */}
           {canCreateTopic && (
             <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '12px' }}>
@@ -324,6 +420,8 @@ export default async function SubcategoryPage({ params, searchParams }: Subcateg
         activeSubcategory={params.subcategory}
         sort={sort}
         search={search}
+        within={sort === 'closing' ? within : ''}
+        source={source}
       />
 
       <div className="page-container" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
