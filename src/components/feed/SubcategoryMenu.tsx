@@ -16,6 +16,8 @@ interface SubcategoryMenuProps {
   totalCount?: number // Total unique events for the category (optional)
   sort?: string // Active sort — carried into every pill link so
   search?: string // switching topic keeps the filtered view (e.g. CLOSING SOON)
+  within?: string // Closing Soon time window
+  source?: string // Source filter
 }
 
 export default function SubcategoryMenu({
@@ -26,6 +28,8 @@ export default function SubcategoryMenu({
   totalCount,
   sort,
   search,
+  within,
+  source,
 }: SubcategoryMenuProps) {
   // Filter out subcategories with 0 count (fetch-only tags)
   const visibleSubcategories = subcategories.filter(sub => {
@@ -36,10 +40,12 @@ export default function SubcategoryMenu({
   if (visibleSubcategories.length === 0) return null
 
   // Query string carried into every pill link — keeps the active sort/search
-  // so users can e.g. stay on CLOSING SOON while drilling into a topic.
+  // and filters so users can e.g. stay on CLOSING SOON while drilling into a topic.
   const params = new URLSearchParams()
   if (sort && sort !== 'trending') params.set('sort', sort)
   if (search) params.set('search', search)
+  if (sort === 'closing' && within) params.set('within', within)
+  if (source) params.set('source', source)
   const query = params.toString() ? `?${params.toString()}` : ''
 
   // Format count for display
