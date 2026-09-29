@@ -159,6 +159,10 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
               What does this mean?
             </Link>
           </p>
+          <p style={{ color: 'var(--mist)', marginTop: '6px', fontSize: '13px' }}>
+            Tap any forecaster below to see their predictions, reasoning, and full track record.
+            Want your own? Every prediction you make is listed on your profile.
+          </p>
         </div>
 
         {/* Filters */}

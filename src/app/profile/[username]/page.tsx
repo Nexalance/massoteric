@@ -208,6 +208,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           {/* Predictions */}
           <div>
             <div className="section-label">Recent Predictions</div>
+            <p style={{ fontSize: '12px', color: 'var(--mist)', margin: '0 0 14px', lineHeight: '1.6' }}>
+              Each card shows this forecaster&apos;s call (as a probability) with their reasoning — and once the
+              topic resolves, the final outcome and whether the call was correct.{' '}
+              <Link href="/about/scoring" style={{ color: 'var(--gold)' }}>How scoring works →</Link>
+            </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {recentPredictions.map(pred => {
                 const resolved = pred.market.status === 'RESOLVED'
@@ -236,8 +241,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                           <div style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 300, color: 'var(--gold)' }}>
                             {Math.round(pred.probability * 100)}%
                           </div>
-                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--fog)', letterSpacing: '1px' }}>
-                            THEIR CALL
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--cream)', letterSpacing: '1px' }}>
+                            THEIR CALL · {pred.probability >= 0.5 ? 'YES' : 'NO'}
                           </div>
                         </div>
                       </div>
@@ -292,23 +297,33 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           {accuracySummary.byCategory.length > 0 && (
             <aside>
               <div className="section-label">Accuracy by Topic</div>
+              <p style={{ fontSize: '12px', color: 'var(--mist)', margin: '0 0 14px', lineHeight: '1.6' }}>
+                How often this forecaster&apos;s calls were correct, per topic — counted only from topics that have
+                resolved and been scored.{' '}
+                <Link href="/about/scoring" style={{ color: 'var(--gold)' }}>How scoring works →</Link>
+              </p>
               <div className="card">
-                {accuracySummary.byCategory.map(score => (
-                  <div key={score.category} style={{ marginBottom: '14px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '13px', color: 'var(--cream)' }}>{score.category}</span>
-                      <span style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 300, color: (score.accuracyPct || 0) > 75 ? 'var(--signal)' : 'var(--gold)' }}>
-                        {score.accuracyPct}%
-                      </span>
+                {accuracySummary.byCategory.map(score => {
+                  const hasScores = (score.scoredPredictions || 0) > 0 && score.accuracyPct !== null
+                  return (
+                    <div key={score.category} style={{ marginBottom: '14px', opacity: hasScores ? 1 : 0.55 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <span style={{ fontSize: '13px', color: 'var(--cream)' }}>{score.category}</span>
+                        <span style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fontWeight: 300, color: (score.accuracyPct || 0) > 75 ? 'var(--signal)' : 'var(--gold)' }}>
+                          {hasScores ? `${score.accuracyPct}%` : '—'}
+                        </span>
+                      </div>
+                      <div className="accuracy-bar">
+                        <div className="accuracy-bar-fill" style={{ width: hasScores ? `${score.accuracyPct}%` : '0%' }} />
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--cream)', marginTop: '3px' }}>
+                        {hasScores
+                          ? `${score.scoredPredictions} scored prediction${score.scoredPredictions === 1 ? '' : 's'}`
+                          : 'No scored predictions yet'}
+                      </div>
                     </div>
-                    <div className="accuracy-bar">
-                      <div className="accuracy-bar-fill" style={{ width: `${score.accuracyPct}%` }} />
-                    </div>
-                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--fog)', marginTop: '3px' }}>
-                      {score.scoredPredictions} scored predictions
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </aside>
           )}
