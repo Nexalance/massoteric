@@ -129,7 +129,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
             {[
               {
                 label: 'Market Probability',
-                value: market.marketProbability !== null ? `${Math.round(market.marketProbability * 100)}%` : 'N/A',
+                value: market.marketProbability !== null ? `${Math.round(market.marketProbability * 100)}%` : '—',
                 color: market.marketProbability && market.marketProbability > 0.5 ? 'var(--signal)' : 'var(--gold)',
               },
               {
@@ -180,7 +180,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
           {/* Predictions list */}
           <div className="market-grid-main">
             <div className="section-label" style={{ marginBottom: '16px' }}>
-              {market._count.predictions} Predictions
+              {market._count.predictions} {market._count.predictions === 1 ? 'Prediction' : 'Predictions'}
               {isAuthenticated && !canFilterAccuracy && (
                 <Link href="/settings/billing" style={{ marginLeft: '12px', color: 'var(--mist)', fontSize: '9px' }}>
                   UPGRADE TO SORT BY ACCURACY →
@@ -259,8 +259,13 @@ export default async function MarketPage({ params }: MarketPageProps) {
                             </span>
                           </Link>
                         )}
-                        <div style={{ fontFamily: 'var(--font-display)', fontSize: '36px', fontWeight: 300, color: prediction.probability > 0.5 ? 'var(--signal)' : 'var(--gold)' }}>
-                          {Math.round(prediction.probability * 100)}%
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontFamily: 'var(--font-display)', fontSize: '36px', fontWeight: 300, color: prediction.probability > 0.5 ? 'var(--signal)' : 'var(--gold)' }}>
+                            {Math.round(prediction.probability * 100)}%
+                          </div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--mist)', letterSpacing: '1px', marginTop: '2px' }}>
+                            PREDICTED {prediction.probability >= 0.5 ? 'YES' : 'NO'}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -312,9 +317,9 @@ export default async function MarketPage({ params }: MarketPageProps) {
                       {formatDistanceToNow(prediction.createdAt, { addSuffix: true })}
                       {prediction.status === 'LOCKED' && ' · 🔒 locked'}
                       {prediction.status === 'SCORED' && prediction.brierScore !== null && (
-                        <span style={{ marginLeft: '8px', color: 'var(--signal)' }}>
-                          Brier: {prediction.brierScore.toFixed(3)}
-                        </span>
+                        <Link href="/about/scoring" style={{ marginLeft: '8px', color: 'var(--signal)', textDecoration: 'none' }} title="Brier score — how close the forecast was to the outcome. Lower is better; 0 is a perfect call.">
+                          Brier score {prediction.brierScore.toFixed(3)} (lower is better)
+                        </Link>
                       )}
                     </div>
                   </div>
