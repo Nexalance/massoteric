@@ -125,7 +125,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
           </h1>
 
           {/* Stats row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '16px' }}>
             {[
               {
                 label: 'Market Probability',
@@ -169,9 +169,14 @@ export default async function MarketPage({ params }: MarketPageProps) {
           )}
 
           {market.description && (
-            <p style={{ fontSize: '15px', color: 'var(--mist)', marginTop: '16px', lineHeight: '1.7', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-              {market.description}
-            </p>
+            <details style={{ marginTop: '16px', borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
+              <summary style={{ cursor: 'pointer', fontFamily: 'var(--font-mono)', fontSize: '11px', color: 'var(--gold)', letterSpacing: '1px', textTransform: 'uppercase', listStyle: 'none' }}>
+                ▾ Details &amp; Resolution Criteria
+              </summary>
+              <p style={{ fontSize: '15px', color: 'var(--mist)', marginTop: '12px', lineHeight: '1.7' }}>
+                {market.description}
+              </p>
+            </details>
           )}
         </div>
 
@@ -224,7 +229,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
                       borderLeft: isMyPrediction ? '3px solid var(--gold)' : '3px solid transparent',
                     }}>
                     {/* User header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
                       <Link href={`/profile/${prediction.user.username}`} style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
                         <div style={{
                           width: 40, height: 40, borderRadius: '50%',
@@ -244,7 +249,7 @@ export default async function MarketPage({ params }: MarketPageProps) {
                           )}
                         </div>
                       </Link>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'flex-end', gap: '12px' }}>
                         {topicScoreDisplay ? (
                           <Link href="/about/scoring" style={{ textDecoration: 'none' }} title={`Accuracy on this topic (${market.category.toLowerCase()}, ${topicScoreDisplay.scoredPredictions} scored) — click to learn how scoring works`}>
                             <span className="badge badge-free" style={{ fontSize: '10px', opacity: topicScore ? 1 : 0.6 }}>
@@ -317,8 +322,17 @@ export default async function MarketPage({ params }: MarketPageProps) {
                       {formatDistanceToNow(prediction.createdAt, { addSuffix: true })}
                       {prediction.status === 'LOCKED' && ' · 🔒 locked'}
                       {prediction.status === 'SCORED' && prediction.brierScore !== null && (
-                        <Link href="/about/scoring" style={{ marginLeft: '8px', color: 'var(--signal)', textDecoration: 'none' }} title="Brier score — how close the forecast was to the outcome. Lower is better; 0 is a perfect call.">
-                          Brier score {prediction.brierScore.toFixed(3)} (lower is better)
+                        <Link
+                          href="/about/scoring"
+                          style={{
+                            display: 'inline-block', marginTop: '10px', padding: '6px 12px',
+                            background: 'rgba(79,195,161,0.1)', border: '1px solid rgba(79,195,161,0.35)',
+                            borderRadius: '4px', color: 'var(--signal)', textDecoration: 'none',
+                            fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.5px',
+                          }}
+                          title="Brier score — how close the forecast was to the outcome. Lower is better; 0 is a perfect call."
+                        >
+                          📊 Brier score {prediction.brierScore.toFixed(3)} · lower is better
                         </Link>
                       )}
                     </div>

@@ -67,7 +67,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
     prisma.prediction.findMany({
       where: { userId: profileUser.id },
       orderBy: { createdAt: 'desc' },
-      take: 10,
+      // Show every prediction so the list always matches the header's
+      // "Predictions Made" count (mismatch was flagged by the client).
+      take: 100,
       select: {
         id: true,
         probability: true,
