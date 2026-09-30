@@ -227,6 +227,10 @@ export default async function MarketPage({ params }: MarketPageProps) {
                   return (
                     <div key={prediction.id} className="card" style={{
                       borderLeft: isMyPrediction ? '3px solid var(--gold)' : '3px solid transparent',
+                      // Unbreakable runs (e.g. a long "…………" sequence in reasoning) must not
+                      // push the card wider than the viewport — that clipped the score column.
+                      minWidth: 0,
+                      overflowWrap: 'anywhere',
                     }}>
                     {/* User header */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
