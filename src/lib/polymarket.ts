@@ -1230,12 +1230,14 @@ export async function checkMarketResolutions(): Promise<void> {
   //    consensus: the average of the predictors' probabilities is the community's
   //    position, so >= 0.5 resolves YES and < 0.5 resolves NO. (marketProbability
   //    is never populated for user topics, so it cannot be used as the signal.)
-  //    Topics with no predictions and unpublished topics just auto-close for
-  //    admin review.
+  //    Already-CLOSED topics (auto-closed by older code before they could resolve)
+  //    are picked up too and healed the same way. Topics with no predictions and
+  //    unpublished topics stay closed for admin review.
   const pendingCustom = await prisma.market.findMany({
     where: {
-      status: MarketStatus.OPEN,
+      status: { in: [MarketStatus.OPEN, MarketStatus.CLOSED] },
       resolvesAt: { lte: new Date() },
+      resolvedValue: null,
       source: 'USER_CREATED',
     },
     select: { id: true, title: true, topicStatus: true },
@@ -1275,15 +1277,12 @@ export async function checkMarketResolutions(): Promise<void> {
         autoResolvedCustom++
         console.log(`[Custom Market] Auto-resolved (${consensusOutcome ? 'YES' : 'NO'} by consensus): ${market.id} (${market.title})`)
       } else {
-        // No community signal (or not published) — auto-close, admin sets outcome
-        await prisma.market.update({
-          where: { id: market.id },
-          data: {
-            status: MarketStatus.CLOSED,
-            // No resolvedValue - admin must set it manually
-          },
-        })
-        console.log(`[Custom Market] Auto-closed: ${market.id} (${market.title})`)
+        // No community signal (or not published) — keep closed, admin sets outcome
+        if (market.topicStatus === 'APPROVED') {
+          console.log(`[Custom Market] Approved topic without predictions stays closed for admin: ${market.id} (${market.title})`)
+        } else {
+          console.log(`[Custom Market] Auto-closed: ${market.id} (${market.title})`)
+        }
       }
     } catch (err) {
       console.error(`Failed to process custom market ${market.id}:`, err)
