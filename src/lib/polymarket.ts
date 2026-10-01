@@ -1226,10 +1226,11 @@ export async function checkMarketResolutions(): Promise<void> {
   }
 
   // 2. Handle USER_CREATED markets (auto-resolve or auto-close when resolvesAt passes)
-  //    Published (APPROVED) topics with predictions auto-RESOLVE by community
-  //    consensus: the final marketProbability is the community's position, so
-  //    >= 0.5 resolves YES and < 0.5 resolves NO. Topics with no predictions
-  //    (no probability to read) and unpublished topics just auto-close for
+  //    Published (APPROVED) topics WITH predictions auto-RESOLVE by community
+  //    consensus: the average of the predictors' probabilities is the community's
+  //    position, so >= 0.5 resolves YES and < 0.5 resolves NO. (marketProbability
+  //    is never populated for user topics, so it cannot be used as the signal.)
+  //    Topics with no predictions and unpublished topics just auto-close for
   //    admin review.
   const pendingCustom = await prisma.market.findMany({
     where: {
@@ -1237,29 +1238,42 @@ export async function checkMarketResolutions(): Promise<void> {
       resolvesAt: { lte: new Date() },
       source: 'USER_CREATED',
     },
-    select: { id: true, title: true, topicStatus: true, marketProbability: true },
+    select: { id: true, title: true, topicStatus: true },
   })
 
   let autoResolvedCustom = 0
 
   for (const market of pendingCustom) {
     try {
-      if (market.topicStatus === 'APPROVED' && market.marketProbability !== null) {
+      let consensusOutcome: boolean | null = null
+
+      if (market.topicStatus === 'APPROVED') {
+        // Community consensus = average of the predictors' probabilities
+        const preds = await prisma.prediction.findMany({
+          where: { marketId: market.id, status: { in: ['ACTIVE', 'LOCKED'] } },
+          select: { probability: true },
+        })
+        if (preds.length > 0) {
+          const avg = preds.reduce((sum, p) => sum + p.probability, 0) / preds.length
+          consensusOutcome = avg >= 0.5
+        }
+      }
+
+      if (consensusOutcome !== null) {
         // Auto-resolve: community consensus outcome, then score predictions
-        const outcome = market.marketProbability >= 0.5
         await prisma.market.update({
           where: { id: market.id },
           data: {
             status: MarketStatus.RESOLVED,
             resolvedAt: new Date(),
-            resolvedValue: outcome,
+            resolvedValue: consensusOutcome,
           },
         })
         const { scoreMarket, updateCompetitionScores } = await import('@/lib/scoring')
-        await scoreMarket(market.id, outcome)
+        await scoreMarket(market.id, consensusOutcome)
         await updateCompetitionScores(market.id, new Date())
         autoResolvedCustom++
-        console.log(`[Custom Market] Auto-resolved (${outcome ? 'YES' : 'NO'} by consensus): ${market.id} (${market.title})`)
+        console.log(`[Custom Market] Auto-resolved (${consensusOutcome ? 'YES' : 'NO'} by consensus): ${market.id} (${market.title})`)
       } else {
         // No community signal (or not published) — auto-close, admin sets outcome
         await prisma.market.update({

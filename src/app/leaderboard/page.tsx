@@ -241,6 +241,7 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
                     {score.user.occupation && <div style={{ fontSize: '11px', color: 'var(--mist)', marginBottom: '8px' }}>{score.user.occupation}</div>}
                     <div style={{ fontFamily: 'var(--font-display)', fontSize: '32px', fontWeight: 300, color: 'var(--signal)' }}>{score.accuracyPct}%</div>
                     <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--mist)' }}>{score.scoredPredictions} scored</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--fog)' }}>Brier score {score.avgBrierScore.toFixed(3)} (lower is better)</div>
                   </div>
                 </Link>
               )
@@ -297,6 +298,9 @@ export default async function LeaderboardPage({ searchParams }: LeaderboardPageP
                     <td style={{ padding: '14px 20px' }}>
                       <div style={{ fontFamily: 'var(--font-display)', fontSize: '24px', fontWeight: 300, color: (score.accuracyPct || 0) > 80 ? 'var(--signal)' : 'var(--gold)' }}>
                         {score.accuracyPct}%
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', color: 'var(--fog)' }}>
+                        Brier score {(score.avgBrierScore ?? 0).toFixed(3)} (lower is better)
                       </div>
                     </td>
                     <td style={{ padding: '14px 20px', fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--mist)' }}>

@@ -7,7 +7,7 @@ import { isAdmin } from '@/lib/admin'
 import { redirect, notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { canAccess } from '@/lib/access'
-import { isPredictionLocked } from '@/lib/scoring'
+import { isPredictionLocked, brierToAccuracyPct } from '@/lib/scoring'
 import { FeatureKey, MarketStatus } from '@prisma/client'
 import { formatDistanceToNow, format } from 'date-fns'
 import Link from 'next/link'
@@ -329,14 +329,18 @@ export default async function MarketPage({ params }: MarketPageProps) {
                         <Link
                           href="/about/scoring"
                           style={{
-                            display: 'inline-block', marginTop: '10px', padding: '6px 12px',
+                            display: 'inline-flex', flexDirection: 'column', gap: '2px', marginTop: '10px', padding: '8px 14px',
                             background: 'rgba(79,195,161,0.1)', border: '1px solid rgba(79,195,161,0.35)',
-                            borderRadius: '4px', color: 'var(--signal)', textDecoration: 'none',
-                            fontFamily: 'var(--font-mono)', fontSize: '11px', letterSpacing: '0.5px',
+                            borderRadius: '4px', textDecoration: 'none',
                           }}
-                          title="Brier score — how close the forecast was to the outcome. Lower is better; 0 is a perfect call."
+                          title="Accuracy = how close the forecast was to the outcome (higher is better). Brier score is the underlying measure — lower is better; 0 is a perfect call."
                         >
-                          📊 Brier score {prediction.brierScore.toFixed(3)} · lower is better
+                          <span style={{ fontFamily: 'var(--font-display)', fontSize: '18px', fontWeight: 600, color: 'var(--signal)' }}>
+                            {brierToAccuracyPct(prediction.brierScore)}% Accuracy
+                          </span>
+                          <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--mist)' }}>
+                            Brier score {prediction.brierScore.toFixed(3)} · lower is better
+                          </span>
                         </Link>
                       )}
                     </div>

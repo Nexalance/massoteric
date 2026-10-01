@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { auth } from '@/lib/auth-mock'
 import { notFound, redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { getUserAccuracySummary } from '@/lib/scoring'
+import { getUserAccuracySummary, brierToAccuracyPct } from '@/lib/scoring'
 import { isAdmin } from '@/lib/admin'
 import UserButtonWrapper from '@/components/UserButtonWrapper'
 import Link from 'next/link'
@@ -279,6 +279,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                           }}>
                             {correct ? 'Correct ✓' : 'Incorrect ✗'}
                           </span>
+                          {pred.brierScore !== null && (
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', marginLeft: '4px' }}>
+                              <span style={{ color: 'var(--signal)', fontWeight: 600 }}>
+                                Accuracy {brierToAccuracyPct(pred.brierScore)}%
+                              </span>
+                              <span style={{ color: 'var(--mist)' }}>
+                                {' '}· Brier score {pred.brierScore.toFixed(3)} (lower is better)
+                              </span>
+                            </span>
+                          )}
                         </div>
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
@@ -320,7 +330,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                       </div>
                       <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--cream)', marginTop: '3px' }}>
                         {hasScores
-                          ? `${score.scoredPredictions} scored prediction${score.scoredPredictions === 1 ? '' : 's'}`
+                          ? `${score.scoredPredictions} scored prediction${score.scoredPredictions === 1 ? '' : 's'} · Brier score ${(score.avgBrierScore ?? 0).toFixed(3)} (lower is better)`
                           : 'No scored predictions yet'}
                       </div>
                     </div>
