@@ -147,6 +147,40 @@ export async function ensureMigrated() {
       console.log('[migrate] applied: add Market.subcategoryId foreign key')
     }
 
+    // --- Migration: AccuracyScore dedupe + unique index ---------------------
+    // Duplicate overall/category rows made running-average updates land on
+    // arbitrary duplicates, so the leaderboard could show a 100% row for a
+    // forecaster who also had incorrect calls. Fix:
+    //   1) keep only the newest row per (user, category)
+    //   2) enforce uniqueness at the DB level from then on — the expression
+    //      index also covers the overall row where category is NULL
+    const accDupe = (await prisma.$queryRaw`
+      SELECT COUNT(*)::int AS n
+      FROM (
+        SELECT "userId", COALESCE("category"::text, '') AS cat, COUNT(*) AS c
+        FROM "AccuracyScore"
+        GROUP BY "userId", COALESCE("category"::text, '')
+        HAVING COUNT(*) > 1
+      ) d
+    `) as { n: number }[]
+
+    if ((accDupe[0]?.n ?? 0) > 0) {
+      await prisma.$executeRawUnsafe(`
+        DELETE FROM "AccuracyScore" a
+        USING "AccuracyScore" b
+        WHERE a."userId" = b."userId"
+          AND COALESCE(a."category"::text, '') = COALESCE(b."category"::text, '')
+          AND a."id" < b."id"
+      `)
+      console.log('[migrate] applied: removed duplicate AccuracyScore rows')
+    }
+
+    await prisma.$executeRawUnsafe(`
+      CREATE UNIQUE INDEX IF NOT EXISTS "AccuracyScore_user_category_uniq"
+      ON "AccuracyScore" ("userId", COALESCE("category"::text, ''))
+    `)
+    console.log('[migrate] ensured: AccuracyScore unique index (user + category)')
+
     // --- Seed: short-horizon binary test topics (client scoring demo) -------
     // The client onboarding needs topics that resolve within the first week so
     // the full predict → resolve → Brier → leaderboard loop is visible. There
