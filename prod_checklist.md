@@ -26,7 +26,7 @@ From the client (Clerk dashboard → the production instance):
 
 Point the production domain at the CloudPanel server:
 
-- [ ] DNS A/CNAME record: `massoteric.com` (+ `www`) → server IP `72.60.103.57`
+- [ ] DNS A/CNAME record: `massoteric.com` (+ `www`) → server IP `72.61.231.113`
 - [ ] Confirm propagation (`dig massoteric.com +short`)
 - [ ] Then we issue the **Let's Encrypt SSL certificate** for `massoteric.com` from CloudPanel (2 minutes, we do this)
 
