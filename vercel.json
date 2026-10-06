@@ -48,8 +48,5 @@
       "path": "/api/sync?category=CULTURE",
       "schedule": "55 */2 * * *"
     }
-  ],
-  "env": {
-    "CRON_SECRET": "@cron-secret"
-  }
+  ]
 }
