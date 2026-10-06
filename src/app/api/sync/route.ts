@@ -5,21 +5,23 @@ import { syncPolymarketMarkets, syncPolymarketSubcategories, checkMarketResoluti
 import { ensureMigrated } from '@/lib/migrations';
 import { NextRequest } from 'next/server';
 import { isCategorySupported } from '@/lib/category-compat';
+import { waitUntil } from '@vercel/functions';
 
 // In-progress registry — prevents overlapping syncs of the same category
 const inProgress = new Set<string>();
 
-// Fire-and-forget background sync. The HTTP response returns instantly so
-// cron/scheduler clients never time out on big categories (SPORTS can take minutes).
-async function runSyncInBackground(selectedCategory: string) {
+// Background sync that keeps running after the HTTP response via waitUntil
+// (required on Vercel serverless: post-response setTimeout work is frozen).
+// The HTTP response returns instantly so cron/scheduler clients never time
+// out on big categories (SPORTS can take minutes).
+function runSyncInBackground(selectedCategory: string): Promise<void> {
   if (inProgress.has(selectedCategory)) {
     console.log(`[Sync] ${selectedCategory} already in progress — skipping duplicate trigger`)
-    return
+    return Promise.resolve()
   }
   inProgress.add(selectedCategory)
 
-  // Run outside the request lifecycle; errors are logged, never thrown to a caller.
-  setTimeout(async () => {
+  return (async () => {
     try {
       console.log(`[Sync] Background sync starting for category: ${selectedCategory}`)
       const subcatResult = await syncPolymarketSubcategories(selectedCategory);
@@ -31,7 +33,7 @@ async function runSyncInBackground(selectedCategory: string) {
     } finally {
       inProgress.delete(selectedCategory)
     }
-  }, 0)
+  })()
 }
 
 export async function GET(req: NextRequest) {
@@ -64,7 +66,7 @@ export async function GET(req: NextRequest) {
 
     // Respond immediately; heavy work happens in the background so the
     // scheduler never sees a timeout even for the largest categories.
-    runSyncInBackground(selectedCategory);
+    waitUntil(runSyncInBackground(selectedCategory));
 
     return Response.json({
       success: true,
