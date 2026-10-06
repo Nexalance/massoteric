@@ -1,8 +1,52 @@
 {
   "crons": [
     {
-      "path": "/api/sync",
-      "schedule": "*/5 * * * *"
+      "path": "/api/cron/scoring?secret=ploySecret",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/sync?category=POLITICS",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/sync?category=FINANCE",
+      "schedule": "10 * * * *"
+    },
+    {
+      "path": "/api/sync?category=CRYPTO",
+      "schedule": "20 * * * *"
+    },
+    {
+      "path": "/api/sync?category=SPORTS",
+      "schedule": "30 * * * *"
+    },
+    {
+      "path": "/api/sync?category=IRAN",
+      "schedule": "40 * * * *"
+    },
+    {
+      "path": "/api/sync?category=TECH",
+      "schedule": "5 */2 * * *"
+    },
+    {
+      "path": "/api/sync?category=ECONOMY",
+      "schedule": "15 */2 * * *"
+    },
+    {
+      "path": "/api/sync?category=GEOPOLITICS",
+      "schedule": "25 */2 * * *"
+    },
+    {
+      "path": "/api/sync?category=WEATHER",
+      "schedule": "35 */2 * * *"
+    },
+    {
+      "path": "/api/sync?category=ELECTIONS",
+      "schedule": "45 */2 * * *"
+    },
+    {
+      "path": "/api/sync?category=CULTURE",
+      "schedule": "55 */2 * * *"
     }
   ],
   "env": {
