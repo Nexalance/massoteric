@@ -1,9 +1,4 @@
-# Temporarily allowing all automated fetchers for the review period.
-# REVERT after the review is done (restore the staging block below).
+# PRIVATE LAUNCH: keep the site out of search engines until public launch.
+# To go public: replace the block below with "User-agent: * / Allow: /"
 User-agent: *
-Allow: /
-
-# --- STAGING BLOCK (restore this section and remove the Allow block above
-# --- when the review window ends, to keep the site out of search engines):
-# User-agent: *
-# Disallow: /
+Disallow: /
