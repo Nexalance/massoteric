@@ -42,6 +42,10 @@ export const metadata: Metadata = {
     description: 'The world\'s most informed predictions.',
     type: 'website',
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
 }
 
 // Check if we have valid Clerk keys
