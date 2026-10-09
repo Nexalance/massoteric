@@ -1,12 +1,11 @@
-// One-off data migration: old server Postgres -> Supabase (data-only).
-// v4: transaction-pooler target (6543), single-instance lock, externalId-based
-// skip for Market (avoids re-inserting rows the Vercel sync already created),
-// source-side orphan filter, per-row fallback, full x7_report verification.
+// One-off data migration v5: migrate ONLY the small user-data tables
+// (users, predictions, scores, comments...) + the markets they reference.
+// Markets themselves are NOT bulk-migrated — Vercel crons sync them live
+// from Polymarket (authoritative source). Completes in seconds, no timeouts.
 import fs from 'fs';
 import { PrismaClient } from '@prisma/client';
 
 const HOME = '/home/nexalance-massoteric';
-const OVERRIDE_SOURCE = process.argv[2] || ''; // testing only
 
 const newUrl = 'postgresql://massoteric_app.akfpscdidnrpxvmnjuwf:2e67cc278c6daf4f5257e43566939b71@aws-0-us-east-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=5';
 const NEW = new PrismaClient({ datasources: { db: { url: newUrl } } });
@@ -17,28 +16,16 @@ async function report(tag, info) {
     tag, info
   );
 }
-
-function mk(url) {
-  return new PrismaClient({ datasources: { db: { url } } });
-}
+function mk(url) { return new PrismaClient({ datasources: { db: { url } } }); }
 
 async function tryCount(url, table) {
   const c = mk(url);
-  try {
-    const r = await c.$queryRawUnsafe(`SELECT COUNT(*)::int AS n FROM "${table}"`);
-    return r[0].n;
-  } catch {
-    return null;
-  } finally {
-    await c.$disconnect().catch(() => {});
-  }
+  try { const r = await c.$queryRawUnsafe(`SELECT COUNT(*)::int AS n FROM "${table}"`); return r[0].n; }
+  catch { return null; }
+  finally { await c.$disconnect().catch(() => {}); }
 }
 
 async function discoverSource() {
-  if (OVERRIDE_SOURCE) {
-    const n = (await tryCount(OVERRIDE_SOURCE, 'User')) || 0;
-    return { url: OVERRIDE_SOURCE, label: 'override', score: n };
-  }
   const envPath = `${HOME}/htdocs/massoteric.nexalance.com/app/.env`;
   const candidates = new Set();
   try {
@@ -53,91 +40,69 @@ async function discoverSource() {
         for (const d of dbs) candidates.add(`postgresql://${user}@127.0.0.1:${port}/${d.datname}`);
         await c.$disconnect();
         break;
-      } catch {
-        await c.$disconnect().catch(() => {});
-      }
+      } catch { await c.$disconnect().catch(() => {}); }
     }
   }
   let best = null;
   for (const url of candidates) {
     const u = (await tryCount(url, 'User')) ?? -1;
-    const p = (await tryCount(url, 'Prediction')) ?? -1;
-    const a = (await tryCount(url, 'AccuracyScore')) ?? -1;
     if (u < 0) continue;
-    const score = u * 100 + p * 10 + a;
-    const label = url.replace(/:\/\/([^@]+)@/, '$1@').replace(/\?.*/, '');
-    await report(`scan: ${label}`, `user=${u} prediction=${p} accuracy=${a}`);
-    if (!best || score > best.score) best = { url, label, score };
+    const p = (await tryCount(url, 'Prediction')) ?? -1;
+    const score = u * 100 + p * 10;
+    if (!best || score > best.score) best = { url, score };
   }
   return best;
 }
 
+// small tables only; Market handled specially (only prediction-referenced rows)
 const ORDER = [
   'User', 'Subcategory', 'FeatureFlag', 'Competition', 'CreatorSettings',
-  'WaitlistEntry', 'MagicLink', 'Market', 'Prediction', 'PredictionEdit',
+  'WaitlistEntry', 'MagicLink', 'Prediction', 'PredictionEdit',
   'AccuracyScore', 'Comment', 'CommentVote', 'Payout', 'UserSubscription', 'PlatformSubscription',
 ];
 
-async function migrateTable(t, rows) {
-  const meta = await NEW.$queryRawUnsafe(
-    `SELECT column_name, data_type, udt_name FROM information_schema.columns WHERE table_schema='public' AND table_name=$1`,
-    t
-  );
-  const castOf = {};
-  for (const c of meta) castOf[c.column_name] = c.data_type === 'USER-DEFINED' ? `::"${c.udt_name}"` : '';
-  let inserted = 0;
-  let skipped = 0;
+async function migrateTable(t, rows, castOf) {
+  let inserted = 0, skipped = 0;
   for (let i = 0; i < rows.length; i += 100) {
     const batch = rows.slice(i, i + 100);
     const cols = Object.keys(batch[0]);
     const colList = cols.map((c) => `"${c}"`).join(',');
     const params = [];
     const tuples = batch.map((r) => {
-      const placeholders = cols.map((c) => {
-        const v = r[c];
-        params.push(typeof v === 'bigint' ? v.toString() : v);
-        return `$${params.length}${castOf[c] || ''}`;
-      });
-      return `(${placeholders.join(',')})`;
+      const ph = cols.map((c) => { const v = r[c]; params.push(typeof v === 'bigint' ? v.toString() : v); return `$${params.length}${castOf[c] || ''}`; });
+      return `(${ph.join(',')})`;
     });
     try {
-      await NEW.$executeRawUnsafe(
-        `INSERT INTO "${t}" (${colList}) VALUES ${tuples.join(',')} ON CONFLICT DO NOTHING`,
-        ...params
-      );
+      await NEW.$executeRawUnsafe(`INSERT INTO "${t}" (${colList}) VALUES ${tuples.join(',')} ON CONFLICT DO NOTHING`, ...params);
       inserted += batch.length;
     } catch {
       for (const r of batch) {
         const p2 = [];
-        const tuple = cols
-          .map((c) => {
-            const v = r[c];
-            p2.push(typeof v === 'bigint' ? v.toString() : v);
-            return `$${p2.length}${castOf[c] || ''}`;
-          })
-          .join(',');
+        const tuple = cols.map((c) => { const v = r[c]; p2.push(typeof v === 'bigint' ? v.toString() : v); return `$${p2.length}${castOf[c] || ''}`; }).join(',');
         try {
-          await NEW.$executeRawUnsafe(
-            `INSERT INTO "${t}" (${colList}) VALUES (${tuple}) ON CONFLICT DO NOTHING`,
-            ...p2
-          );
+          await NEW.$executeRawUnsafe(`INSERT INTO "${t}" (${colList}) VALUES (${tuple}) ON CONFLICT DO NOTHING`, ...p2);
           inserted++;
-        } catch {
-          skipped++;
-        }
+        } catch { skipped++; }
       }
     }
   }
   return { inserted, skipped };
 }
 
+async function castMapFor(t) {
+  const meta = await NEW.$queryRawUnsafe(
+    `SELECT column_name, data_type, udt_name FROM information_schema.columns WHERE table_schema='public' AND table_name=$1`, t
+  );
+  const castOf = {};
+  for (const c of meta) castOf[c.column_name] = c.data_type === 'USER-DEFINED' ? `::"${c.udt_name}"` : '';
+  return castOf;
+}
+
 try {
   await NEW.$executeRawUnsafe('CREATE TABLE IF NOT EXISTS "x7_report" (tag text primary key, info text, at timestamptz default now())');
-  // single-instance lock: if another run heartbeat < 8 min ago, bail out
-  const lock = await NEW.$queryRawUnsafe(`SELECT info, at FROM "x7_report" WHERE tag='lock'`);
-  const lockFresh = lock[0] && (Date.now() - new Date(lock[0].at).getTime()) < 8 * 60 * 1000;
-  if (lockFresh) {
-    console.log('LOCKED — another instance running');
+  const lock = await NEW.$queryRawUnsafe(`SELECT at FROM "x7_report" WHERE tag='lock'`);
+  if (lock[0] && Date.now() - new Date(lock[0].at).getTime() < 5 * 60 * 1000) {
+    console.log('LOCKED');
     process.exit(0);
   }
   await report('lock', new Date().toISOString());
@@ -148,31 +113,33 @@ try {
     console.error('NO_SOURCE_WITH_USER_DATA_FOUND');
     process.exitCode = 1;
   } else {
-    await report('source', `${source.label} (score=${source.score})`);
+    await report('source', `${source.url.replace(/:[^@/]*@/, ':***@')} (score=${source.score})`);
     const OLD = mk(source.url);
 
+    // 1) markets referenced by predictions (small, FK-required)
+    const refMarketIds = (await OLD.$queryRawUnsafe(`SELECT DISTINCT "marketId" FROM "Prediction"`)).map((r) => r.marketId);
+    await report('pred-markets', `referenced=${refMarketIds.length}`);
+    const castOfMarket = await castMapFor('Market');
+    let mInserted = 0, mSkipped = 0;
+    for (const mid of refMarketIds) {
+      const rows = await OLD.$queryRawUnsafe(`SELECT * FROM "Market" WHERE id=$1`, mid);
+      if (!rows.length) { mSkipped++; continue; }
+      const { inserted, skipped } = await migrateTable('Market', rows, castOfMarket);
+      mInserted += inserted; mSkipped += skipped;
+    }
+    await report(`count: Market`, `referenced-inserted=${mInserted} missing=${mSkipped} (rest: vercel sync covers)`);
+
+    // 2) small user-data tables
     for (const t of ORDER) {
-      let rows = await OLD.$queryRawUnsafe(`SELECT * FROM "${t}"`);
-      if (t === 'Market') {
-        // source-side orphan filter + skip rows the target already has (by externalId)
-        const orphanIds = new Set(
-          (await OLD.$queryRawUnsafe(`SELECT id FROM "Subcategory"`)).map((r) => r.id)
-        );
-        rows = rows.filter((r) => !r.subcategoryId || orphanIds.has(r.subcategoryId));
-        const targetExt = new Set(
-          (await NEW.$queryRawUnsafe(`SELECT "externalId" FROM "Market" WHERE "externalId" IS NOT NULL`)).map((r) => r.externalId)
-        );
-        const before = rows.length;
-        rows = rows.filter((r) => !r.externalId || !targetExt.has(r.externalId));
-        await report('market-filter', `source=9675+ afterOrphanFilter=${before} afterExternalIdSkip=${rows.length}`);
-      }
-      if (rows.length === 0) { await report(`count: ${t}`, 'old=0 (or already present)'); continue; }
-      const { inserted, skipped } = await migrateTable(t, rows);
+      const rows = await OLD.$queryRawUnsafe(`SELECT * FROM "${t}"`);
+      if (rows.length === 0) { await report(`count: ${t}`, 'old=0'); continue; }
+      const castOf = await castMapFor(t);
+      const { inserted, skipped } = await migrateTable(t, rows, castOf);
       await report(`count: ${t}`, `old=${rows.length} new-inserted=${inserted} skipped=${skipped}`);
-      await report('lock', new Date().toISOString()); // heartbeat
+      await report('lock', new Date().toISOString());
     }
     await OLD.$disconnect().catch(() => {});
-    await report('done', 'node-ok-v4');
+    await report('done', 'node-ok-v5');
     fs.writeFileSync(`${HOME}/.x7done`, 'ok');
     console.log('MIGRATION_OK');
   }
