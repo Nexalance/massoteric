@@ -107,6 +107,7 @@ try {
       const castOf = {};
       for (const c of meta) castOf[c.column_name] = c.data_type === 'USER-DEFINED' ? `::"${c.udt_name}"` : '';
       let inserted = 0;
+      let skipped = 0;
       for (let i = 0; i < rows.length; i += 100) {
         const batch = rows.slice(i, i + 100);
         const cols = Object.keys(batch[0]);
@@ -120,13 +121,36 @@ try {
           });
           return `(${placeholders.join(',')})`;
         });
-        await NEW.$executeRawUnsafe(
-          `INSERT INTO "${t}" (${colList}) VALUES ${tuples.join(',')} ON CONFLICT DO NOTHING`,
-          ...params
-        );
-        inserted += batch.length;
+        try {
+          await NEW.$executeRawUnsafe(
+            `INSERT INTO "${t}" (${colList}) VALUES ${tuples.join(',')} ON CONFLICT DO NOTHING`,
+            ...params
+          );
+          inserted += batch.length;
+        } catch {
+          // batch failed (orphan FK rows etc.) — insert row-by-row, skipping bad ones
+          for (const r of batch) {
+            const p2 = [];
+            const tuple = cols
+              .map((c) => {
+                const v = r[c];
+                p2.push(typeof v === 'bigint' ? v.toString() : v);
+                return `$${p2.length}${castOf[c] || ''}`;
+              })
+              .join(',');
+            try {
+              await NEW.$executeRawUnsafe(
+                `INSERT INTO "${t}" (${colList}) VALUES (${tuple}) ON CONFLICT DO NOTHING`,
+                ...p2
+              );
+              inserted++;
+            } catch {
+              skipped++;
+            }
+          }
+        }
       }
-      await report(`count: ${t}`, `old=${rows.length} new-inserted=${inserted}`);
+      await report(`count: ${t}`, `old=${rows.length} new-inserted=${inserted} skipped=${skipped}`);
     }
     await OLD.$disconnect().catch(() => {});
     await report('done', 'node-ok');
